@@ -886,6 +886,14 @@ async function initLock() {
     try { await Store.init(); storeReady = true; }
     catch (e) { $('#lock-sub').textContent = (e && e.userMsg) || (Store.kind === 'local' && !window.SHELF_CONFIG ? '这个浏览器在当前打开方式下不允许保存数据。请换用 Chrome、Edge 或 Safari 打开，或者不要使用无痕模式。' : '读取数据失败：' + ((e && e.message) || e) + '。请检查网络后刷新页面。'); return; }
   }
+  if (Store.kind === 'local') {   // 告诉用户为什么是离线版
+    const cfg = window.SHELF_CONFIG, a = $('#lock-acct');
+    const why = location.protocol === 'file:' ? '当前是离线版：这是直接打开的本地文件。要用账号版，请打开 GitHub Pages 的 github.io 网址'
+      : !cfg ? '当前是离线版：网页没有读到 config.js，请确认它和 index.html 放在同一个位置'
+      : !(cfg.supabaseUrl && cfg.supabaseKey) ? '当前是离线版：config.js 里还没有填写 Supabase 的 Project URL 和 key'
+      : '';
+    if (why) { a.hidden = false; a.textContent = why; }
+  }
   if (Store.kind === 'sb') { const a = $('#lock-acct'); a.hidden = false; a.innerHTML = `账号 ${esc(Store.remote.email || '')} · <button class="lock-link" type="button" data-act="sign-out">切换账号</button>`; }
   try { const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); } } catch {}
   const pw = await Store.get('meta', 'pw');
