@@ -1,20 +1,21 @@
-# Doumi · 账号版
+# Doumi · 你的同人本管理书架
 
-同人本收纳网页。用邮箱注册账号后，手机、电脑打开同一个网址登录，看到的是同一个书架。
-
-## 仓库里应该有这 6 个文件（都放在最外层，名字一个字母都不能差）
+## 文件
 
 | 文件 | 作用 |
 |---|---|
-| index.html | 网页本体 |
-| config.js | 填 Supabase 的 Project URL 和 Publishable key |
-| supabase.js | 登录与同步用的程序库 |
-| sw.js | 离线缓存 |
-| check.html | 自检页：打开 `你的网址/check.html` 逐项检查哪里没生效 |
-| README.md | 说明 |
+| index.html | 网页本体（所有内容先自动保存在本机） |
+| supabase.js | 云端同步用的程序库 |
+| sw.js | 离线缓存：断网也能打开网页 |
+| config.js | 可选：预先填好 Supabase 地址和 key（也可以直接在网页“设置 → 云端同步”里填） |
+| check.html | 自检页 |
+| setup.sql | 建表 SQL（网页里也能一键复制），在 Supabase 的 SQL Editor 里运行一次 |
 
-setup.sql 不用放进仓库，它是在 Supabase 的 SQL Editor 里运行一次的。
+## 开启云端同步
 
-## 网址
+1. 网页里打开 设置 → 云端同步（右侧的小按钮）
+2. 点“复制建表 SQL”，到 Supabase 后台 SQL Editor 粘贴运行
+3. 填 Project URL 和 Publishable key，点“保存并测试连接”
+4. 注册 / 登录账号；其他设备登录同一账号即可同步
 
-用 Settings → Pages 里 “Visit site” 给出的 `https://用户名.github.io/仓库名/` 打开，不是 github.com 的仓库页面。
+按钮绿色 = 已同步；灰色 = 未连接 / 未登录 / 离线（离线时内容照常存在本机，联网后自动上传）。

@@ -216,6 +216,21 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-meta{display:flex;gap:6px;align-items:center;margin-top:4px;min-width:0}
 .cover-cp{font-size:11.5px;color:var(--muted);background:var(--soft);border-radius:4px;padding:0 6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cover-rate{font-size:11.5px;color:var(--star);flex:none;font-variant-numeric:tabular-nums}
+.ct{display:grid;min-width:0;margin-top:8px}
+.ct-title{font-size:14.5px;font-weight:600;line-height:1.35;color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.ct-by{font-size:12.5px;line-height:1.4;color:var(--ink);opacity:.68;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-tags{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:7px;min-width:0}
+.ct-ip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-ip i{width:6px;height:6px;border-radius:50%;background:var(--c);flex:none}
+.ct-cp{font-size:11px;line-height:17px;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ct-marks{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:6px;min-height:18px;padding-top:6px;border-top:1px solid var(--line);min-width:0}
+.covers .ms-row{letter-spacing:0;font-size:11px}
+.ms{display:inline-flex;align-items:center;gap:4px;color:color-mix(in srgb,var(--star) 86%,var(--ink));font-variant-numeric:tabular-nums;line-height:1}
+.ms-row{position:relative;display:inline-block;font-size:11.5px;letter-spacing:1px;line-height:1}
+.ms-bg{color:var(--line-2)}
+.ms-fg{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap}
+.ms b{font-size:12px;font-weight:600;color:inherit}
+.cover-card .ct{margin-top:2px}
 .marks{display:flex;align-items:center;gap:6px;margin-top:5px;min-height:18px;flex-wrap:nowrap}
 .mark-rate{font-size:12px;white-space:nowrap;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;line-height:18px}
 .mark-rate i{font-style:normal;color:var(--star);margin-left:1px}
@@ -499,8 +514,8 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .st-cap{display:block;font-size:13px;color:var(--muted)}
 .st-total strong{display:block;font:650 44px/1.05 var(--num);letter-spacing:-.02em;margin:6px 0 8px;overflow-wrap:anywhere}
 .st-sub{font-size:13px;color:var(--muted)}
-.st-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px;margin:0}
-@media (min-width:560px){.st-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.st-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 16px;margin:0}
+
 .st-kpis>div{min-width:0}
 .st-kpis dt{font-size:12px;color:var(--muted)}
 .st-kpis dd{margin:2px 0 0;font:600 26px/1.2 var(--num)}
@@ -564,8 +579,10 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .sb-top li:last-child a{border-bottom:0}
 .sb-rank{width:18px;font:600 13px var(--num);color:var(--p8);flex:none;text-align:center}
 .sb-top li:first-child .sb-rank{color:var(--ink)}
-.sb-top-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
-.sb-top-name em{font-style:normal;color:var(--muted);font-size:12px;margin-left:6px}
+.sb-top-name{flex:1;min-width:0;display:grid;gap:3px}
+.sb-t1{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-t2{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);opacity:.7;min-width:0;white-space:nowrap;overflow:hidden}
+.sb-t3{font-size:11px;line-height:17px;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted);white-space:nowrap}
 .sb-top b{font-weight:600;font-size:14px}
 /* 设置：主题 */
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -584,6 +601,26 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .theme-names{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
 .theme-names span{display:inline-flex;align-items:center;gap:4px}
 .theme-names i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.sync{border:0;background:none;padding:4px 8px;border-radius:99px;cursor:pointer}
+.sync:hover{background:var(--soft)}
+.sync[data-state=off]::before{background:var(--line-2)}
+.sync[data-state=ok]::before{background:#2f9e6e}
+.sync-row{grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px}
+.sync-row h2{margin-bottom:2px}
+.sync-pill{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:500;white-space:nowrap;background:var(--bg);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line-2)}
+.sync-pill i{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.sync-pill[data-state=ok]{background:color-mix(in srgb,#2f9e6e 13%,var(--bg));color:color-mix(in srgb,#2f9e6e 85%,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,#2f9e6e 40%,transparent)}
+.sync-pill[data-state=ok] i{background:#2f9e6e}
+.sync-pill[data-state=busy] i{background:var(--transit)}
+.sync-status{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;border-radius:10px;background:var(--soft);font-size:14px}
+.sync-status em{font-style:normal;color:var(--muted);font-size:13px}
+.sync-status small{flex-basis:100%;color:var(--muted);font-size:12px}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:var(--line-2)}
+.sync-dot.on{background:#2f9e6e;box-shadow:0 0 0 3px color-mix(in srgb,#2f9e6e 22%,transparent)}
+.sync-checks{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13px}
+.sync-checks li{display:flex;gap:8px;align-items:flex-start}
+.sync-checks li i{font-style:normal;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;flex:none;background:var(--muted)}
+.sync-checks li.ok i{background:#2f9e6e}.sync-checks li.bad i{background:var(--danger)}
 /* 设置：品牌与实时汇率 */
 .brand-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .logo-preview{width:56px;height:56px;border-radius:12px;background:var(--bg);display:grid;place-items:center;overflow:hidden;flex:none}
@@ -654,7 +691,7 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
         <a class="tab" data-tab="prefs" href="#prefs">设置</a>
       </nav>
       <div class="spacer"></div>
-      <span class="sync" id="sync" hidden></span>
+      <button type="button" class="sync" id="sync" data-act="sync-panel" hidden></button>
       <button class="icon-btn" data-act="lock" title="上锁" aria-label="上锁">
         <svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
       </button>
@@ -843,11 +880,11 @@ const DB = {
   open() {
     return new Promise((res, rej) => {
       if (!window.indexedDB) return rej(new Error('no-idb'));
-      const r = indexedDB.open('doujin-shelf', 1);
+      const r = indexedDB.open('doujin-shelf', 2);
       r.onupgradeneeded = () => {
         const d = r.result;
         ['ips', 'books'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, {keyPath: 'id'}); });
-        if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta');
+        ['meta', 'outbox', 'imgcache'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n); });   // outbox = 待同步队列，imgcache = 云端图片的本机缓存
       };
       r.onsuccess = () => { this.db = r.result; res(); };
       r.onerror = () => rej(r.error);
@@ -861,6 +898,7 @@ const DB = {
     });
   },
   all: s => DB.run(s, 'readonly', st => st.getAll()),
+  keys: s => DB.run(s, 'readonly', st => st.getAllKeys()),
   get: (s, k) => DB.run(s, 'readonly', st => st.get(k)),
   put: (s, v, k) => DB.run(s, 'readwrite', st => k === undefined ? st.put(v) : st.put(v, k)),
   del: (s, k) => DB.run(s, 'readwrite', st => st.delete(k)),
@@ -872,7 +910,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-12';
+const APP_VERSION = '2026.10.30-14';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -910,93 +948,231 @@ async function claudeAdapter() {
   };
 }
 
-async function sbAdapter(cfg) {
-  try { await loadScript('supabase.js').catch(() => loadScript(SB_CDN)); } catch { throw Object.assign(new Error('offline'), {userMsg: '需要联网才能打开账号版。请检查网络后刷新页面。'}); }
-  const client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true}});
-  client.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') showRecovery(client); });
-  let {data: {session}} = await client.auth.getSession();
-  if (!session) session = await showAuth(client);
-  const uid = session.user.id, T = 'shelf_docs', B = 'covers';
-  // 把 Supabase 的报错翻译成能看懂的话（与 setup.sql 的表、权限、图片桶规则对应）
-  const fail = error => {
-    if (!error) return;
-    const m = String(error.message || ''), c = String(error.code || ''), st = String(error.statusCode || error.status || '');
-    let userMsg = '';
-    if (c === '42P01' || c === 'PGRST205' || /does not exist|Could not find the table/i.test(m)) userMsg = '数据库还没初始化：请在 Supabase 的 SQL Editor 里运行 setup.sql';
-    else if (/Bucket not found/i.test(m)) userMsg = '找不到图片桶 covers：请在 Supabase 里运行 setup.sql';
-    else if (c === '23514') userMsg = '数据格式不符合数据库规则，这条记录没有保存';
-    else if (c === '42501' || /row-level security|violates.*policy|Unauthorized/i.test(m) || st === '403') userMsg = '没有写入权限：请确认已登录，并且 setup.sql 已完整运行（检查结果全部为 true）';
-    else if (/mime type|invalid_mime/i.test(m) || st === '415') userMsg = '图片格式不支持，只能上传 JPG、PNG、WebP、GIF 或 SVG';
-    else if (/maximum allowed size|too large|Payload too large/i.test(m) || st === '413') userMsg = '图片超过 10 MB，请换一张小一点的';
-    else if (/JWT|token.*expired|refresh token/i.test(m)) userMsg = '登录已过期，请刷新页面重新登录';
-    else if (/Failed to fetch|NetworkError|network/i.test(m)) userMsg = '连不上 Supabase，请检查网络后再试';
-    throw Object.assign(new Error(m || 'Supabase error'), {code: c || st || 'sb', userMsg});
-  };
-  const DOC_RE = /^(ip|book|meta)_[A-Za-z0-9_.:-]{1,120}$/;   // 与 setup.sql 里 doc_id 的检查规则一致
-  const ad = {
-    kind: 'sb', label: '账号', client, email: session.user.email,
-    async load() {
-      const out = [];
-      for (let from = 0; ; from += 1000) {
-        const {data, error} = await client.from(T).select('doc_id,body').range(from, from + 999); fail(error);
-        out.push(...data.map(r => ({id: r.doc_id, body: r.body})));
-        if (data.length < 1000) break;
+const SETUP_SQL = "-- =====================================================================\n--  Doumi · Supabase 初始化脚本（安全版）\n--\n--  用法：Supabase 后台 → SQL Editor → New query → 粘贴全部内容 → Run\n--\n--  这个脚本只\"新建\"、不\"删除\"：\n--    · 不删除任何表、数据、文件或权限规则\n--    · 已经存在的东西会自动跳过，所以重复运行也不会出错、不会覆盖\n--    · 全部步骤放在一个事务里：中途任何一步出错，整份脚本都不会生效\n--  运行完成后，最下面会显示一张\"检查结果\"表，每一项都应该是 true。\n-- =====================================================================\n\nbegin;\n\n-- ---------------------------------------------------------------------\n-- 第 1 步：建数据表\n--   每一行是一个用户的一条记录：一个 IP、一本本子或一项设置。\n--   user_id  这行数据属于谁（默认就是当前登录的用户）\n--   doc_id   记录编号，例如 ip_xxx、book_xxx、meta_rates\n--   body     记录内容（JSON）\n--   用户账号被删除时，他的记录会随之删除（on delete cascade）。\n-- ---------------------------------------------------------------------\ncreate table if not exists public.shelf_docs (\n  user_id    uuid        not null default auth.uid()\n                         references auth.users (id) on delete cascade,\n  doc_id     text        not null\n                         check (doc_id ~ '^(ip|book|meta)_[A-Za-z0-9_.:-]{1,120}$'),\n  body       jsonb       not null\n                         check (jsonb_typeof(body) = 'object'),\n  updated_at timestamptz not null default now(),\n  primary key (user_id, doc_id)\n);\n\ncomment on table public.shelf_docs is 'Doumi：每个用户的 IP、本子和设置';\n\n-- ---------------------------------------------------------------------\n-- 第 2 步：开启行级权限（RLS）\n--   开启后，没有规则允许的读写一律被拒绝；\n--   未登录的访客（anon）没有任何规则，所以什么都读不到、写不了。\n-- ---------------------------------------------------------------------\nalter table public.shelf_docs enable row level security;\n\n-- ---------------------------------------------------------------------\n-- 第 3 步：建图片存储桶 covers\n--   private：图片不公开，只能凭登录身份换取临时访问地址\n--   单张最大 10 MB，只接受常见图片格式\n--   （如果 covers 已经存在，这一步会跳过，不改动原有设置）\n-- ---------------------------------------------------------------------\ninsert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)\nvalues (\n  'covers', 'covers', false, 10485760,\n  array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']\n)\non conflict (id) do nothing;\n\n-- ---------------------------------------------------------------------\n-- 第 4 步：权限规则——\"每个人只能读写自己的东西\"\n--   数据表：user_id 必须等于当前登录用户\n--   图片：只能放在、读取、删除以自己用户 id 命名的文件夹里\n--   规则已存在（同名）就跳过，不会删除或覆盖。\n-- ---------------------------------------------------------------------\ndo $$\ndeclare\n  r record;\nbegin\n  for r in\n    select * from (values\n      -- 表所在模式, 表名,       规则名,                   操作,     条件\n      ('public',  'shelf_docs', 'shelf: read own',     'select', 'using (auth.uid() = user_id)'),\n      ('public',  'shelf_docs', 'shelf: insert own',   'insert', 'with check (auth.uid() = user_id)'),\n      ('public',  'shelf_docs', 'shelf: update own',   'update', 'using (auth.uid() = user_id) with check (auth.uid() = user_id)'),\n      ('public',  'shelf_docs', 'shelf: delete own',   'delete', 'using (auth.uid() = user_id)'),\n      ('storage', 'objects',    'covers: read own',    'select', 'using (bucket_id = ''covers'' and (storage.foldername(name))[1] = auth.uid()::text)'),\n      ('storage', 'objects',    'covers: upload own',  'insert', 'with check (bucket_id = ''covers'' and (storage.foldername(name))[1] = auth.uid()::text)'),\n      ('storage', 'objects',    'covers: delete own',  'delete', 'using (bucket_id = ''covers'' and (storage.foldername(name))[1] = auth.uid()::text)')\n    ) as t (schema_name, table_name, policy_name, command, rule)\n  loop\n    if not exists (\n      select 1 from pg_policies\n      where schemaname = r.schema_name\n        and tablename  = r.table_name\n        and policyname = r.policy_name\n    ) then\n      execute format(\n        'create policy %I on %I.%I for %s to authenticated %s',\n        r.policy_name, r.schema_name, r.table_name, r.command, r.rule\n      );\n    end if;\n  end loop;\nend\n$$;\n\n-- ---------------------------------------------------------------------\n-- 第 5 步：开启实时同步\n--   一台设备改了数据，其他设备马上收到通知（仍然受第 4 步的权限限制）。\n--   已经开启过就跳过。\n-- ---------------------------------------------------------------------\ndo $$\nbegin\n  if not exists (\n    select 1 from pg_publication_tables\n    where pubname = 'supabase_realtime'\n      and schemaname = 'public'\n      and tablename = 'shelf_docs'\n  ) then\n    alter publication supabase_realtime add table public.shelf_docs;\n  end if;\nend\n$$;\n\ncommit;\n\n-- ---------------------------------------------------------------------\n-- 第 6 步：检查结果（只读，不改动任何东西）\n--   每一项的\"结果\"都应该是 true。\n-- ---------------------------------------------------------------------\nselect '1. 数据表 shelf_docs 已建好'    as \"检查项\", to_regclass('public.shelf_docs') is not null as \"结果\"\nunion all\nselect '2. 数据表已开启行级权限',\n       coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.shelf_docs')), false)\nunion all\nselect '3. 数据表权限规则 4 条',\n       (select count(*) from pg_policies where schemaname = 'public' and tablename = 'shelf_docs' and policyname like 'shelf: %') = 4\nunion all\nselect '4. 图片桶 covers 已建好且不公开',\n       exists (select 1 from storage.buckets where id = 'covers' and public = false)\nunion all\nselect '5. 图片权限规则 3 条',\n       (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname like 'covers: %') = 3\nunion all\nselect '6. 实时同步已开启',\n       exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'shelf_docs');\n";
+/* ================= Supabase 同步（本地优先） =================
+   · 所有修改先存到本机 IndexedDB（关掉再打开也不会丢），同时记进“待同步”队列
+   · 连上 Supabase 并登录后：先把队列推上去，再把云端最新内容拉下来
+   · 断网时照常使用；网络恢复、切回页面、其他设备有改动时会自动再同步
+   · 图片：上传到 Supabase 的 covers 图片桶，同时在本机留一份缓存，离线也能看 */
+const SYNC_META = ['pw', 'rates', 'brand', 'startView', 'theme', 'themes'];   // 会同步的设置；草稿、当前视图等只留在本机
+const DOC_RE = /^(ip|book|meta)_[A-Za-z0-9_.:-]{1,120}$/;   // 与 setup.sql 里 doc_id 的检查规则一致
+function sbFail(error) {   // 把 Supabase 的报错翻译成能看懂的话
+  if (!error) return;
+  const m = String(error.message || ''), c = String(error.code || ''), st = String(error.statusCode || error.status || '');
+  let userMsg = '';
+  if (c === '42P01' || c === 'PGRST205' || /does not exist|Could not find the table/i.test(m)) userMsg = '数据库还没建表：请复制建表 SQL，在 Supabase 的 SQL Editor 里运行';
+  else if (/Bucket not found/i.test(m)) userMsg = '找不到图片桶 covers：请复制建表 SQL 在 Supabase 里运行';
+  else if (c === '23514') userMsg = '有一条记录格式不符合数据库规则，已跳过';
+  else if (c === '42501' || /row-level security|violates.*policy|Unauthorized/i.test(m) || st === '403') userMsg = '没有写入权限：请确认已登录，并且建表 SQL 已完整运行';
+  else if (/mime type|invalid_mime/i.test(m) || st === '415') userMsg = '有一张图片格式不支持（只支持 JPG、PNG、WebP、GIF、SVG）';
+  else if (/maximum allowed size|too large|Payload too large/i.test(m) || st === '413') userMsg = '有一张图片超过 10 MB';
+  else if (/JWT|token.*expired|refresh token/i.test(m)) userMsg = '登录已过期，请在同步设置里重新登录';
+  else if (/Failed to fetch|NetworkError|network|Load failed/i.test(m)) userMsg = '连不上 Supabase，请检查网络';
+  throw Object.assign(new Error(m || 'Supabase error'), {code: c || st || 'sb', userMsg});
+}
+const Sync = {
+  cfg: null, client: null, user: null, state: 'off', msg: '', lastAt: 0, busy: false, again: false, timer: null, channel: null,
+  configured() { return !!(this.cfg && this.cfg.supabaseUrl && this.cfg.supabaseKey); },
+  set(state, msg) {
+    this.state = state; this.msg = msg || '';
+    const el = document.getElementById('sync');
+    if (el) {
+      el.hidden = !this.configured() && state === 'off';
+      el.dataset.state = {ok: 'ok', busy: 'busy'}[state] || 'off';
+      el.textContent = {ok: '已同步', busy: '同步中…', login: '未登录', offline: '离线 · 已存本机', error: '未同步', off: '未连接'}[state] || '未同步';
+      el.title = this.msg || el.textContent;
+    }
+    $$('[data-sync-pill]').forEach(p => { p.dataset.state = el ? el.dataset.state : 'off'; p.querySelector('span').textContent = this.label(); });
+    const box = document.getElementById('sync-status'); if (box) box.innerHTML = this.statusHtml();
+  },
+  label() {
+    if (this.state === 'ok') return '已同步' + (this.lastAt ? ' · ' + new Date(this.lastAt).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'}) : '');
+    return {busy: '同步中…', login: '已连接 · 未登录', offline: '离线 · 内容已存本机', error: '未同步', off: '未连接云端'}[this.state] || '未同步';
+  },
+  statusHtml() {
+    const on = this.state === 'ok' || this.state === 'busy';
+    return `<span class="sync-dot ${on ? 'on' : ''}"></span><b>${esc(this.label())}</b>${this.user ? `<em>${esc(this.user.email || '')}</em>` : ''}${this.msg && !on ? `<small>${esc(this.msg)}</small>` : ''}`;
+  },
+  async lib() {
+    if (window.supabase && window.supabase.createClient) return;
+    try { await loadScript('supabase.js'); } catch {}
+    if (!(window.supabase && window.supabase.createClient)) await loadScript(SB_CDN);
+  },
+  async boot() {
+    try { this.cfg = (await DB.get('meta', 'sync')) || normConfig(window.SHELF_CONFIG); } catch { this.cfg = null; }
+    this.lastAt = (await DB.get('meta', 'syncLast').catch(() => 0)) || 0;
+    if (!this.configured()) return this.set('off');
+    window.addEventListener('online', () => this.soon(300));
+    window.addEventListener('offline', () => this.set('offline'));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.soon(500); });
+    setInterval(() => { if (!document.hidden) this.soon(0); }, 120000);
+    await this.connect();
+  },
+  async connect() {
+    if (!this.configured()) return this.set('off');
+    if (!navigator.onLine) return this.set('offline');
+    try {
+      await this.lib();
+      if (!this.client) {
+        this.client = window.supabase.createClient(this.cfg.supabaseUrl, this.cfg.supabaseKey, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'doumi-auth'}});
+        this.client.auth.onAuthStateChange((ev, session) => {
+          if (ev === 'PASSWORD_RECOVERY') showRecovery(this.client);
+          this.user = session ? session.user : null;
+          if (ev === 'SIGNED_OUT') { this.unsub(); this.set('login'); }
+        });
       }
-      return out;
-    },
-    async put(id, body) {
-      if (!DOC_RE.test(id)) throw Object.assign(new Error('bad id'), {code: '23514', userMsg: '记录编号含有不支持的字符，这条记录没有保存'});
-      const {error} = await client.from(T).upsert({user_id: uid, doc_id: id, body, updated_at: new Date().toISOString()}, {onConflict: 'user_id,doc_id'}); fail(error);
-    },
-    async del(id) { const {error} = await client.from(T).delete().eq('doc_id', id); fail(error); },
-    async upload(dataUrl) {
-      const blob = dataUrlToBlob(dataUrl), ext = /png/.test(blob.type) ? 'png' : /svg/.test(blob.type) ? 'svg' : /webp/.test(blob.type) ? 'webp' : /gif/.test(blob.type) ? 'gif' : 'jpg';
-      const path = `${uid}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-      const {error} = await client.storage.from(B).upload(path, blob, {contentType: blob.type, upsert: false}); fail(error);
-      Store.urls['sb:' + path] = dataUrl;
-      return 'sb:' + path;
-    },
-    async remove(srcs) {   // 删除不再使用的图片（setup.sql 里的 "covers: delete own" 规则允许删自己的）
-      const paths = srcs.filter(x => x && x.startsWith('sb:')).map(x => x.slice(3));
-      if (!paths.length) return;
-      const {error} = await client.storage.from(B).remove(paths);
-      if (!error) paths.forEach(x => delete Store.urls['sb:' + x]);
-    },
-    async sign(srcs) {   // 私有图片：批量换成 7 天有效的访问地址
-      const paths = [...new Set(srcs.filter(s => s && s.startsWith('sb:') && !Store.urls[s]).map(s => s.slice(3)))];
-      for (let i = 0; i < paths.length; i += 100) {
-        const {data, error} = await client.storage.from(B).createSignedUrls(paths.slice(i, i + 100), 7 * 24 * 3600);
-        if (error || !data) continue;
-        data.forEach(d => { if (d.signedUrl && d.path) Store.urls['sb:' + d.path] = d.signedUrl; });
+      const {data} = await this.client.auth.getSession();
+      this.user = data.session ? data.session.user : null;
+      if (!this.user) return this.set('login');
+      this.sub();
+      await this.now();
+    } catch (e) { this.set(navigator.onLine ? 'error' : 'offline', e.userMsg || '连不上 Supabase，请检查网址和网络'); }
+  },
+  sub() {
+    if (this.channel || !this.client || !this.user) return;
+    try { this.channel = this.client.channel('doumi-' + this.user.id).on('postgres_changes', {event: '*', schema: 'public', table: 'shelf_docs', filter: 'user_id=eq.' + this.user.id}, () => this.soon(800)).subscribe(); } catch {}
+  },
+  unsub() { try { if (this.channel) this.client.removeChannel(this.channel); } catch {} this.channel = null; },
+  soon(ms = 1500) { if (!this.configured() || !this.user) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.now(), ms); },
+  async now() {
+    if (!this.client || !this.user) return;
+    if (this.busy) { this.again = true; return; }
+    if (!navigator.onLine) return this.set('offline');
+    this.busy = true; this.set('busy');
+    try {
+      if ((await DB.get('meta', 'syncUser')) !== this.user.id) { await this.merge(); await DB.put('meta', this.user.id, 'syncUser'); }
+      await this.flush(); await this.pull();
+      this.lastAt = Date.now(); await DB.put('meta', this.lastAt, 'syncLast');
+      this.set('ok');
+    } catch (e) { this.set(navigator.onLine ? 'error' : 'offline', e.userMsg || e.message); }
+    finally { this.busy = false; if (this.again) { this.again = false; this.soon(200); } }
+  },
+  async rows() {
+    const out = [];
+    for (let from = 0; ; from += 1000) {
+      const {data, error} = await this.client.from('shelf_docs').select('doc_id,body').range(from, from + 999); sbFail(error);
+      out.push(...data); if (data.length < 1000) break;
+    }
+    return out;
+  },
+  /* 第一次在这台设备上登录：把本机已有的内容和云端合并（较新的为准；设置项以云端为准） */
+  async merge() {
+    const remote = new Map((await this.rows()).map(r => [r.doc_id, r.body]));
+    const mark = id => DB.put('outbox', {op: 'put', t: Date.now()}, id);
+    for (const ip of await DB.all('ips')) { const r = remote.get('ip_' + ip.id); if (!r || (ip._u || 0) > (r._u || 0)) await mark('ip_' + ip.id); }
+    for (const b of await DB.all('books')) { const r = remote.get('book_' + b.id); if (!r || (b._u || 0) > (r._u || 0)) await mark('book_' + b.id); }
+    for (const k of SYNC_META) { if (!remote.has('meta_' + k) && (await DB.get('meta', k)) !== undefined) await mark('meta_' + k); }
+  },
+  localOf(id) {
+    if (id.startsWith('ip_')) return DB.get('ips', id.slice(3));
+    if (id.startsWith('book_')) return DB.get('books', id.slice(5));
+    return DB.get('meta', id.slice(5));
+  },
+  async upload(dataUrl) {
+    const blob = dataUrlToBlob(dataUrl), ext = /png/.test(blob.type) ? 'png' : /svg/.test(blob.type) ? 'svg' : /webp/.test(blob.type) ? 'webp' : /gif/.test(blob.type) ? 'gif' : 'jpg';
+    const path = `${this.user.id}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    const {error} = await this.client.storage.from('covers').upload(path, blob, {contentType: blob.type, upsert: false}); sbFail(error);
+    const src = 'sb:' + path; Store.urls[src] = dataUrl; await DB.put('imgcache', dataUrl, src);
+    return src;
+  },
+  /* 推送待同步队列：新图片先上传，换成云端地址后写回本机，再写进云端表 */
+  async flush() {
+    const ids = await DB.keys('outbox');
+    for (const id of ids) {
+      const op = await DB.get('outbox', id); if (!op) continue;
+      if (!DOC_RE.test(id)) { await DB.del('outbox', id); continue; }
+      if (op.op === 'del') {
+        const {error} = await this.client.from('shelf_docs').delete().eq('doc_id', id); sbFail(error);
+      } else {
+        let v = await this.localOf(id);
+        if (v === undefined) { await DB.del('outbox', id); continue; }
+        let changed = false;
+        if (id.startsWith('book_') && Array.isArray(v.images)) for (let i = 0; i < v.images.length; i++) if (/^data:/.test(v.images[i])) { v.images[i] = await this.upload(v.images[i]); changed = true; }
+        if (id.startsWith('ip_') && /^data:/.test(v.spineImg || '')) { v.spineImg = await this.upload(v.spineImg); changed = true; }
+        if (id === 'meta_brand' && v && /^data:/.test(v.logo || '')) { v.logo = await this.upload(v.logo); changed = true; }
+        if (changed) {
+          if (id.startsWith('ip_')) await DB.put('ips', v); else if (id.startsWith('book_')) await DB.put('books', v); else await DB.put('meta', v, id.slice(5));
+        }
+        const body = id.startsWith('meta_') ? {v: v === undefined ? null : v, _u: Date.now()} : v;
+        const {error} = await this.client.from('shelf_docs').upsert({user_id: this.user.id, doc_id: id, body: JSON.parse(JSON.stringify(body)), updated_at: new Date().toISOString()}, {onConflict: 'user_id,doc_id'});
+        try { sbFail(error); } catch (e) { if (e.code === '23514') { await DB.del('outbox', id); continue; } throw e; }
       }
-    },
-    subscribe(cb) {
-      let t = null; const refetch = () => { clearTimeout(t); t = setTimeout(async () => { try { cb(await ad.load()); setSync(Store.pending ? 'busy' : 'ok'); } catch { setSync('error'); } }, 500); };
-      try { client.channel('shelf-' + uid).on('postgres_changes', {event: '*', schema: 'public', table: T, filter: 'user_id=eq.' + uid}, refetch).subscribe(); } catch {}
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) refetch(); });
-      window.addEventListener('focus', refetch);
-      window.addEventListener('online', refetch);
-    },
-    async signOut() { await client.auth.signOut(); },
-  };
-  return ad;
+      const cur = await DB.get('outbox', id);
+      if (cur && cur.t === op.t) await DB.del('outbox', id);   // 推送期间又改过的，留到下一轮
+    }
+  },
+  /* 拉取云端：以云端为准覆盖本机（还在队列里没推上去的不动） */
+  async pull() {
+    const rows = await this.rows(), pending = new Set(await DB.keys('outbox'));
+    const ips = [], books = [], meta = {}, srcs = [];
+    rows.forEach(({doc_id: id, body: v}) => {
+      if (!v) return;
+      if (id.startsWith('ip_')) { ips.push(v); if (v.spineImg) srcs.push(v.spineImg); }
+      else if (id.startsWith('book_')) { books.push(v); (v.images || []).forEach(x => srcs.push(x)); }
+      else if (id.startsWith('meta_')) { meta[id.slice(5)] = v.v; if (id === 'meta_brand' && v.v && v.v.logo) srcs.push(v.v.logo); }
+    });
+    const replace = async (store, prefix, list) => {
+      const keep = new Set(list.map(x => x.id));
+      for (const k of await DB.keys(store)) if (!keep.has(k) && !pending.has(prefix + k)) await DB.del(store, k);
+      const put = list.filter(x => !pending.has(prefix + x.id));
+      if (put.length) await DB.putMany(store, put);
+    };
+    await replace('ips', 'ip_', ips); await replace('books', 'book_', books);
+    const oldPw = await DB.get('meta', 'pw');
+    for (const k of SYNC_META) {
+      if (pending.has('meta_' + k)) continue;
+      if (k in meta) { if (meta[k] === null || meta[k] === undefined) await DB.del('meta', k); else await DB.put('meta', meta[k], k); }
+    }
+    const newPw = await DB.get('meta', 'pw');
+    if (oldPw && newPw && oldPw.hash !== newPw.hash) toast('已改用云端账号里的解锁密码');
+    await this.images(srcs);
+    if (Store.onRemote) await Store.onRemote();
+  },
+  /* 图片：有本机缓存就用缓存；没有就向云端要临时地址，并在后台存一份到本机 */
+  async images(srcs) {
+    const need = [...new Set(srcs.filter(s => s && s.startsWith('sb:') && !Store.urls[s]))];
+    for (let i = 0; i < need.length; i += 100) {
+      const {data, error} = await this.client.storage.from('covers').createSignedUrls(need.slice(i, i + 100).map(s => s.slice(3)), 7 * 24 * 3600);
+      if (error || !data) continue;
+      data.forEach(d => { if (d.signedUrl && d.path) Store.urls['sb:' + d.path] = d.signedUrl; });
+    }
+    need.forEach(async src => {
+      const url = Store.urls[src]; if (!url || /^data:/.test(url)) return;
+      try { const r = await fetch(url); if (!r.ok) return; const b = await r.blob();
+        const du = await new Promise(res => { const f = new FileReader(); f.onload = () => res(f.result); f.readAsDataURL(b); });
+        await DB.put('imgcache', du, src); } catch {}
+    });
+  },
+  async signOut() { this.unsub(); try { await this.client.auth.signOut(); } catch {} this.user = null; await DB.del('meta', 'syncUser'); this.set('login'); },
+  async disconnect() {
+    this.unsub(); try { if (this.client) await this.client.auth.signOut(); } catch {}
+    this.client = null; this.user = null; this.cfg = null;
+    await DB.del('meta', 'sync'); await DB.del('meta', 'syncUser'); await DB.clear('outbox');
+    this.set('off');
+  },
+};
+/* 记录待同步的修改（只在配置了云端同步时记录） */
+function queueSync(id, op) {
+  if (!Sync.configured() || !DOC_RE.test(id)) return;
+  if (id.startsWith('meta_') && !SYNC_META.includes(id.slice(5))) return;
+  DB.put('outbox', {op, t: Date.now() + Math.random()}, id).then(() => Sync.soon()).catch(() => {});
 }
 
 const Store = {
   kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {},
   get cloud() { return this.remote; },
   async init() {
-    const cfg = normConfig(window.SHELF_CONFIG);
-    if (cfg && /^https?:/.test(location.protocol)) this.remote = await sbAdapter(cfg);
-    else { try { this.remote = await claudeAdapter(); } catch { this.remote = null; } }
+    try { this.remote = await claudeAdapter(); } catch { this.remote = null; }
     if (this.remote) {
       this.kind = this.remote.kind;
       await this.absorb(await this.remote.load());
       this.remote.subscribe(docs => this.absorb(docs, true));
     }
     try { if (!DB.db) await DB.open(); }
-    catch (e) { if (!this.remote) throw e; }   // 账号/云端模式下本地存储只用于草稿
-    setSync(this.remote ? 'ok' : 'local');
+    catch (e) { if (!this.remote) throw e; }   // 云端版里本地存储只用于草稿
+    if (this.remote) { setSync('ok'); return; }
+    try { const keys = await DB.keys('imgcache'); for (const k of keys) this.urls[k] = await DB.get('imgcache', k); } catch {}   // 离线也能显示云端图片
+    Sync.boot();   // 后台连接 Supabase，不阻塞打开
   },
   async absorb(docs, remote) {
     const ips = new Map(), books = new Map(), meta = {}, srcs = [];
@@ -1029,7 +1205,10 @@ const Store = {
   },
   async cleanup(srcs) { if (srcs.length && this.remote.remove) { try { await this.remote.remove(srcs); } catch {} } },
   async put(s, v, k) {
-    if (!this.remote) return DB.put(s, v, k);
+    if (!this.remote) {
+      if (s !== 'meta' && v && typeof v === 'object') v._u = Date.now();
+      await DB.put(s, v, k); queueSync(this.docId(s, s === 'meta' ? k : v.id), 'put'); return;
+    }
     const key = s === 'meta' ? k : v.id, before = this.imagesOf(s, key);
     return this.write(async () => {
       await this.prepare(s, v, k);
@@ -1041,7 +1220,7 @@ const Store = {
     });
   },
   async del(s, k) {
-    if (!this.remote) return DB.del(s, k);
+    if (!this.remote) { await DB.del(s, k); queueSync(this.docId(s, k), 'del'); return; }
     const before = this.imagesOf(s, k);
     return this.write(async () => {
       await this.remote.del(this.docId(s, k));
@@ -1050,11 +1229,14 @@ const Store = {
     });
   },
   async putMany(s, arr, progress) {
-    if (!this.remote) return DB.putMany(s, arr);
+    if (!this.remote) { const t = Date.now(); arr.forEach(v => { v._u = v._u || t; }); await DB.putMany(s, arr); arr.forEach(v => queueSync(this.docId(s, v.id), 'put')); return; }
     let i = 0; for (const v of arr) { await this.put(s, v); if (progress) progress(++i, arr.length); }
   },
   async clear(s) {
-    if (!this.remote) return DB.clear(s);
+    if (!this.remote) {
+      const keys = await DB.keys(s); await DB.clear(s);
+      keys.forEach(k => queueSync(this.docId(s, k), 'del')); return;
+    }
     const keys = s === 'meta' ? Object.keys(this.cache.meta) : [...this.cache[s].keys()];
     for (const k of keys) await this.del(s, k);
   },
@@ -1116,7 +1298,7 @@ function showRecovery(client) {
   });
 }
 
-function setSync(state) {
+function setSync(state) {   // Claude 云端版用；Supabase 同步的状态由 Sync.set 显示
   const el = document.getElementById('sync'); if (!el) return;
   el.hidden = state === 'local';
   el.dataset.state = state;
@@ -1162,15 +1344,10 @@ async function initLock() {
     try { await Store.init(); storeReady = true; }
     catch (e) { $('#lock-sub').textContent = (e && e.userMsg) || (Store.kind === 'local' && !window.SHELF_CONFIG ? '这个浏览器在当前打开方式下不允许保存数据。请换用 Chrome、Edge 或 Safari 打开，或者不要使用无痕模式。' : '读取数据失败：' + ((e && e.message) || e) + '。请检查网络后刷新页面，或打开 check.html 自检。'); return; }
   }
-  if (Store.kind === 'local') {   // 告诉用户为什么是离线版
-    const cfg = window.SHELF_CONFIG, a = $('#lock-acct');
-    const why = location.protocol === 'file:' ? '当前是离线版：这是直接打开的本地文件。要用账号版，请打开 GitHub Pages 的 github.io 网址'
-      : !cfg ? '当前是离线版：网页没有读到 config.js，请确认它和 index.html 放在同一个位置'
-      : !normConfig(cfg) ? '当前是离线版：config.js 里的 Project URL 或 key 是空的，或者网址不是 https:// 开头'
-      : '';
-    a.hidden = false; a.textContent = (why ? why + ' · ' : '') + '版本 ' + APP_VERSION;
+  if (Store.kind === 'local') {   // 锁屏页只显示版本号
+    const a = $('#lock-acct');
+    a.hidden = false; a.textContent = '版本 ' + APP_VERSION;
   }
-  if (Store.kind === 'sb') { const a = $('#lock-acct'); a.hidden = false; a.innerHTML = `账号版 · ${esc(Store.remote.email || '')} · <button class="lock-link" type="button" data-act="sign-out">切换账号</button> · 版本 ${APP_VERSION}`; }
   try { const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); } } catch {}
   const pw = await Store.get('meta', 'pw');
   const form = $('#lock-form'); form.hidden = false;
@@ -1205,6 +1382,11 @@ async function initLock() {
 }
 let storeReady = false;
 async function wipeAll() {
+  if (!Store.remote) {   // 只清空这台设备；云端数据保留（同步会先断开）
+    if (Sync.configured()) await Sync.disconnect();
+    await DB.clear('ips'); await DB.clear('books'); await DB.clear('meta'); await DB.clear('outbox'); await DB.clear('imgcache');
+    Drafts.mem = {}; return;
+  }
   await Store.clear('ips'); await Store.clear('books'); await Store.clear('meta');
   try { if (DB.db) await DB.clear('meta'); } catch {}
   Drafts.mem = {};
@@ -1279,9 +1461,20 @@ function renderCurrent() {
 
 /* ================= 首页 ================= */
 /* 封面卡片下方的“评分 + 年龄限制”一行（两者同一层级） */
-function markRow(b) {
-  if (!b.rating && !b.age) return '';
-  return `<div class="marks">${b.rating ? `<span class="mark-rate" title="${b.rating} 星">${b.rating}<i>★</i></span>` : ''}${b.age ? `<span class="mark-age" style="--c:${TAG_COLORS.age[b.age] || TAG_COLORS.other}">${esc(b.age.replace('（18X）', ''))}</span>` : ''}</div>`;
+/* 卡片文字：① 书名 ② 作者 / 社团 ③ IP 与 CP ④ 评分与年龄限制 */
+function miniStars(r) {
+  r = halfRound(r);
+  return `<span class="ms" title="${r} 星"><span class="ms-row"><span class="ms-bg">★★★★★</span><span class="ms-fg" style="width:${r / 5 * 100}%">★★★★★</span></span><b>${r}</b></span>`;
+}
+function cardText(b) {
+  const ip = ipById(b.ipId), by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
+  const cps = splitCp(b.cp);
+  return `<div class="ct">
+    <div class="ct-title">${esc(b.title || '无题')}</div>
+    <div class="ct-by">${by || '<span class="muted">作者未填写</span>'}</div>
+    ${ip || cps.length ? `<div class="ct-tags">${ip ? `<span class="ct-ip" style="--c:${ipColor(ip)}"><i></i>${esc(ip.name)}</span>` : ''}${cps.map(x => `<span class="ct-cp">${esc(x)}</span>`).join('')}</div>` : ''}
+    ${b.rating || b.age ? `<div class="ct-marks">${b.rating ? miniStars(b.rating) : ''}${b.age ? `<span class="mark-age" style="--c:${TAG_COLORS.age[b.age] || TAG_COLORS.other}">${esc(b.age.replace('（18X）', ''))}</span>` : ''}</div>` : ''}
+  </div>`;
 }
 function coverHtml(b, c, big) {
   return b.images && b.images.length
@@ -1305,10 +1498,7 @@ function renderHome() {
         const ip = ipById(b.ipId);
         const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
         return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
-          <div class="wf-title">${esc(b.title || '无题')}</div>
-          ${by ? `<div class="wf-by">${by}</div>` : ''}
-          ${markRow(b)}
-          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div></button>`;
+          ${cardText(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
     body = `<div class="shelf">${ips.map(ip => {
@@ -1459,15 +1649,10 @@ function renderIp(id) {
       <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
     ${books.length > 1 ? '<p class="drag-hint">长按封面（电脑上按住拖动）可以调整顺序，瀑布流会按同样的顺序显示</p>' : ''}
     <div class="covers" id="covers" data-ip="${esc(id)}">
-      ${books.map(b => { const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
+      ${books.map(b => {
         return `<button class="cover-card" data-go="book-${esc(b.id)}" data-id="${esc(b.id)}">
         <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
-        <div class="cover-text">
-          <div class="cover-title">${esc(b.title || '无题')}</div>
-          <div class="cover-by">${by || '<span class="muted">作者未填写</span>'}</div>
-          ${markRow(b)}
-          ${b.cp ? `<div class="cover-meta"><span class="cover-cp">${esc(b.cp)}</span></div>` : ''}
-        </div></button>`; }).join('')}
+        ${cardText(b)}</button>`; }).join('')}
       <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
   setupCoverDrag();
@@ -1702,7 +1887,6 @@ function renderStats() {
         <div><dt>本子</dt><dd class="num">${copies}<small>本</small></dd><em>${books.length} 种${transit ? ` · ${transit} 本在途` : ''}</em></div>
         <div><dt>IP</dt><dd class="num">${byIp.length}<small>个</small></dd><em>${byIp[0] ? '最多 ' + esc(byIp[0].name) : '—'}</em></div>
         <div><dt>CP</dt><dd class="num">${cps.length}<small>个</small></dd><em>${cps[0] ? '最多 ' + esc(cps[0].name) : '—'}</em></div>
-        <div><dt>平均评分</dt><dd class="num">${rated.length ? avgRate.toFixed(1) : '—'}${rated.length ? '<small>星</small>' : ''}</dd><em>${rated.length ? `${rated.length} 本已打分` : '还没有打分'}</em></div>
       </dl>
     </section>
 
@@ -1728,7 +1912,7 @@ function renderStats() {
         <div class="sb">${blockHead('钱花在哪儿', 6, money(total))}
           ${labs.length ? stackBar(labs, total, r => money(r.v), 5) : '<p class="sb-empty">还没有支付明细</p>'}</div>
         <div class="sb">${blockHead('花费最多的本子', 8, '按实际支付')}
-          <ol class="sb-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="sb-rank">${i + 1}</span><span class="sb-top-name">${esc(b.title || '无题')}<em>${esc((ipById(b.ipId) || {}).name || '')}</em></span><b class="num">${money(bookTotal(b))}</b></a></li>`).join('')}</ol></div>
+          <ol class="sb-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="sb-rank">${i + 1}</span><span class="sb-top-name"><span class="sb-t1">${esc(b.title || '无题')}</span><span class="sb-t2">${esc((ipById(b.ipId) || {}).name || '')}${splitCp(b.cp).map(x => `<span class="sb-t3">${esc(x)}</span>`).join('')}</span></span><b class="num">${money(bookTotal(b))}</b></a></li>`).join('')}</ol></div>
       </div>
     </section>
 
@@ -1750,7 +1934,7 @@ function renderStats() {
 /* ================= 设置 ================= */
 function renderSettings() {
   $('#view').innerHTML = `
-    <div class="page-head"><div><h1>设置</h1><p>${{sb: '账号版：数据保存在你自己的 Supabase 项目里，登录同一账号的设备自动同步', claude: '云端版：数据保存在你 Claude 账号下的私有空间，多台设备自动同步'}[Store.kind] || '离线版：数据只保存在这个浏览器里，不会上传到任何地方'}</p></div></div>
+    <div class="page-head"><div><h1>设置</h1><p>${Store.kind === 'claude' ? '云端版：数据保存在你 Claude 账号下的私有空间，多台设备自动同步' : Sync.user ? '内容自动保存在这台设备，并同步到你的 Supabase 账号' : '内容自动保存在这台设备；连上云端同步后可在多台设备之间同步'}</p></div></div>
     <div class="settings">
       ${syncCard()}
       <div class="set-card"><h2>名称与 LOGO</h2>
@@ -1863,19 +2047,114 @@ function renderSettings() {
 /* 云端同步说明卡片 */
 const CLOUD_URL = 'https://claude.ai/artifact/U3p7hkhHagKz5azQdWQMP8';
 function syncCard() {
-  const link = CLOUD_URL ? `<div class="link-box"><code id="cloud-url">${esc(CLOUD_URL)}</code><button class="btn small" type="button" data-act="copy-url">复制链接</button></div>` : '';
-  if (Store.kind === 'sb') return `<div class="set-card"><h2>账号同步 · 已开启</h2>
-    <p>当前登录：<b>${esc(Store.remote.email || '')}</b>。在任何设备打开这个网址、登录同一个账号，看到的都是同一个书架，改动会自动同步。</p>
-    <div class="link-box"><code id="cloud-url">${esc(location.origin + location.pathname)}</code><button class="btn small" type="button" data-act="copy-url">复制网址</button></div>
-    <div class="row"><button class="btn" type="button" data-act="sign-out">退出登录</button></div></div>`;
-  if (Store.kind === 'claude') return `<div class="set-card"><h2>云端同步 · 已开启</h2>
-    <p>你正在使用云端版。数据和图片保存在你 Claude 账号下的私有空间，只有你自己能看到。手机、平板、电脑登录同一个 Claude 账号，打开这个链接，看到的都是同一个书架，改动会自动同步。</p>
-    ${link}
-    <ol class="steps"><li>把链接发到手机，用浏览器或 Claude App 打开</li><li>登录同一个 Claude 账号</li><li>输入同一个解锁密码</li></ol></div>`;
-  return `<div class="set-card"><h2>云端同步</h2>
-    <p>当前是离线文件版，数据只在这台设备上。想让手机和电脑看到同一个书架，请改用云端版链接（需要联网并登录 Claude 账号）。</p>
-    ${link}
-    <ol class="steps"><li>在这里点“导出备份”</li><li>打开云端版链接，设置解锁密码</li><li>在云端版的设置里点“导入备份”，选刚才的文件</li><li>以后在电脑和手机上都打开云端版链接即可</li></ol></div>`;
+  if (Store.kind === 'claude') {
+    const link = CLOUD_URL ? `<div class="link-box"><code id="cloud-url">${esc(CLOUD_URL)}</code><button class="btn small" type="button" data-act="copy-url">复制链接</button></div>` : '';
+    return `<div class="set-card"><h2>云端同步 · 已开启</h2>
+    <p>你正在使用 Claude 云端版。数据和图片保存在你 Claude 账号下的私有空间，手机、电脑登录同一个 Claude 账号打开这个链接即可同步。</p>${link}</div>`;
+  }
+  return `<div class="set-card sync-row">
+    <div><h2>云端同步</h2><p>内容会先自动保存在这台设备；连上 Supabase 后，在多台设备之间同步。</p></div>
+    <button type="button" class="sync-pill" data-sync-pill data-state="${{ok: 'ok', busy: 'busy'}[Sync.state] || 'off'}" data-act="sync-panel"><i></i><span>${esc(Sync.label())}</span></button>
+  </div>`;
+}
+/* 同步设置面板 */
+function openSyncPanel() {
+  const cfg = Sync.cfg || normConfig(window.SHELF_CONFIG) || {};
+  openModal(`
+    <div class="sheet-head"><h2>云端同步</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
+    <div class="sync-status" id="sync-status">${Sync.statusHtml()}</div>
+    <div class="form" style="margin-top:14px">
+      <div class="fgroup"><h3>1 · 连接 Supabase</h3>
+        <label class="field"><span>Project URL</span><input class="input" id="sy-url" value="${esc(cfg.supabaseUrl || '')}" placeholder="https://xxxx.supabase.co" autocomplete="off" spellcheck="false"></label>
+        <label class="field"><span>Publishable key（或 anon key）</span><input class="input" id="sy-key" value="${esc(cfg.supabaseKey || '')}" placeholder="sb_publishable_…" autocomplete="off" spellcheck="false"></label>
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn primary" id="sy-test">保存并测试连接</button>
+          <button type="button" class="btn" id="sy-sql">复制建表 SQL</button>
+        </div>
+        <ul class="sync-checks" id="sy-checks"></ul>
+        <p class="hint" style="margin:0">建表 SQL 只需在 Supabase 后台的 SQL Editor 里运行一次。Project URL 和 key 在 Supabase 的 Project Settings → API Keys 里。</p>
+      </div>
+      <div class="fgroup" id="sy-acct"></div>
+    </div>`, root => {
+    $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    const checks = $('#sy-checks', root);
+    const drawAcct = () => {
+      const box = $('#sy-acct', root);
+      if (!Sync.configured()) { box.innerHTML = '<h3>2 · 登录账号</h3><p class="hint" style="margin:0">先保存并测试连接。</p>'; return; }
+      if (Sync.user) {
+        box.innerHTML = `<h3>2 · 账号</h3><p class="hint" style="margin:0">已登录 <b>${esc(Sync.user.email || '')}</b>。修改会先存在本机，有网时自动上传；其他设备登录同一账号即可看到。</p>
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sy-now">立即同步</button><button type="button" class="btn" id="sy-out">退出登录</button><button type="button" class="btn text danger" id="sy-off">断开云端同步</button></div>`;
+        $('#sy-now', root).onclick = async () => { await Sync.now(); toast(Sync.state === 'ok' ? '同步完成' : (Sync.msg || '没有同步成功')); drawAcct(); };
+        $('#sy-out', root).onclick = async () => { await Sync.signOut(); drawAcct(); toast('已退出登录，内容仍保存在这台设备'); };
+      } else {
+        box.innerHTML = `<h3>2 · 登录账号</h3>
+          <div class="seg" style="justify-self:start"><button type="button" data-m="login" class="on">登录</button><button type="button" data-m="signup">注册</button></div>
+          <input class="input" type="email" id="sy-email" placeholder="邮箱" autocomplete="email" inputmode="email">
+          <input class="input" type="password" id="sy-pw" placeholder="账号密码（至少 6 位）" autocomplete="current-password">
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn primary" id="sy-go">登录</button><button type="button" class="btn text" id="sy-forgot">忘记账号密码？</button><button type="button" class="btn text danger" id="sy-off">断开云端同步</button></div>
+          <p class="hint" id="sy-msg" style="margin:0"></p>`;
+        let mode = 'login';
+        $$('[data-m]', box).forEach(b => b.onclick = () => { mode = b.dataset.m; $$('[data-m]', box).forEach(x => x.classList.toggle('on', x === b)); $('#sy-go', root).textContent = mode === 'login' ? '登录' : '注册'; });
+        const say = t => { $('#sy-msg', root).textContent = t; };
+        const back = /^https?:/.test(location.protocol) ? location.origin + location.pathname : undefined;
+        $('#sy-go', root).onclick = async () => {
+          const email = $('#sy-email', root).value.trim(), password = $('#sy-pw', root).value;
+          if (!/^\S+@\S+\.\S+$/.test(email)) return say('请填写正确的邮箱');
+          if (password.length < 6) return say('账号密码至少 6 位');
+          try {
+            await Sync.connect(); if (!Sync.client) return say(Sync.msg || '连不上 Supabase');
+            const r = mode === 'signup' ? await Sync.client.auth.signUp({email, password, options: back ? {emailRedirectTo: back} : {}}) : await Sync.client.auth.signInWithPassword({email, password});
+            if (r.error) return say(authErr(r.error));
+            if (!r.data.session) return say('注册成功！请去邮箱点确认链接，然后回来登录。');
+            Sync.user = r.data.session.user; Sync.sub(); await Sync.now(); drawAcct();
+            toast(Sync.state === 'ok' ? '已登录并完成同步' : (Sync.msg || '已登录'));
+          } catch (e) { say(authErr(e)); }
+        };
+        $('#sy-forgot', root).onclick = async () => {
+          const email = $('#sy-email', root).value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return say('先在上面填写注册时用的邮箱');
+          try { await Sync.connect(); const {error} = await Sync.client.auth.resetPasswordForEmail(email, back ? {redirectTo: back} : {}); say(error ? authErr(error) : '重置邮件已发送，请查收'); } catch (e) { say(authErr(e)); }
+        };
+      }
+      const off = $('#sy-off', root);
+      if (off) off.onclick = async () => {
+        if (!(await confirmBox('断开后这台设备不再同步，本机内容会保留，云端数据也不会删除。确定断开吗？', '断开'))) return openSyncPanel();
+        await Sync.disconnect(); toast('已断开云端同步'); openSyncPanel();
+      };
+    };
+    $('#sy-test', root).onclick = async () => {
+      const c = normConfig({supabaseUrl: $('#sy-url', root).value, supabaseKey: $('#sy-key', root).value});
+      const line = (ok, t) => `<li class="${ok ? 'ok' : 'bad'}"><i>${ok ? '✓' : '!'}</i>${esc(t)}</li>`;
+      if (!c) { checks.innerHTML = line(false, '网址要以 https:// 开头，key 不能为空'); return; }
+      if (/^sb_secret_/.test(c.supabaseKey)) { checks.innerHTML = line(false, '这是 secret 密钥，不能放在网页里，请换成 publishable key'); return; }
+      checks.innerHTML = '<li>正在测试…</li>';
+      const out = [];
+      try {
+        const r = await fetch(c.supabaseUrl + '/auth/v1/settings', {headers: {apikey: c.supabaseKey}, cache: 'no-store'});
+        out.push(line(r.ok, r.ok ? '能连上 Supabase，key 正确' : `连接被拒绝（${r.status}），请检查 key 是否属于这个项目`));
+        if (r.ok) {
+          const t = await fetch(c.supabaseUrl + '/rest/v1/shelf_docs?select=doc_id&limit=1', {headers: {apikey: c.supabaseKey}, cache: 'no-store'});
+          const body = await t.text();
+          const okT = t.ok, missing = t.status === 404 || /PGRST205|does not exist|Could not find/i.test(body);
+          out.push(line(okT, okT ? '数据表已建好' : missing ? '还没建表：点“复制建表 SQL”，到 Supabase 的 SQL Editor 运行' : `数据表检查失败（${t.status}）`));
+        }
+      } catch { out.push(line(false, '连不上：请检查网址是否正确、网络是否正常')); }
+      checks.innerHTML = out.join('');
+      await DB.put('meta', c, 'sync');
+      const changed = !Sync.cfg || Sync.cfg.supabaseUrl !== c.supabaseUrl || Sync.cfg.supabaseKey !== c.supabaseKey;
+      if (changed) { Sync.unsub(); Sync.client = null; Sync.user = null; }
+      const first = !Sync.cfg; Sync.cfg = c;
+      if (first) Sync.boot(); else await Sync.connect();
+      drawAcct(); toast('连接设置已保存');
+    };
+    $('#sy-sql', root).onclick = async () => {
+      try { await navigator.clipboard.writeText(SETUP_SQL); toast('建表 SQL 已复制，去 Supabase 的 SQL Editor 粘贴运行'); }
+      catch {
+        checks.innerHTML = `<li>复制被浏览器拦住了，请长按下面的内容全选复制：</li><textarea class="input" style="min-height:140px;font-size:12px" readonly>${esc(SETUP_SQL)}</textarea>`;
+        const ta = $('textarea', checks); ta.focus(); ta.select();
+      }
+    };
+    drawAcct();
+  });
 }
 async function blobToDataUrl(path) {
   const r = await fetch(path); if (!r.ok) throw new Error(r.status);
@@ -1918,7 +2197,7 @@ async function fetchLiveRates() {
 }
 async function exportBackup() {
   let books = S.books, brand = BRAND, ips = S.ips;
-  if (Store.cloud) {
+  if (Store.cloud || S.books.some(b => (b.images || []).some(x => !/^data:/.test(x))) || S.ips.some(i => i.spineImg && !/^data:/.test(i.spineImg))) {
     toast('正在打包图片…');
     books = clone(S.books); brand = clone(BRAND); ips = clone(S.ips);
     for (const ip of ips) { try { if (ip.spineImg && !/^data:/.test(ip.spineImg)) ip.spineImg = await blobToDataUrl(imgSrc(ip.spineImg)); } catch {} }
@@ -2552,10 +2831,9 @@ document.addEventListener('click', async e => {
       try { await Store.put('meta', THEME, 'theme'); toast(`已换成“${themeOf(THEME).name}”配色，去统计页看看`); } catch (e) { toast(errMsg(e)); }
       break;
     }
+    case 'sync-panel': openSyncPanel(); break;
     case 'sign-out': {
-      if (Store.kind !== 'sb') break;
-      if (!(await confirmBox('退出当前账号？书架数据仍保存在云端，重新登录即可看到。', '退出登录'))) break;
-      await Store.remote.signOut(); location.hash = ''; location.reload(); break;
+      await Sync.signOut(); toast('已退出登录，内容仍保存在这台设备'); break;
     }
     case 'copy-url': {
       try { await navigator.clipboard.writeText(($('#cloud-url') || {}).textContent || CLOUD_URL); toast('链接已复制'); }
