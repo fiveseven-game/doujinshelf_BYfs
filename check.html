@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>同人本棚自检</title>
+<style>
+:root{--bg:#fff;--ink:#16181d;--muted:#8b909a;--line:#ececef;--soft:#f4f5f7;--ok:#2f9e6e;--bad:#d64545;--warn:#e58a1f;--btn:#16181d;--btn-ink:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1013;--ink:#ececf0;--muted:#8d929c;--line:#22242a;--soft:#18191d;--ok:#4cc48f;--bad:#ff6b6b;--warn:#f0a04a;--btn:#ececf0;--btn-ink:#0f1013;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:680px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li{background:var(--soft);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:22px 1fr;gap:4px 10px}
+li i{grid-row:span 2;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:700;background:var(--muted)}
+li.ok i{background:var(--ok)}li.bad i{background:var(--bad)}li.warn i{background:var(--warn)}
+li b{font-weight:600}
+li span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+li.bad span{color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+button,a.btn{border:0;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:500;background:var(--soft);color:var(--ink);cursor:pointer;text-decoration:none}
+button.primary,a.primary{background:var(--btn);color:var(--btn-ink)}
+code{font-size:12px;background:var(--bg);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<main>
+  <h1>同人本棚自检</h1>
+  <p class="sub">逐项检查账号版为什么没有生效。这个页面只读取信息，不会改动任何数据。</p>
+  <ol id="list"></ol>
+  <div class="row">
+    <button class="primary" id="clear">清除缓存并打开书架</button>
+    <button id="again">重新检查</button>
+  </div>
+  <p class="sub" style="margin-top:14px">“清除缓存”只清掉浏览器存的旧网页文件，书架数据不受影响。</p>
+</main>
+<script>
+'use strict';
+const list = document.getElementById('list');
+function add(state, title, detail) {
+  const li = document.createElement('li'); li.className = state;
+  li.innerHTML = `<i>${state === 'ok' ? '✓' : state === 'bad' ? '!' : state === 'warn' ? '?' : '·'}</i><b></b><span></span>`;
+  li.querySelector('b').textContent = title; li.querySelector('span').textContent = detail || '';
+  list.appendChild(li); return li;
+}
+const get = (u, opt) => fetch(u, Object.assign({cache: 'no-store'}, opt || {}));
+function norm(c) {
+  if (!c) return null;
+  const url = String(c.supabaseUrl || '').trim().replace(/\/+$/, '').replace(/\/(rest|auth)\/v1.*$/i, '');
+  const key = String(c.supabaseKey || '').trim();
+  return {url, key};
+}
+async function run() {
+  list.innerHTML = '';
+  // 1 打开方式
+  const p = location.protocol, h = location.hostname;
+  if (p === 'file:') { add('bad', '打开方式：本地文件', '你是在电脑上直接打开的文件。账号版必须用 GitHub Pages 的网址打开（形如 https://用户名.github.io/仓库名/check.html）。'); return; }
+  if (h === 'github.com' || h.endsWith('githubusercontent.com')) { add('bad', '打开方式：GitHub 仓库页面', '这是存文件的仓库，不是网站。请到仓库 Settings → Pages，点 Visit site 打开 github.io 网址。'); return; }
+  add('ok', '打开方式：网址', location.origin + location.pathname.replace(/check\.html$/, ''));
+
+  // 2 index.html
+  let ver = '';
+  try {
+    const r = await get('index.html');
+    if (!r.ok) add('bad', 'index.html：找不到（' + r.status + '）', '仓库最外层必须有一个名字正好叫 index.html 的文件。注意下载时浏览器可能把它改名成 index (1).html，上传前要改回来。');
+    else {
+      const t = await r.text(); const m = t.match(/APP_VERSION = '([^']+)'/);
+      ver = m ? m[1] : '';
+      if (!ver) add('bad', 'index.html：是旧版本', '服务器上的 index.html 不是账号版。请把最新的 index.html 重新上传，覆盖旧文件。');
+      else add('ok', 'index.html：版本 ' + ver, t.includes('src="config.js"') ? '账号版网页' : '');
+    }
+  } catch (e) { add('bad', 'index.html：读取失败', String(e)); }
+
+  // 3 config.js
+  let cfg = null;
+  try {
+    const r = await get('config.js');
+    if (!r.ok) { add('bad', 'config.js：找不到（' + r.status + '）', 'config.js 要和 index.html 放在同一层，名字必须一模一样（全小写）。'); }
+    else {
+      const t = await r.text(); const sandbox = {};
+      try { new Function('window', t)(sandbox); } catch (e) { add('bad', 'config.js：格式写错了', '常见原因：少了引号、逗号，或用了中文引号“”。错误：' + e.message); }
+      cfg = norm(sandbox.SHELF_CONFIG);
+      if (sandbox.SHELF_CONFIG) {
+        if (!cfg.url || !cfg.key) add('bad', 'config.js：还没填', 'supabaseUrl 和 supabaseKey 两项都要填在英文单引号里面。'
+          + (r.headers.get('age') ? '（如果你刚改过，GitHub 可能还在更新，等 2 分钟再检查）' : ''));
+        else if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(cfg.url)) add('warn', 'config.js：网址格式少见', '你填的是 ' + cfg.url + '，正常应该形如 https://xxxx.supabase.co');
+        else if (/^eyJ/.test(cfg.key) && cfg.key.split('.').length === 3) {
+          let role = ''; try { role = JSON.parse(atob(cfg.key.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role; } catch {}
+          if (role === 'service_role') add('bad', 'config.js：填成了 service_role 密钥', '这个密钥权限过大，不能放在网页里！请到 Supabase 换成 anon / publishable key，并在 Supabase 后台重新生成 service_role 密钥。');
+          else add('ok', 'config.js：已填写', cfg.url + ' · anon key');
+        } else if (/^sb_secret_/.test(cfg.key)) add('bad', 'config.js：填成了 secret 密钥', '请换成 sb_publishable_ 开头的那个，并到 Supabase 后台删除这个已暴露的 secret key。');
+        else if (/^sb_publishable_/.test(cfg.key)) add('ok', 'config.js：已填写', cfg.url + ' · publishable key');
+        else add('warn', 'config.js：key 格式少见', '应以 sb_publishable_ 或 eyJ 开头。');
+      } else add('bad', 'config.js：内容不对', '文件里没有 window.SHELF_CONFIG，请用我给的 config.js 模板重新填写。');
+    }
+  } catch (e) { add('bad', 'config.js：读取失败', String(e)); }
+
+  // 4 supabase.js
+  try {
+    const r = await get('supabase.js');
+    if (!r.ok) add('warn', 'supabase.js：找不到（' + r.status + '）', '网页会改从网上的 CDN 加载，国内可能较慢。建议把 supabase.js 一起上传。');
+    else { const t = (await r.text()).slice(0, 40); add(t.startsWith('var supabase') ? 'ok' : 'bad', 'supabase.js：' + (t.startsWith('var supabase') ? '正常' : '内容不对'), t.startsWith('var supabase') ? '' : '请重新上传我给的 supabase.js。'); }
+  } catch (e) { add('warn', 'supabase.js：读取失败', String(e)); }
+
+  // 5 连接 Supabase
+  if (cfg && cfg.url && cfg.key) {
+    try {
+      const r = await get(cfg.url + '/auth/v1/settings', {headers: {apikey: cfg.key}});
+      if (r.ok) {
+        const j = await r.json().catch(() => ({}));
+        add('ok', 'Supabase：连接成功', j.mailer_autoconfirm ? '邮箱确认已关闭：注册后可直接登录' : '邮箱确认已开启：注册后要先去邮箱点确认链接');
+      } else if (r.status === 401 || r.status === 403) add('bad', 'Supabase：密钥不对（' + r.status + '）', 'config.js 里的 key 和这个项目不匹配，请重新复制 Project URL 和 key。');
+      else add('bad', 'Supabase：连接异常（' + r.status + '）', '项目可能已暂停：登录 Supabase 后台看看，有 Restore 按钮就点一下。');
+    } catch (e) { add('bad', 'Supabase：连不上', '可能是网络问题，或 Project URL 填错了。也可能项目已暂停。'); }
+
+    // 6 数据表
+    try {
+      const r = await get(cfg.url + '/rest/v1/shelf_docs?select=doc_id&limit=1', {headers: {apikey: cfg.key}});
+      const t = await r.text();
+      if (r.ok) add('ok', '数据表 shelf_docs：已建好', '权限保护生效中（未登录时看不到任何数据）');
+      else if (r.status === 404 || /PGRST205|does not exist|Could not find/i.test(t)) add('bad', '数据表 shelf_docs：不存在', '请在 Supabase 的 SQL Editor 里运行 setup.sql。');
+      else add('warn', '数据表：无法确认（' + r.status + '）', t.slice(0, 160));
+    } catch (e) { add('warn', '数据表：无法检查', String(e)); }
+  }
+
+  // 7 缓存
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    add(regs.length ? 'warn' : 'ok', '浏览器缓存：' + (regs.length ? '有离线缓存' : '没有旧缓存'),
+      regs.length ? '如果上面全部正常，打开书架却还是旧样子，点下面的“清除缓存并打开书架”。' : '');
+  }
+  const last = list.lastElementChild;
+  const bad = list.querySelectorAll('li.bad').length;
+  add(bad ? 'bad' : 'ok', bad ? `有 ${bad} 项需要处理` : '全部正常', bad ? '按红色项的说明改好后，点“重新检查”。' : '打开书架时锁屏页应显示“登录 / 注册”，下方写着“账号版”。');
+}
+document.getElementById('again').onclick = run;
+document.getElementById('clear').onclick = async () => {
+  try { for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch {}
+  try { for (const k of await caches.keys()) await caches.delete(k); } catch {}
+  location.href = './?v=' + Date.now();
+};
+run();
+</script>
+</body>
+</html>

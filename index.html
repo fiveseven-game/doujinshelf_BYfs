@@ -611,6 +611,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
+const APP_VERSION = '2026.10.29-5';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -619,6 +620,13 @@ function dataUrlToBlob(u) {
 }
 function loadScript(src) {
   return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); });
+}
+/* config.js 容错：去掉多余空格、结尾斜杠和误粘的 /rest/v1 */
+function normConfig(c) {
+  if (!c) return null;
+  const url = String(c.supabaseUrl || '').trim().replace(/\/+$/, '').replace(/\/(rest|auth)\/v1.*$/i, '');
+  const key = String(c.supabaseKey || '').trim();
+  return /^https:\/\/.+/.test(url) && key ? {supabaseUrl: url, supabaseKey: key} : null;
 }
 const imgSrc = x => (x && x.startsWith('sb:')) ? (Store.urls[x] || '') : (x || '');
 
@@ -717,8 +725,8 @@ const Store = {
   kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {},
   get cloud() { return this.remote; },
   async init() {
-    const cfg = window.SHELF_CONFIG;
-    if (cfg && cfg.supabaseUrl && cfg.supabaseKey && /^https?:/.test(location.protocol)) this.remote = await sbAdapter(cfg);
+    const cfg = normConfig(window.SHELF_CONFIG);
+    if (cfg && /^https?:/.test(location.protocol)) this.remote = await sbAdapter(cfg);
     else { try { this.remote = await claudeAdapter(); } catch { this.remote = null; } }
     if (this.remote) {
       this.kind = this.remote.kind;
@@ -884,17 +892,17 @@ const ipColor = ip => (ip && ip.color) || COLORS[hashStr(ip ? ip.id : '') % COLO
 async function initLock() {
   if (!storeReady) {
     try { await Store.init(); storeReady = true; }
-    catch (e) { $('#lock-sub').textContent = (e && e.userMsg) || (Store.kind === 'local' && !window.SHELF_CONFIG ? '这个浏览器在当前打开方式下不允许保存数据。请换用 Chrome、Edge 或 Safari 打开，或者不要使用无痕模式。' : '读取数据失败：' + ((e && e.message) || e) + '。请检查网络后刷新页面。'); return; }
+    catch (e) { $('#lock-sub').textContent = (e && e.userMsg) || (Store.kind === 'local' && !window.SHELF_CONFIG ? '这个浏览器在当前打开方式下不允许保存数据。请换用 Chrome、Edge 或 Safari 打开，或者不要使用无痕模式。' : '读取数据失败：' + ((e && e.message) || e) + '。请检查网络后刷新页面，或打开 check.html 自检。'); return; }
   }
   if (Store.kind === 'local') {   // 告诉用户为什么是离线版
     const cfg = window.SHELF_CONFIG, a = $('#lock-acct');
     const why = location.protocol === 'file:' ? '当前是离线版：这是直接打开的本地文件。要用账号版，请打开 GitHub Pages 的 github.io 网址'
       : !cfg ? '当前是离线版：网页没有读到 config.js，请确认它和 index.html 放在同一个位置'
-      : !(cfg.supabaseUrl && cfg.supabaseKey) ? '当前是离线版：config.js 里还没有填写 Supabase 的 Project URL 和 key'
+      : !normConfig(cfg) ? '当前是离线版：config.js 里的 Project URL 或 key 是空的，或者网址不是 https:// 开头'
       : '';
-    if (why) { a.hidden = false; a.textContent = why; }
+    a.hidden = false; a.textContent = (why ? why + ' · ' : '') + '版本 ' + APP_VERSION;
   }
-  if (Store.kind === 'sb') { const a = $('#lock-acct'); a.hidden = false; a.innerHTML = `账号 ${esc(Store.remote.email || '')} · <button class="lock-link" type="button" data-act="sign-out">切换账号</button>`; }
+  if (Store.kind === 'sb') { const a = $('#lock-acct'); a.hidden = false; a.innerHTML = `账号版 · ${esc(Store.remote.email || '')} · <button class="lock-link" type="button" data-act="sign-out">切换账号</button> · 版本 ${APP_VERSION}`; }
   try { const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); } } catch {}
   const pw = await Store.get('meta', 'pw');
   const form = $('#lock-form'); form.hidden = false;
