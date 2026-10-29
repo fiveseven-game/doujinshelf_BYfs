@@ -358,6 +358,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .img-row{display:flex;gap:8px;flex-wrap:wrap}
 .img-item{position:relative;width:70px;height:94px;border-radius:6px;overflow:hidden;background:var(--soft);cursor:pointer}
 .img-item img{width:100%;height:100%;object-fit:cover}
+.img-wait{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px}
 .img-item .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:22px;padding:0}
 .img-item .badge{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:11px;text-align:center}
 .img-add{width:70px;height:94px;border-radius:6px;border:1.5px dashed var(--line-2);display:grid;place-items:center;align-content:center;gap:2px;color:var(--muted);font-size:12px;cursor:pointer}
@@ -633,6 +634,9 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .live-table th{text-align:left;font-weight:500;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line-2)}
 .live-table td{padding:7px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
 .live-table td:last-child,.live-table th:last-child{text-align:right}
+.rate-q{white-space:nowrap}
+.live-table td:first-child{white-space:nowrap}
+.rate-q a{font-size:12px;margin-right:8px;text-decoration:none}
 .diff{font-size:11px;color:var(--muted)}
 .sync{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#3aa17e}
@@ -912,7 +916,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-15';
+const APP_VERSION = '2026.10.30-16';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -929,7 +933,11 @@ function normConfig(c) {
   const key = String(c.supabaseKey || '').trim();
   return /^https:\/\/.+/.test(url) && key ? {supabaseUrl: url, supabaseKey: key} : null;
 }
-const imgSrc = x => (x && x.startsWith('sb:')) ? (Store.urls[x] || '') : (x || '');
+const imgSrc = x => {
+  if (!(x && x.startsWith('sb:'))) return x || '';
+  const u = Store.urls[x]; if (!u) Sync.want(x);   // 还没有地址就去要，拿到后页面会自动刷新
+  return u || '';
+};
 
 async function claudeAdapter() {
   if (!(window.claude && typeof window.claude.use === 'function')) return null;
@@ -1045,6 +1053,7 @@ const Sync = {
       if ((await DB.get('meta', 'syncUser')) !== this.user.id) { await this.merge(); await DB.put('meta', this.user.id, 'syncUser'); }
       await this.flush(); await this.pull();
       this.lastAt = Date.now(); await DB.put('meta', this.lastAt, 'syncLast');
+      if (!this._repaired) { this._repaired = true; this.repairImages().then(r => { if (r.fixed) toast(`已补传 ${r.fixed} 张之前没传上云端的图片`); }).catch(() => {}); }
       this.set('ok');
     } catch (e) { this.set(navigator.onLine ? 'error' : 'offline', e.userMsg || e.message); }
     finally { this.busy = false; if (this.again) { this.again = false; this.soon(200); } }
@@ -1079,29 +1088,63 @@ const Sync = {
   },
   /* 推送待同步队列：新图片先上传，换成云端地址后写回本机，再写进云端表 */
   async flush() {
-    const ids = await DB.keys('outbox');
+    const ids = await DB.keys('outbox'), failed = [];
     for (const id of ids) {
-      const op = await DB.get('outbox', id); if (!op) continue;
-      if (!DOC_RE.test(id)) { await DB.del('outbox', id); continue; }
-      if (op.op === 'del') {
-        const {error} = await this.client.from('shelf_docs').delete().eq('doc_id', id); sbFail(error);
-      } else {
-        let v = await this.localOf(id);
-        if (v === undefined) { await DB.del('outbox', id); continue; }
-        let changed = false;
-        if (id.startsWith('book_') && Array.isArray(v.images)) for (let i = 0; i < v.images.length; i++) if (/^data:/.test(v.images[i])) { v.images[i] = await this.upload(v.images[i]); changed = true; }
-        if (id.startsWith('ip_') && /^data:/.test(v.spineImg || '')) { v.spineImg = await this.upload(v.spineImg); changed = true; }
-        if (id === 'meta_brand' && v && /^data:/.test(v.logo || '')) { v.logo = await this.upload(v.logo); changed = true; }
-        if (changed) {
-          if (id.startsWith('ip_')) await DB.put('ips', v); else if (id.startsWith('book_')) await DB.put('books', v); else await DB.put('meta', v, id.slice(5));
-        }
-        const body = id.startsWith('meta_') ? {v: v === undefined ? null : v, _u: Date.now()} : v;
-        const {error} = await this.client.from('shelf_docs').upsert({user_id: this.user.id, doc_id: id, body: JSON.parse(JSON.stringify(body)), updated_at: new Date().toISOString()}, {onConflict: 'user_id,doc_id'});
-        try { sbFail(error); } catch (e) { if (e.code === '23514') { await DB.del('outbox', id); continue; } throw e; }
-      }
-      const cur = await DB.get('outbox', id);
-      if (cur && cur.t === op.t) await DB.del('outbox', id);   // 推送期间又改过的，留到下一轮
+      try { await this.pushOne(id); }
+      catch (e) { if (!navigator.onLine || /连不上/.test(e.userMsg || '')) throw e; failed.push(e); }   // 一条出错不影响其他条
     }
+    if (failed.length) throw Object.assign(new Error('partial'), {userMsg: `有 ${failed.length} 条没同步成功：${failed[0].userMsg || failed[0].message}（下次同步会再试）`});
+  },
+  async pushOne(id) {
+    const op = await DB.get('outbox', id); if (!op) return;
+    if (!DOC_RE.test(id)) { await DB.del('outbox', id); return; }
+    if (op.op === 'del') {
+      const {error} = await this.client.from('shelf_docs').delete().eq('doc_id', id); sbFail(error);
+    } else {
+      let v = await this.localOf(id);
+      if (v === undefined) { await DB.del('outbox', id); return; }
+      const writeBack = () => id.startsWith('ip_') ? DB.put('ips', v) : id.startsWith('book_') ? DB.put('books', v) : DB.put('meta', v, id.slice(5));
+      // 新图片（本机的 data: 图）先上传到 covers 图片桶；每传成功一张就写回本机，避免重复上传
+      if (id.startsWith('book_') && Array.isArray(v.images)) for (let i = 0; i < v.images.length; i++) if (/^data:/.test(v.images[i])) { v.images[i] = await this.upload(v.images[i]); await writeBack(); }
+      if (id.startsWith('ip_') && /^data:/.test(v.spineImg || '')) { v.spineImg = await this.upload(v.spineImg); await writeBack(); }
+      if (id === 'meta_brand' && v && /^data:/.test(v.logo || '')) { v.logo = await this.upload(v.logo); await writeBack(); }
+      const body = id.startsWith('meta_') ? {v: v === undefined ? null : v, _u: Date.now()} : v;
+      const {error} = await this.client.from('shelf_docs').upsert({user_id: this.user.id, doc_id: id, body: JSON.parse(JSON.stringify(body)), updated_at: new Date().toISOString()}, {onConflict: 'user_id,doc_id'});
+      try { sbFail(error); } catch (e) { if (e.code === '23514') { await DB.del('outbox', id); return; } throw e; }
+    }
+    const cur = await DB.get('outbox', id);
+    if (cur && cur.t === op.t) await DB.del('outbox', id);   // 推送期间又改过的，留到下一轮
+  },
+  /* 检查云端图片：本机有、云端却没有的图（比如以前上传失败的），用本机缓存补传到原位置 */
+  async repairImages() {
+    if (!this.client || !this.user) return {checked: 0, fixed: 0, lost: 0};
+    const srcs = new Set();
+    (await DB.all('books')).forEach(b => (b.images || []).forEach(x => x && x.startsWith('sb:') && srcs.add(x)));
+    (await DB.all('ips')).forEach(i => i.spineImg && i.spineImg.startsWith('sb:') && srcs.add(i.spineImg));
+    const br = await DB.get('meta', 'brand'); if (br && br.logo && br.logo.startsWith('sb:')) srcs.add(br.logo);
+    const have = new Set();
+    for (let off = 0; ; off += 1000) {
+      const {data, error} = await this.client.storage.from('covers').list(this.user.id, {limit: 1000, offset: off}); sbFail(error);
+      (data || []).forEach(f => have.add('sb:' + this.user.id + '/' + f.name));
+      if (!data || data.length < 1000) break;
+    }
+    let fixed = 0, lost = 0;
+    for (const src of srcs) {
+      if (have.has(src) || !src.startsWith('sb:' + this.user.id + '/')) continue;
+      const du = (await DB.get('imgcache', src)) || (/^data:/.test(Store.urls[src] || '') ? Store.urls[src] : null);
+      if (!du) { lost++; continue; }
+      const blob = dataUrlToBlob(du);
+      const {error} = await this.client.storage.from('covers').upload(src.slice(3), blob, {contentType: blob.type, upsert: true});
+      if (error) lost++; else fixed++;
+    }
+    return {checked: srcs.size, fixed, lost};
+  },
+  /* 某张云端图片还没有地址时，攒一批一起去要（列表、详情、编辑页都会用到） */
+  want(src) {
+    if (!this.client || !this.user || Store.missing.has(src)) return;
+    (this._want = this._want || new Set()).add(src);
+    clearTimeout(this._wt);
+    this._wt = setTimeout(async () => { const list = [...this._want]; this._want.clear(); try { await this.images(list); } catch {} }, 250);
   },
   /* 拉取云端：以云端为准覆盖本机（还在队列里没推上去的不动） */
   async pull() {
@@ -1136,8 +1179,11 @@ const Sync = {
     for (let i = 0; i < need.length; i += 100) {
       const {data, error} = await this.client.storage.from('covers').createSignedUrls(need.slice(i, i + 100).map(s => s.slice(3)), 7 * 24 * 3600);
       if (error || !data) continue;
-      data.forEach(d => { if (d.signedUrl && d.path && !Store.urls['sb:' + d.path]) { Store.urls['sb:' + d.path] = d.signedUrl; Store.urlsVer++; } });
+      const got = new Set();
+      data.forEach(d => { if (d.signedUrl && d.path) { got.add('sb:' + d.path); if (!Store.urls['sb:' + d.path]) { Store.urls['sb:' + d.path] = d.signedUrl; Store.urlsVer++; } } });
+      need.slice(i, i + 100).forEach(x => { if (!got.has(x)) Store.missing.add(x); });   // 云端找不到这张图
     }
+    Store.bumpUrls();
     need.forEach(async src => {
       const url = Store.urls[src]; if (!url || /^data:/.test(url)) return;
       try { const r = await fetch(url); if (!r.ok) return; const b = await r.blob();
@@ -1161,13 +1207,14 @@ function queueSync(id, op) {
 }
 
 const Store = {
-  kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {}, urlsVer: 0,
+  kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {}, urlsVer: 0, missing: new Set(),
+  bumpUrls() { this.urlsVer++; window.dispatchEvent(new Event('doumi-urls')); if (unlocked && this.onRemote) this.onRemote(); },
   get cloud() { return this.remote; },
   async loadImgCache() {
     try {
       const [keys, vals] = await Promise.all([DB.keys('imgcache'), DB.all('imgcache')]);
       let n = 0; keys.forEach((k, i) => { if (vals[i] && !/^data:/.test(this.urls[k] || '')) { this.urls[k] = vals[i]; n++; } });
-      if (n) { this.urlsVer++; if (this.onRemote) this.onRemote(); }
+      if (n) this.bumpUrls();
     } catch {}
   },
   async init() {
@@ -2007,7 +2054,7 @@ function renderSettings() {
         <div class="live">
           <div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:14px;font-weight:600">实时汇率参考</b>
             ${Store.kind === 'claude' ? '' : '<button class="btn small" type="button" data-act="live-rates">联网获取</button>'}</div>
-          <div id="live-box"><p>${Store.kind === 'claude' ? '云端版出于安全限制不能访问其他网站，联网获取汇率请在离线文件版里操作，或对照汇率网站手动填写。' : '点“联网获取”会访问公开汇率接口（open.er-api.com），只下载汇率，不会上传你的任何数据。'}</p></div>
+          <div id="live-box"><p>${Store.kind === 'claude' ? '云端版不能直接访问汇率网站，可以点下面每一行的“谷歌 / 必应”查实时汇率，再手动填写。' : '联网后点“联网获取”自动读取实时汇率；也可以点每一行的“谷歌 / 必应”直接搜索核对。'}</p>${rateTable(null)}</div>
         </div>
       </div>
       <div class="set-card"><h2>修改密码</h2>
@@ -2108,9 +2155,19 @@ function openSyncPanel() {
       if (!Sync.configured()) { box.innerHTML = '<h3>2 · 登录账号</h3><p class="hint" style="margin:0">先保存并测试连接。</p>'; return; }
       if (Sync.user) {
         box.innerHTML = `<h3>2 · 账号</h3><p class="hint" style="margin:0">已登录 <b>${esc(Sync.user.email || '')}</b>。修改会先存在本机，有网时自动上传；其他设备登录同一账号即可看到。</p>
-          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sy-now">立即同步</button><button type="button" class="btn" id="sy-out">退出登录</button><button type="button" class="btn text danger" id="sy-off">断开云端同步</button></div>`;
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sy-now">立即同步</button><button type="button" class="btn" id="sy-fix">检查并补传图片</button><button type="button" class="btn" id="sy-out">退出登录</button><button type="button" class="btn text danger" id="sy-off">断开云端同步</button></div>`;
         $('#sy-now', root).onclick = async () => { await Sync.now(); toast(Sync.state === 'ok' ? '同步完成' : (Sync.msg || '没有同步成功')); drawAcct(); };
         $('#sy-out', root).onclick = async () => { await Sync.signOut(); drawAcct(); toast('已退出登录，内容仍保存在这台设备'); };
+        $('#sy-fix', root).onclick = async e => {
+          const btn = e.currentTarget; btn.disabled = true; btn.textContent = '检查中…';
+          try {
+            await Sync.now();
+            const pend = (await DB.all('books')).reduce((n, b) => n + (b.images || []).filter(x => /^data:/.test(x)).length, 0);
+            const r = await Sync.repairImages(); Store.missing.clear(); Store.bumpUrls();
+            toast(`检查了 ${r.checked} 张云端图片${r.fixed ? `，补传 ${r.fixed} 张` : '，都在'}${r.lost ? `；${r.lost} 张在这台设备上也没有原图，需要重新上传` : ''}${pend ? `；还有 ${pend} 张等待上传` : ''}`);
+          } catch (err) { toast(errMsg(err)); }
+          btn.disabled = false; btn.textContent = '检查并补传图片';
+        };
       } else {
         box.innerHTML = `<h3>2 · 登录账号</h3>
           <div class="seg" style="justify-self:start"><button type="button" data-m="login" class="on">登录</button><button type="button" data-m="signup">注册</button></div>
@@ -2189,36 +2246,48 @@ async function blobToDataUrl(path) {
 
 /* 实时汇率：先试 open.er-api.com，失败再试 frankfurter（后者没有新台币） */
 let LIVE = null;
+/* 实时汇率：依次尝试几个免费的汇率接口（国内外都能访问的优先），都失败时用谷歌 / 必应查询 */
+const RATE_SOURCES = [
+  {name: 'currency-api（jsDelivr）', url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.json', parse: j => j && j.cny ? {rates: upperKeys(j.cny), when: j.date} : null},
+  {name: 'currency-api（Cloudflare）', url: 'https://latest.currency-api.pages.dev/v1/currencies/cny.json', parse: j => j && j.cny ? {rates: upperKeys(j.cny), when: j.date} : null},
+  {name: 'open.er-api.com', url: 'https://open.er-api.com/v6/latest/CNY', parse: j => j && j.result === 'success' && j.rates ? {rates: j.rates, when: j.time_last_update_utc ? new Date(j.time_last_update_utc).toLocaleString('zh-CN', {hour12: false}) : ''} : null},
+  {name: 'frankfurter（欧洲央行）', url: 'https://api.frankfurter.app/latest?from=CNY', parse: j => j && j.rates ? {rates: j.rates, when: j.date} : null},
+];
+function upperKeys(o) { const r = {}; Object.keys(o).forEach(k => { r[k.toUpperCase()] = o[k]; }); return r; }
+const searchLinks = c => {
+  const q = encodeURIComponent(`1 ${c} to CNY`);
+  return `<a href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">谷歌</a><a href="https://cn.bing.com/search?q=${q}" target="_blank" rel="noopener">必应</a>`;
+};
 async function fetchLiveRates() {
   const box = $('#live-box'); if (!box) return;
+  if (!navigator.onLine) { box.innerHTML = '<p style="color:var(--danger)">现在没有联网，联网后再点一次。</p>' + rateTable(null); return; }
   box.innerHTML = '<p>正在获取…</p>';
-  const getJson = async url => { const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
+  const getJson = async url => { const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 7000);
     try { const r = await fetch(url, {signal: ctl.signal, cache: 'no-store'}); if (!r.ok) throw new Error(r.status); return await r.json(); } finally { clearTimeout(t); } };
-  let perCny = null, when = '', src = '';
-  try {
-    const j = await getJson('https://open.er-api.com/v6/latest/CNY');
-    if (j.result === 'success' && j.rates) { perCny = j.rates; when = j.time_last_update_utc ? new Date(j.time_last_update_utc).toLocaleString('zh-CN', {hour12: false}) : ''; src = 'open.er-api.com'; }
-  } catch {}
-  if (!perCny) {
-    try { const j = await getJson('https://api.frankfurter.app/latest?from=CNY'); if (j.rates) { perCny = j.rates; when = j.date || ''; src = 'frankfurter.app（欧洲央行数据）'; } } catch {}
+  let got = null, src = '';
+  for (const s of RATE_SOURCES) {
+    try { const r = s.parse(await getJson(s.url)); if (r && r.rates && Object.keys(DEFAULT_RATES).some(c => r.rates[c])) { got = r; src = s.name; break; } } catch {}
   }
-  if (!perCny) { box.innerHTML = '<p style="color:var(--danger)">没有获取到汇率。请确认已经联网后再试一次。</p>'; return; }
+  if (!got) { LIVE = null; box.innerHTML = '<p style="color:var(--danger)">汇率接口暂时都连不上。可以点每一行的“谷歌 / 必应”直接查，再把数字填到上面。</p>' + rateTable(null); return; }
   LIVE = {};
-  Object.keys(DEFAULT_RATES).forEach(c => { if (perCny[c]) LIVE[c] = 1 / perCny[c]; });
-  const fmt = v => v >= 1 ? v.toFixed(4) : v.toPrecision(4);
-  box.innerHTML = `
-    <div style="overflow-x:auto"><table class="live-table">
-      <thead><tr><th>币种</th><th>实时</th><th>你的设置</th><th></th></tr></thead>
-      <tbody>${Object.keys(DEFAULT_RATES).map(c => {
-        const v = LIVE[c], mine = Number(RATES[c]) || 0;
-        const d = v && mine ? Math.round((mine / v - 1) * 100) : null;
-        return `<tr><td>1 ${CUR[c].n}</td><td>${v ? '¥' + fmt(v) : '<span class="muted">无数据</span>'}</td>
-          <td>¥${fmt(mine)} ${d ? `<span class="diff">${d > 0 ? '+' : ''}${d}%</span>` : ''}</td>
-          <td>${v ? `<button class="btn small" type="button" data-act="use-rate" data-c="${c}">填入</button>` : ''}</td></tr>`;
-      }).join('')}</tbody></table></div>
+  Object.keys(DEFAULT_RATES).forEach(c => { if (got.rates[c]) LIVE[c] = 1 / got.rates[c]; });
+  box.innerHTML = rateTable(LIVE) + `
     <div class="row" style="justify-content:space-between;align-items:center">
-      <span class="hint">来源 ${esc(src)}${when ? ' · 更新于 ' + esc(when) : ''}，仅供参考</span>
+      <span class="hint">来源 ${esc(src)}${got.when ? ' · 更新于 ' + esc(got.when) : ''}，仅供参考；也可以点“谷歌 / 必应”核对</span>
       <button class="btn small primary" type="button" data-act="use-all-rates">全部填入并保存</button></div>`;
+}
+function rateTable(live) {
+  const fmt = v => v >= 1 ? v.toFixed(4) : v.toPrecision(4);
+  return `<div style="overflow-x:auto"><table class="live-table">
+    <thead><tr><th>币种</th><th>实时</th><th>你的设置</th><th>查询</th><th></th></tr></thead>
+    <tbody>${Object.keys(DEFAULT_RATES).map(c => {
+      const v = live && live[c], mine = Number(RATES[c]) || 0;
+      const d = v && mine ? Math.round((mine / v - 1) * 100) : null;
+      return `<tr><td>1 ${CUR[c].n}</td><td>${v ? '¥' + fmt(v) : '<span class="muted">—</span>'}</td>
+        <td>¥${fmt(mine)} ${d ? `<span class="diff">${d > 0 ? '+' : ''}${d}%</span>` : ''}</td>
+        <td class="rate-q">${searchLinks(c)}</td>
+        <td>${v ? `<button class="btn small" type="button" data-act="use-rate" data-c="${c}">填入</button>` : ''}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
 }
 async function exportBackup() {
   let books = S.books, brand = BRAND, ips = S.ips;
@@ -2599,11 +2668,13 @@ async function openBookForm(book, presetIp) {
 
     // 图片
     const drawImgs = () => {
-      imgBox.innerHTML = d.images.map((src, i) => `<div class="img-item" data-i="${i}" title="设为封面"><img src="${imgSrc(src)}" alt="">
+      imgBox.innerHTML = d.images.map((src, i) => `<div class="img-item" data-i="${i}" title="设为封面">${imgSrc(src) ? `<img src="${imgSrc(src)}" alt="">` : `<span class="img-wait">${Store.missing.has(src) ? '云端找不到' : '加载中…'}</span>`}
           ${i === 0 ? '<span class="badge">封面</span>' : ''}<button type="button" class="x" data-rm="${i}" aria-label="删除这张">×</button></div>`).join('') +
         `<label class="img-add" for="bk-cam"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>拍照</label>
          <label class="img-add" for="bk-pick"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M20 15l-5-5-9 9"/></svg>相册/截图</label>`;
     };
+    const onUrls = () => { if (!document.body.contains(imgBox)) return window.removeEventListener('doumi-urls', onUrls); drawImgs(); };
+    window.addEventListener('doumi-urls', onUrls);
     imgBox.onclick = e => {
       const rm = e.target.closest('[data-rm]');
       if (rm) { d.images.splice(+rm.dataset.rm, 1); touch(); return drawImgs(); }
