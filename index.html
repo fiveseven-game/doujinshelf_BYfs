@@ -216,8 +216,9 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-meta{display:flex;gap:6px;align-items:center;margin-top:4px;min-width:0}
 .cover-cp{font-size:11.5px;color:var(--muted);background:var(--soft);border-radius:4px;padding:0 6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cover-rate{font-size:11.5px;color:var(--star);flex:none;font-variant-numeric:tabular-nums}
-.marks{display:flex;align-items:center;gap:4px 6px;margin-top:5px;min-height:18px;flex-wrap:wrap}
-.mark-rate{font-size:11.5px;white-space:nowrap;color:var(--star);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.marks{display:flex;align-items:center;gap:6px;margin-top:5px;min-height:18px;flex-wrap:nowrap}
+.mark-rate{font-size:12px;white-space:nowrap;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;line-height:18px}
+.mark-rate i{font-style:normal;color:var(--star);margin-left:1px}
 .mark-rate.none{color:var(--line-2);font-weight:400}
 .mark-age{white-space:nowrap;flex:none;font-size:11px;line-height:18px;padding:0 6px;border-radius:4px;font-weight:500;background:color-mix(in srgb,var(--c) 14%,var(--bg));color:color-mix(in srgb,var(--c) 80%,var(--ink))}
 .cover .tag.qty{left:auto;right:6px;background:rgba(0,0,0,.55);color:#fff}
@@ -853,7 +854,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-10';
+const APP_VERSION = '2026.10.30-11';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1262,7 +1263,7 @@ function renderCurrent() {
 /* 封面卡片下方的“评分 + 年龄限制”一行（两者同一层级） */
 function markRow(b) {
   if (!b.rating && !b.age) return '';
-  return `<div class="marks">${b.rating ? `<span class="mark-rate" title="${b.rating} 星">${'★'.repeat(b.rating)}</span>` : ''}${b.age ? `<span class="mark-age" style="--c:${TAG_COLORS.age[b.age] || TAG_COLORS.other}">${esc(b.age.replace('（18X）', ''))}</span>` : ''}</div>`;
+  return `<div class="marks">${b.rating ? `<span class="mark-rate" title="${b.rating} 星">${b.rating}<i>★</i></span>` : ''}${b.age ? `<span class="mark-age" style="--c:${TAG_COLORS.age[b.age] || TAG_COLORS.other}">${esc(b.age.replace('（18X）', ''))}</span>` : ''}</div>`;
 }
 function coverHtml(b, c, big) {
   return b.images && b.images.length
@@ -1288,8 +1289,8 @@ function renderHome() {
         return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
           <div class="wf-title">${esc(b.title || '无题')}</div>
           ${by ? `<div class="wf-by">${by}</div>` : ''}
-          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div>
-          ${markRow(b)}</button>`;
+          ${markRow(b)}
+          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div></button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
     body = `<div class="shelf">${ips.map(ip => {
@@ -1446,8 +1447,8 @@ function renderIp(id) {
         <div class="cover-text">
           <div class="cover-title">${esc(b.title || '无题')}</div>
           <div class="cover-by">${by || '<span class="muted">作者未填写</span>'}</div>
-          ${b.cp ? `<div class="cover-meta"><span class="cover-cp">${esc(b.cp)}</span></div>` : ''}
           ${markRow(b)}
+          ${b.cp ? `<div class="cover-meta"><span class="cover-cp">${esc(b.cp)}</span></div>` : ''}
         </div></button>`; }).join('')}
       <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
