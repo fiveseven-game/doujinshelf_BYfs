@@ -180,6 +180,13 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .buy .buy-sum{text-align:left}
 .price-cap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
 .buy .price-cap+.price-lines{margin-top:6px;padding-top:0;border-top:0}
+.unit-in{position:relative}
+.unit-in input{padding-right:30px}
+.unit-in input,.words-in input{-moz-appearance:textfield;appearance:textfield}
+.unit-in input::-webkit-inner-spin-button,.unit-in input::-webkit-outer-spin-button,.words-in input::-webkit-inner-spin-button,.words-in input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.unit-in em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:14px;pointer-events:none}
+.words-in{display:grid;grid-template-columns:minmax(0,1fr) 4.6em;gap:6px}
+.words-in select.input{padding-left:8px;padding-right:20px;background-position:calc(100% - 11px) 50%,calc(100% - 6px) 50%}
 .unit-row{display:grid;grid-template-columns:minmax(0,1fr) 5.4em;gap:6px}
 .form-note{margin:-4px 0 0;font-size:12px;color:var(--muted);line-height:1.6}
 .buy-qty{font-size:13px;color:var(--muted);margin-top:4px;display:block}
@@ -679,6 +686,8 @@ const TAG_COLORS = {
   read: {'已读': '#3a9a6e', '在读': '#3d78c8', '未读': '#8a8f99', '弃读': '#a8784e'},
   age: {'全年龄': '#3a9a6e', 'R15': '#c98a1c', 'R18（18X）': '#d6455a', 'R18G': '#8e2a3c'},
 };
+/* 字数显示：5 → 5W字；3000（字）→ 3000字 */
+const wordsText = b => b && b.words && b.words.n ? (b.words.unit === 'z' ? `${b.words.n}字` : `${b.words.n}W字`) : '';
 const qtyOf = b => Math.max(1, parseInt(b && b.qty, 10) || 1);
 /* 单价（每本）：只做记录，不参与总价计算。总价永远 = 支付明细各项相加 */
 const unitOf = b => b && b.unit && Number(b.unit.amount) > 0 ? {amount: Number(b.unit.amount), cur: b.unit.cur || 'CNY'} : null;
@@ -698,6 +707,7 @@ const OPT = {
   place: ['通贩', '场贩', '二手', '代购', '书店 / 漫展店', '网店', '委托 / 拼本'],
   read: ['未读', '在读', '已读', '弃读'],
   age: ['全年龄', 'R15', 'R18（18X）', 'R18G'],
+  lang: ['简体中文', '繁体中文', '日文', '英文', '韩文', '多语言', '无文字'],
 };
 /* 尺寸对应的毫米数（宽×高）。B 系列按日本同人常用的 JIS B 规格 */
 const SIZE_MM = {
@@ -825,7 +835,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-4';
+const APP_VERSION = '2026.10.30-5';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1347,6 +1357,9 @@ function renderBook(id) {
         ${spec('本子尺寸', b.size, SIZE_MM[b.size])}
         ${spec('地区', b.origin)}
         ${spec('形式', b.format)}
+        ${spec('页数', b.pages ? b.pages + 'p' : '')}
+        ${spec('字数', wordsText(b))}
+        ${spec('语言', b.lang)}
         ${spec('品相', b.condition)}
         ${spec('购买数量', qtyOf(b) + ' 本')}
       </div>
@@ -2056,14 +2069,22 @@ async function openBookForm(book, presetIp) {
       <div class="fgroup"><h3>本子信息</h3>
         <div class="two">
           ${selField('bk-kind', '本子类型', OPT.kind, d.kind, {custom: true})}
+          ${selField('bk-lang', '语言', OPT.lang, d.lang, {optional: true, custom: true})}
+        </div>
+        <div class="two">
+          <label class="field"><span>页数<i>选填</i></span><div class="unit-in"><input class="input num" type="number" id="bk-pages" min="1" max="9999" step="1" inputmode="numeric" placeholder="例如 40" value="${esc(d.pages || '')}"><em>p</em></div></label>
+          <div class="field"><span>字数<i>选填</i></span><div class="words-in"><input class="input num" type="number" id="bk-words" min="0" step="any" inputmode="decimal" placeholder="例如 5" value="${esc(d.words && d.words.n ? d.words.n : '')}" aria-label="字数">
+            <select class="input" id="bk-wordunit" aria-label="字数单位"><option value="w" ${!d.words || d.words.unit !== 'z' ? 'selected' : ''}>W字</option><option value="z" ${d.words && d.words.unit === 'z' ? 'selected' : ''}>字</option></select></div></div>
+        </div>
+        <div class="two">
+          ${selField('bk-format', '本子性质 · 形式', OPT.format, d.format)}
           ${selField('bk-size', '本子尺寸', OPT.size, d.size, {custom: true, labels: SIZE_MM})}
         </div>
         <div class="two">
           ${selField('bk-origin', '本子性质 · 地区', OPT.origin, d.origin)}
-          ${selField('bk-format', '本子性质 · 形式', OPT.format, d.format)}
+          ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
         </div>
         <div class="two">
-          ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
           ${selField('bk-age', '限制年龄', OPT.age, d.age, {optional: true})}
         </div>
       </div>
@@ -2096,6 +2117,8 @@ async function openBookForm(book, presetIp) {
     const collect = () => {
       const v = id => $('#' + id, root).value;
       d.title = v('bk-title'); d.author = v('bk-author'); d.club = v('bk-club'); d.cp = v('bk-cp'); d.note = v('bk-note');
+      d.lang = readSel(root, 'bk-lang'); d.pages = Math.max(0, parseInt(v('bk-pages'), 10) || 0) || '';
+      { const wn = parseFloat(v('bk-words')); d.words = wn > 0 ? {n: wn, unit: v('bk-wordunit') === 'z' ? 'z' : 'w'} : null; }
       d.kind = readSel(root, 'bk-kind'); d.size = readSel(root, 'bk-size'); d.origin = readSel(root, 'bk-origin'); d.format = readSel(root, 'bk-format');
       d.condition = readSel(root, 'bk-cond'); d.age = readSel(root, 'bk-age'); d.read = readSel(root, 'bk-read'); d.place = readSel(root, 'bk-place');
       d.qty = Math.min(999, Math.max(1, parseInt(v('bk-qty'), 10) || 1));
@@ -2309,11 +2332,11 @@ async function loadSample() {
   ];
   const mk = (id, ipId, o) => Object.assign({id, ipId, images: [], rating: 0, note: '', club: '', format: '实体本', created: now - hashStr(id) % 99999, sample: true}, o);
   const books = [
-    mk('sx-b1', 'sx-ip1', {title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆本子', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
+    mk('sx-b1', 'sx-ip1', {pages: 40, lang: '简体中文', title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆本子', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
       costs: [{label: '本子本体', amount: 68, cur: 'CNY'}, {label: '邮费', amount: 12, cur: 'CNY'}], note: '这是示例本子，可以随时删掉。\n场贩购入，附赠明信片一张。'}),
     mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', qty: 2, unit: {amount: 550, cur: 'JPY'}, cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本本子', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
       costs: [{label: '本子本体', amount: 1100, cur: 'JPY'}, {label: '代购费', amount: 15, cur: 'CNY'}, {label: '国际运费', amount: 800, cur: 'JPY'}]}),
-    mk('sx-b3', 'sx-ip1', {title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆本子', place: '通贩', buyDate: '2026-10-25', transit: true,
+    mk('sx-b3', 'sx-ip1', {pages: 120, words: {n: 5, unit: 'w'}, lang: '简体中文', title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆本子', place: '通贩', buyDate: '2026-10-25', transit: true,
       costs: [{label: '本子本体', amount: 52, cur: 'CNY'}, {label: '邮费', amount: 10, cur: 'CNY'}]}),
     mk('sx-b4', 'sx-ip2', {title: '雨夜的委托书', author: '雾灯', cp: '侦探×助手', kind: '原画集 / 插画集', size: 'A4', origin: '日本本子', condition: '全新', place: '通贩', read: '已读', buyDate: '2026-06-30', rating: 5,
       costs: [{label: '本子本体', amount: 2500, cur: 'JPY'}, {label: '邮费', amount: 1200, cur: 'JPY'}], note: '特装版，含书签。'}),
