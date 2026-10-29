@@ -216,6 +216,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-meta{display:flex;gap:6px;align-items:center;margin-top:4px;min-width:0}
 .cover-cp{font-size:11.5px;color:var(--muted);background:var(--soft);border-radius:4px;padding:0 6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cover-rate{font-size:11.5px;color:var(--star);flex:none;font-variant-numeric:tabular-nums}
+.marks{display:flex;align-items:center;gap:4px 6px;margin-top:5px;min-height:18px;flex-wrap:wrap}
+.mark-rate{font-size:11.5px;white-space:nowrap;color:var(--star);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.mark-rate.none{color:var(--line-2);font-weight:400}
+.mark-age{white-space:nowrap;flex:none;font-size:11px;line-height:18px;padding:0 6px;border-radius:4px;font-weight:500;background:color-mix(in srgb,var(--c) 14%,var(--bg));color:color-mix(in srgb,var(--c) 80%,var(--ink))}
 .cover .tag.qty{left:auto;right:6px;background:rgba(0,0,0,.55);color:#fff}
 .ph{width:100%;height:100%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;padding:12%}
 .ph span{writing-mode:vertical-rl;font-weight:600;font-size:16px;letter-spacing:.12em;max-height:100%;overflow:hidden}
@@ -711,7 +715,7 @@ const today = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
 const OPT = {
   size: ['A4', 'B5', 'A5', 'B6', 'A6', '新书判', '文库本', '正方形'],
   kind: ['漫画', '小说 / 文本', '图文本', '原画集 / 插画集', '设定集', '合志', '杂志 / 会刊', '画册周边'],
-  origin: ['日本本子', '中国大陆本子', '港台本子', '韩国本子', '欧美本子', '其他地区'],
+  origin: ['日本', '中国大陆', '港澳台', '韩国', '欧美', '其他地区'],
   format: ['实体本', '电子本'],
   condition: ['全新', '99新', '95新', '9成新', '8成新', '7成新及以下', '有瑕疵'],
   place: ['通贩', '场贩', '二手', '代购', '书店 / 漫展店', '网店', '委托 / 拼本'],
@@ -724,7 +728,10 @@ const SIZE_MM = {
   'A4': '210 × 297 mm', 'B5': '182 × 257 mm', 'A5': '148 × 210 mm', 'B6': '128 × 182 mm',
   'A6': '105 × 148 mm', '新书判': '103 × 182 mm', '文库本': '105 × 148 mm', '正方形': '边长不一',
 };
-const REGION_COLORS = {'日本本子': '#e4574c', '中国大陆本子': '#3d6fd9', '港台本子': '#3aa17e', '韩国本子': '#8a63d2', '欧美本子': '#e3a33b', '其他地区': '#2a9bb0', '未填写': '#c3c6cd'};
+const REGION_COLORS = {'日本': '#e4574c', '中国大陆': '#3d6fd9', '港澳台': '#3aa17e', '韩国': '#8a63d2', '欧美': '#e3a33b', '其他地区': '#2a9bb0', '未填写': '#c3c6cd'};
+/* 旧版地区名自动换成新写法（日本本子 → 日本，港台本子 → 港澳台 …） */
+const ORIGIN_ALIAS = {'日本本子': '日本', '中国大陆本子': '中国大陆', '中国本子': '中国大陆', '港台本子': '港澳台', '港台': '港澳台', '韩国本子': '韩国', '欧美本子': '欧美'};
+const normOrigin = o => ORIGIN_ALIAS[o] || o || '';
 
 /* 自定义名称与 LOGO */
 const DEFAULT_NAME = 'Doumi';
@@ -846,7 +853,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-9';
+const APP_VERSION = '2026.10.30-10';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1252,6 +1259,11 @@ function renderCurrent() {
 }
 
 /* ================= 首页 ================= */
+/* 封面卡片下方的“评分 + 年龄限制”一行（两者同一层级） */
+function markRow(b) {
+  if (!b.rating && !b.age) return '';
+  return `<div class="marks">${b.rating ? `<span class="mark-rate" title="${b.rating} 星">${'★'.repeat(b.rating)}</span>` : ''}${b.age ? `<span class="mark-age" style="--c:${TAG_COLORS.age[b.age] || TAG_COLORS.other}">${esc(b.age.replace('（18X）', ''))}</span>` : ''}</div>`;
+}
 function coverHtml(b, c, big) {
   return b.images && b.images.length
     ? `<img src="${imgSrc(b.images[0])}" alt="${esc(b.title)}" loading="lazy">`
@@ -1276,7 +1288,8 @@ function renderHome() {
         return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
           <div class="wf-title">${esc(b.title || '无题')}</div>
           ${by ? `<div class="wf-by">${by}</div>` : ''}
-          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div></button>`;
+          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div>
+          ${markRow(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
     body = `<div class="shelf">${ips.map(ip => {
@@ -1433,7 +1446,8 @@ function renderIp(id) {
         <div class="cover-text">
           <div class="cover-title">${esc(b.title || '无题')}</div>
           <div class="cover-by">${by || '<span class="muted">作者未填写</span>'}</div>
-          ${b.cp || b.rating ? `<div class="cover-meta">${b.cp ? `<span class="cover-cp">${esc(b.cp)}</span>` : ''}${b.rating ? `<span class="cover-rate">★${b.rating}</span>` : ''}</div>` : ''}
+          ${b.cp ? `<div class="cover-meta"><span class="cover-cp">${esc(b.cp)}</span></div>` : ''}
+          ${markRow(b)}
         </div></button>`; }).join('')}
       <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
@@ -1478,7 +1492,7 @@ function renderBook(id) {
       <div class="specs">
         ${spec('本子类型', b.kind)}
         ${spec('本子尺寸', b.size, SIZE_MM[b.size])}
-        ${spec('地区', b.origin)}
+        ${spec('地区', normOrigin(b.origin))}
         ${spec('形式', b.format)}
         ${spec('页数', b.pages ? b.pages + 'p' : '')}
         ${spec('字数', wordsText(b))}
@@ -1643,7 +1657,7 @@ function renderStats() {
     .filter(x => x.v).sort((a, b) => b.v - a.v || b.cost - a.cost);
   const cps = sumBy(books, b => splitCp(b.cp)).map(x => ({...x, v: x.count, sub: [...new Set(books.filter(b => splitCp(b.cp).includes(x.name)).map(b => (ipById(b.ipId) || {}).name).filter(Boolean))].join('、')}));
   const noCp = sum(books.filter(b => !splitCp(b.cp).length).map(qtyOf));
-  const regions = sumBy(books, b => [b.origin || '未填写']).map(x => ({...x, v: x.count}));
+  const regions = sumBy(books, b => [normOrigin(b.origin) || '未填写']).map(x => ({...x, v: x.count}));
   const kinds = sumBy(books, b => [b.kind || '未填写']).map(x => ({...x, v: x.count}));
   const reads = sumBy(books, b => [b.read || '未标记']).map(x => ({...x, v: x.count}));
   const labMap = new Map();
@@ -2204,7 +2218,7 @@ async function openBookForm(book, presetIp) {
           ${selField('bk-size', '本子尺寸', OPT.size, d.size, {custom: true, labels: SIZE_MM})}
         </div>
         <div class="two">
-          ${selField('bk-origin', '本子性质 · 地区', OPT.origin, d.origin)}
+          ${selField('bk-origin', '地区', OPT.origin, normOrigin(d.origin))}
           ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
         </div>
         <div class="two">
@@ -2455,21 +2469,21 @@ async function loadSample() {
   ];
   const mk = (id, ipId, o) => Object.assign({id, ipId, images: [], rating: 0, note: '', club: '', format: '实体本', created: now - hashStr(id) % 99999, sample: true}, o);
   const books = [
-    mk('sx-b1', 'sx-ip1', {pages: 40, lang: '简体中文', title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆本子', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
+    mk('sx-b1', 'sx-ip1', {pages: 40, lang: '简体中文', title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
       costs: [{label: '本子本体', amount: 68, cur: 'CNY'}, {label: '邮费', amount: 12, cur: 'CNY'}], note: '这是示例本子，可以随时删掉。\n场贩购入，附赠明信片一张。'}),
-    mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', qty: 2, unit: {amount: 550, cur: 'JPY'}, cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本本子', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
+    mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', qty: 2, unit: {amount: 550, cur: 'JPY'}, cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
       costs: [{label: '本子本体', amount: 1100, cur: 'JPY'}, {label: '代购费', amount: 15, cur: 'CNY'}, {label: '国际运费', amount: 800, cur: 'JPY'}]}),
-    mk('sx-b3', 'sx-ip1', {pages: 120, words: {n: 5, unit: 'w'}, lang: '简体中文', title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆本子', place: '通贩', buyDate: '2026-10-25', transit: true,
+    mk('sx-b3', 'sx-ip1', {pages: 120, words: {n: 5, unit: 'w'}, lang: '简体中文', title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆', place: '通贩', buyDate: '2026-10-25', transit: true,
       costs: [{label: '本子本体', amount: 52, cur: 'CNY'}, {label: '邮费', amount: 10, cur: 'CNY'}]}),
-    mk('sx-b4', 'sx-ip2', {title: '雨夜的委托书', author: '雾灯', cp: '侦探×助手', kind: '原画集 / 插画集', size: 'A4', origin: '日本本子', condition: '全新', place: '通贩', read: '已读', buyDate: '2026-06-30', rating: 5,
+    mk('sx-b4', 'sx-ip2', {title: '雨夜的委托书', author: '雾灯', cp: '侦探×助手', kind: '原画集 / 插画集', size: 'A4', origin: '日本', condition: '全新', place: '通贩', read: '已读', buyDate: '2026-06-30', rating: 5,
       costs: [{label: '本子本体', amount: 2500, cur: 'JPY'}, {label: '邮费', amount: 1200, cur: 'JPY'}], note: '特装版，含书签。'}),
-    mk('sx-b5', 'sx-ip3', {title: '一盏月光', author: '青苔', cp: '书生×狐仙', kind: '图文本', size: 'A5', origin: '中国大陆本子', format: '电子本', read: '未读', buyDate: '2026-10-20',
+    mk('sx-b5', 'sx-ip3', {title: '一盏月光', author: '青苔', cp: '书生×狐仙', kind: '图文本', size: 'A5', origin: '中国大陆', format: '电子本', read: '未读', buyDate: '2026-10-20',
       costs: [{label: '本子本体', amount: 18, cur: 'CNY'}]}),
-    mk('sx-b6', 'sx-ip2', {title: '港口夜话', author: '雾灯', cp: '侦探×助手', kind: '漫画', size: 'B5', origin: '日本本子', place: '通贩', buyDate: '2026-10-27', transit: true,
+    mk('sx-b6', 'sx-ip2', {title: '港口夜话', author: '雾灯', cp: '侦探×助手', kind: '漫画', size: 'B5', origin: '日本', place: '通贩', buyDate: '2026-10-27', transit: true,
       costs: [{label: '本子本体', amount: 900, cur: 'JPY'}, {label: '邮费', amount: 600, cur: 'JPY'}]}),
-    mk('sx-b7', 'sx-ip3', {title: '竹林小记', author: '青苔', cp: '书生×狐仙', kind: '小说 / 文本', size: 'A5', origin: '港台本子', place: '二手', condition: '9成新', read: '已读', buyDate: '2025-01-18', rating: 4,
+    mk('sx-b7', 'sx-ip3', {title: '竹林小记', author: '青苔', cp: '书生×狐仙', kind: '小说 / 文本', size: 'A5', origin: '港澳台', place: '二手', condition: '9成新', read: '已读', buyDate: '2025-01-18', rating: 4,
       costs: [{label: '本子本体', amount: 180, cur: 'TWD'}, {label: '邮费', amount: 20, cur: 'CNY'}]}),
-    mk('sx-b8', 'sx-ip1', {title: '星图拾遗', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '设定集', size: 'A4', origin: '中国大陆本子', place: '场贩', read: '已读', buyDate: '2025-05-01', rating: 3,
+    mk('sx-b8', 'sx-ip1', {title: '星图拾遗', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '设定集', size: 'A4', origin: '中国大陆', place: '场贩', read: '已读', buyDate: '2025-05-01', rating: 3,
       costs: [{label: '本子本体', amount: 88, cur: 'CNY'}]}),
   ];
   await Store.putMany('ips', ips); await Store.putMany('books', books);
