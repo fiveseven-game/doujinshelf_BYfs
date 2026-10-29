@@ -265,11 +265,17 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .price-lines li{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted)}
 .price-lines li span:last-child{font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
 .price-lines li small{color:var(--muted);margin-left:6px}
-.stars{display:flex;gap:2px}
-.stars button{border:0;background:none;padding:3px;width:38px;height:38px;color:var(--line-2);transition:transform .12s}
-.stars button.on{color:var(--star)}
-.stars button:active{transform:scale(.88)}
-.stars svg{width:100%;height:100%;fill:currentColor}
+.stars{display:flex;gap:4px}
+.stars svg{width:100%;height:100%;fill:currentColor;display:block}
+/* 半星：灰色底星 + 按比例露出的金色星；每颗星左右两半各是一个按钮 */
+.star{position:relative;width:34px;height:34px;flex:none;transition:transform .12s}
+.star:active{transform:scale(.9)}
+.star-bg{position:absolute;inset:0;color:var(--line-2)}
+.star-fg{position:absolute;left:0;top:0;bottom:0;overflow:hidden;color:var(--star);width:0}
+.star-fg svg{width:34px;height:34px}
+.stars .star-half{position:absolute;top:0;bottom:0;width:50%;border:0;background:none;padding:0;margin:0;cursor:pointer}
+.stars .star-half.l{left:0}.stars .star-half.r{right:0}
+.stars .star-half:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px}
 .stars-note{font-size:12px;color:var(--muted);margin-top:2px}
 .note{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:var(--soft);border-radius:10px;padding:14px 16px}
 .note.empty{color:var(--muted)}
@@ -703,6 +709,18 @@ const TAG_COLORS = {
 };
 /* 字数显示：5 → 5W字；3000（字）→ 3000字 */
 const wordsText = b => b && b.words && b.words.n ? (b.words.unit === 'z' ? `${b.words.n}字` : `${b.words.n}W字`) : '';
+/* 星级（支持半星）：每颗星 = 灰色底 + 金色部分（0 / 50% / 100%） */
+const halfRound = v => Math.round((Number(v) || 0) * 2) / 2;
+const fillOf = (v, n) => v >= n ? 100 : v >= n - 0.5 ? 50 : 0;
+function starsInner(rating, act) {
+  const r = halfRound(rating);
+  return [1, 2, 3, 4, 5].map(n => `<span class="star"><span class="star-bg">${STAR}</span><span class="star-fg" style="width:${fillOf(r, n)}%">${STAR}</span>
+    <button type="button" class="star-half l" ${act} data-n="${n - 0.5}" aria-label="${n - 0.5} 星"></button><button type="button" class="star-half r" ${act} data-n="${n}" aria-label="${n} 星"></button></span>`).join('');
+}
+function fillStars(box, v) { $$('.star-fg', box).forEach((f, i) => { f.style.width = fillOf(v, i + 1) + '%'; }); }
+/* 电脑上鼠标悬停时预览分数，移开后恢复 */
+document.addEventListener('pointerover', e => { const h = e.target.closest && e.target.closest('.stars .star-half'); if (h && e.pointerType === 'mouse') fillStars(h.closest('.stars'), +h.dataset.n); });
+document.addEventListener('pointerout', e => { const box = e.target.closest && e.target.closest('.stars'); if (box && !box.contains(e.relatedTarget)) fillStars(box, +box.dataset.rating || 0); });
 const qtyOf = b => Math.max(1, parseInt(b && b.qty, 10) || 1);
 /* 单价（每本）：只做记录，不参与总价计算。总价永远 = 支付明细各项相加 */
 const unitOf = b => b && b.unit && Number(b.unit.amount) > 0 ? {amount: Number(b.unit.amount), cur: b.unit.cur || 'CNY'} : null;
@@ -854,7 +872,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-11';
+const APP_VERSION = '2026.10.30-12';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1520,8 +1538,8 @@ function renderBook(id) {
         </div>
       </section>
       <section class="block"><h3>评分</h3>
-        <div class="stars">${[1,2,3,4,5].map(n => `<button class="${n <= (b.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}" aria-label="${n} 星">${STAR}</button>`).join('')}</div>
-        <div class="stars-note">${b.rating ? `${b.rating} 星 · 再点一次当前星可清除` : '点星星打分'}</div>
+        <div class="stars" data-rating="${Number(b.rating) || 0}">${starsInner(b.rating, 'data-act="rate"')}</div>
+        <div class="stars-note">${b.rating ? `${b.rating} 星 · 点星星的左半边是半星，再点一次当前分数可清除` : '点星星打分，点左半边是半星'}</div>
       </section>
       <section class="block"><h3>备注</h3><p class="note ${b.note ? '' : 'empty'}">${esc(b.note) || '还没有备注'}</p></section>
       <div class="actions">
@@ -2404,7 +2422,7 @@ async function openBookForm(book, presetIp) {
     });
 
     // 星星
-    const drawStars = () => { starBox.innerHTML = [1,2,3,4,5].map(n => `<button type="button" class="${n <= d.rating ? 'on' : ''}" data-n="${n}" aria-label="${n} 星">${STAR}</button>`).join(''); };
+    const drawStars = () => { starBox.innerHTML = starsInner(d.rating, ''); starBox.dataset.rating = Number(d.rating) || 0; };
     starBox.onclick = e => { const b = e.target.closest('[data-n]'); if (!b) return; const n = +b.dataset.n; d.rating = d.rating === n ? 0 : n; drawStars(); touch(); };
 
     const ipSel = $('#bk-ip', root), newIp = $('#bk-newip', root);
