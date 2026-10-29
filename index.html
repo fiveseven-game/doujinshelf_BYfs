@@ -648,7 +648,22 @@ async function sbAdapter(cfg) {
   let {data: {session}} = await client.auth.getSession();
   if (!session) session = await showAuth(client);
   const uid = session.user.id, T = 'shelf_docs', B = 'covers';
-  const fail = error => { if (error) throw Object.assign(new Error(error.message), {code: error.code || 'sb'}); };
+  // 把 Supabase 的报错翻译成能看懂的话（与 setup.sql 的表、权限、图片桶规则对应）
+  const fail = error => {
+    if (!error) return;
+    const m = String(error.message || ''), c = String(error.code || ''), st = String(error.statusCode || error.status || '');
+    let userMsg = '';
+    if (c === '42P01' || c === 'PGRST205' || /does not exist|Could not find the table/i.test(m)) userMsg = '数据库还没初始化：请在 Supabase 的 SQL Editor 里运行 setup.sql';
+    else if (/Bucket not found/i.test(m)) userMsg = '找不到图片桶 covers：请在 Supabase 里运行 setup.sql';
+    else if (c === '23514') userMsg = '数据格式不符合数据库规则，这条记录没有保存';
+    else if (c === '42501' || /row-level security|violates.*policy|Unauthorized/i.test(m) || st === '403') userMsg = '没有写入权限：请确认已登录，并且 setup.sql 已完整运行（检查结果全部为 true）';
+    else if (/mime type|invalid_mime/i.test(m) || st === '415') userMsg = '图片格式不支持，只能上传 JPG、PNG、WebP、GIF 或 SVG';
+    else if (/maximum allowed size|too large|Payload too large/i.test(m) || st === '413') userMsg = '图片超过 10 MB，请换一张小一点的';
+    else if (/JWT|token.*expired|refresh token/i.test(m)) userMsg = '登录已过期，请刷新页面重新登录';
+    else if (/Failed to fetch|NetworkError|network/i.test(m)) userMsg = '连不上 Supabase，请检查网络后再试';
+    throw Object.assign(new Error(m || 'Supabase error'), {code: c || st || 'sb', userMsg});
+  };
+  const DOC_RE = /^(ip|book|meta)_[A-Za-z0-9_.:-]{1,120}$/;   // 与 setup.sql 里 doc_id 的检查规则一致
   const ad = {
     kind: 'sb', label: '账号', client, email: session.user.email,
     async load() {
@@ -660,7 +675,10 @@ async function sbAdapter(cfg) {
       }
       return out;
     },
-    async put(id, body) { const {error} = await client.from(T).upsert({user_id: uid, doc_id: id, body, updated_at: new Date().toISOString()}); fail(error); },
+    async put(id, body) {
+      if (!DOC_RE.test(id)) throw Object.assign(new Error('bad id'), {code: '23514', userMsg: '记录编号含有不支持的字符，这条记录没有保存'});
+      const {error} = await client.from(T).upsert({user_id: uid, doc_id: id, body, updated_at: new Date().toISOString()}, {onConflict: 'user_id,doc_id'}); fail(error);
+    },
     async del(id) { const {error} = await client.from(T).delete().eq('doc_id', id); fail(error); },
     async upload(dataUrl) {
       const blob = dataUrlToBlob(dataUrl), ext = /png/.test(blob.type) ? 'png' : /svg/.test(blob.type) ? 'svg' : /webp/.test(blob.type) ? 'webp' : /gif/.test(blob.type) ? 'gif' : 'jpg';
@@ -668,6 +686,12 @@ async function sbAdapter(cfg) {
       const {error} = await client.storage.from(B).upload(path, blob, {contentType: blob.type, upsert: false}); fail(error);
       Store.urls['sb:' + path] = dataUrl;
       return 'sb:' + path;
+    },
+    async remove(srcs) {   // 删除不再使用的图片（setup.sql 里的 "covers: delete own" 规则允许删自己的）
+      const paths = srcs.filter(x => x && x.startsWith('sb:')).map(x => x.slice(3));
+      if (!paths.length) return;
+      const {error} = await client.storage.from(B).remove(paths);
+      if (!error) paths.forEach(x => delete Store.urls['sb:' + x]);
     },
     async sign(srcs) {   // 私有图片：批量换成 7 天有效的访问地址
       const paths = [...new Set(srcs.filter(s => s && s.startsWith('sb:') && !Store.urls[s]).map(s => s.slice(3)))];
@@ -727,19 +751,32 @@ const Store = {
   async write(fn) { this.pending++; setSync('busy'); try { return await fn(); } catch (e) { setSync('error'); throw e; } finally { this.pending--; if (this.pending === 0 && document.getElementById('sync').dataset.state !== 'error') setSync('ok'); } },
   async all(s) { if (!this.remote) return DB.all(s); return [...this.cache[s].values()].map(clone); },
   async get(s, k) { if (!this.remote) return DB.get(s, k); return s === 'meta' ? clone(this.cache.meta[k]) : clone(this.cache[s].get(k)); },
+  imagesOf(s, k, v) {   // 一条记录引用的云端图片
+    if (s === 'books') return ((v || this.cache.books.get(k) || {}).images || []).slice();
+    if (s === 'meta' && k === 'brand') { const b = v || this.cache.meta.brand; return b && b.logo ? [b.logo] : []; }
+    return [];
+  },
+  async cleanup(srcs) { if (srcs.length && this.remote.remove) { try { await this.remote.remove(srcs); } catch {} } },
   async put(s, v, k) {
     if (!this.remote) return DB.put(s, v, k);
-    const key = s === 'meta' ? k : v.id;
+    const key = s === 'meta' ? k : v.id, before = this.imagesOf(s, key);
     return this.write(async () => {
       await this.prepare(s, v, k);
       const body = s === 'meta' ? {v: v === undefined ? null : JSON.parse(JSON.stringify(v))} : JSON.parse(JSON.stringify(v));
       await this.remote.put(this.docId(s, key), body);
       if (s === 'meta') this.cache.meta[k] = clone(v); else this.cache[s].set(key, clone(v));
+      const now = new Set(this.imagesOf(s, key, v));
+      await this.cleanup(before.filter(x => !now.has(x)));
     });
   },
   async del(s, k) {
     if (!this.remote) return DB.del(s, k);
-    return this.write(async () => { await this.remote.del(this.docId(s, k)); if (s === 'meta') delete this.cache.meta[k]; else this.cache[s].delete(k); });
+    const before = this.imagesOf(s, k);
+    return this.write(async () => {
+      await this.remote.del(this.docId(s, k));
+      if (s === 'meta') delete this.cache.meta[k]; else this.cache[s].delete(k);
+      await this.cleanup(before);
+    });
   },
   async putMany(s, arr, progress) {
     if (!this.remote) return DB.putMany(s, arr);
@@ -814,10 +851,11 @@ function setSync(state) {
   el.dataset.state = state;
   el.textContent = {ok: '已同步', busy: '同步中…', error: '同步中断'}[state] || '';
 }
+const errMsg = e => (e && e.userMsg) || (e && e.code ? `云端操作失败（${e.code}），请检查网络后再试` : '操作失败：' + ((e && e.message) || e));
 async function save(store, v) {
   try { await Store.put(store, v); return true; }
   catch (e) {
-    const msg = e && (e.name === 'QuotaExceededError' || e.code === 'quota_exceeded' || e.code === 'too_large') ? '存储空间不够了，删掉一些图片后再试'
+    const msg = e && e.userMsg ? e.userMsg : e && (e.name === 'QuotaExceededError' || e.code === 'quota_exceeded' || e.code === 'too_large') ? '存储空间不够了，删掉一些图片后再试'
       : e && e.code ? `云端保存失败（${e.code}），请检查网络后再试` : '保存失败：' + (e && e.message || e);
     toast(msg); return false;
   }
@@ -1389,7 +1427,7 @@ function importBackup(file) {
       if (data.rates) { RATES = {...DEFAULT_RATES, ...data.rates}; await Store.put('meta', RATES, 'rates'); }
       S.ips = await Store.all('ips'); S.books = await Store.all('books');
       toast('导入完成'); location.hash = ''; route();
-    } catch (e) { toast('导入失败：' + (e && e.message || e)); }
+    } catch (e) { toast('导入失败：' + errMsg(e)); }
   };
   r.readAsText(file);
 }
@@ -1453,8 +1491,10 @@ function openIpForm(ip) {
     if (del) del.onclick = async () => {
       const ok = await confirmBox(n ? `删除“${d.name}”会同时删除里面的 ${n} 本，确定吗？` : `删除“${d.name}”？`);
       if (!ok) return openIpForm(ip);
-      for (const b of S.books.filter(b => b.ipId === d.id)) await Store.del('books', b.id);
-      await Store.del('ips', d.id);
+      try {
+        for (const b of S.books.filter(b => b.ipId === d.id)) await Store.del('books', b.id);
+        await Store.del('ips', d.id);
+      } catch (err) { toast(errMsg(err)); return; }
       S.books = S.books.filter(b => b.ipId !== d.id); S.ips = S.ips.filter(x => x.id !== d.id);
       toast('已删除'); location.hash = ''; route();
     };
@@ -1794,7 +1834,8 @@ document.addEventListener('click', async e => {
     case 'del-book': {
       const b = bookById(id);
       if (!(await confirmBox(`删除《${b.title || '无题'}》？删除后无法恢复。`))) return;
-      await Store.del('books', id); S.books = S.books.filter(x => x.id !== id);
+      try { await Store.del('books', id); } catch (err) { toast(errMsg(err)); return; }
+      S.books = S.books.filter(x => x.id !== id);
       toast('已删除'); location.hash = 'ip-' + b.ipId; break;
     }
     case 'thumb': galleryIdx = +el.dataset.i; renderBook(lastBookId); break;
