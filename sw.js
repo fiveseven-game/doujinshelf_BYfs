@@ -1,7 +1,10 @@
-// Doumi离线缓存（通过 https 网址访问时生效）
-// 规则：每次都先去服务器取最新文件（不用浏览器旧缓存），只有断网时才用这里存的副本。
-const CACHE = 'doujin-shelf-v6';
+// Doumi 离线缓存（通过 https 网址访问时生效）
+// 规则：先去服务器取最新文件；网速慢（超过 2.5 秒）或断网时，先用这台设备上存的副本马上打开，
+//       同时在后台继续下载最新版，下次打开就是新的。
+const CACHE = 'doumi-v7';
 const CORE = ['./', './index.html', './config.js', './supabase.js'];
+const WAIT = 2500;
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, {cache: 'reload'})))).catch(() => {}).then(() => self.skipWaiting()));
 });
@@ -12,10 +15,16 @@ self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
   if (url.pathname.endsWith('/check.html')) return;   // 自检页永远直接取最新
-  e.respondWith(
-    fetch(req, {cache: 'no-store'}).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
-      return res;
-    }).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match('./')))
-  );
+  const network = fetch(req, {cache: 'no-store'}).then(res => {
+    if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+    return res;
+  });
+  e.waitUntil(network.catch(() => {}));   // 即使先用了缓存，也让后台下载继续完成
+  e.respondWith((async () => {
+    const cached = await caches.match(req, {ignoreSearch: true}) || (req.mode === 'navigate' ? await caches.match('./') : null);
+    if (!cached) return network.catch(() => caches.match('./'));
+    const slow = new Promise(r => setTimeout(() => r(null), WAIT));
+    const first = await Promise.race([network.catch(() => null), slow]);
+    return first || cached;
+  })());
 });

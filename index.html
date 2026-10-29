@@ -49,6 +49,7 @@ a{color:var(--accent)}
 .num{font-family:var(--num);font-variant-numeric:tabular-nums}
 
 /* 锁屏 */
+html.resuming #lock .lock-card{visibility:hidden}
 #lock{min-height:100vh;display:grid;place-items:center;padding-block:40px}
 .lock-card{width:min(340px,100%);display:grid;gap:16px;text-align:center}
 .lock-mark{display:flex;justify-content:center;align-items:flex-end;gap:4px;height:44px;border-bottom:2px solid var(--ink);width:84px;margin:0 auto}
@@ -129,7 +130,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .t-card{flex:none;width:250px;display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:var(--soft);min-width:0}
 .t-card .mini{width:44px;height:60px;flex:none;border-radius:3px;overflow:hidden;border:0;padding:0;background:var(--line)}
 .t-card .mini img{width:100%;height:100%;object-fit:cover}
-.t-card .mini .ph span{font-size:10px}
+.t-card .mini .ph.loading{opacity:.75}
+.ph span{font-size:10px}
 .t-info{min-width:0;flex:1;display:grid;gap:1px;text-align:left;border:0;background:none;padding:0}
 .t-info b{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t-info span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -827,7 +829,7 @@ function processLogo(file) {
       c.getContext('2d').drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, out, out);
       res({src: c.toDataURL('image/png'), warn: w !== h ? '图片不是正方形，已自动裁切中间部分' : ''});
     };
-    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('读不了这张图片')); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error(/heic|heif/i.test(file.type + file.name) ? '这个浏览器读不了 HEIC 格式的照片，请在相机设置里改成“兼容性最佳”，或先截图再上传' : '读不了这张图片，请换一张 JPG 或 PNG 试试')); };
     img.src = url;
   });
 }
@@ -910,7 +912,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-14';
+const APP_VERSION = '2026.10.30-15';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1134,7 +1136,7 @@ const Sync = {
     for (let i = 0; i < need.length; i += 100) {
       const {data, error} = await this.client.storage.from('covers').createSignedUrls(need.slice(i, i + 100).map(s => s.slice(3)), 7 * 24 * 3600);
       if (error || !data) continue;
-      data.forEach(d => { if (d.signedUrl && d.path) Store.urls['sb:' + d.path] = d.signedUrl; });
+      data.forEach(d => { if (d.signedUrl && d.path && !Store.urls['sb:' + d.path]) { Store.urls['sb:' + d.path] = d.signedUrl; Store.urlsVer++; } });
     }
     need.forEach(async src => {
       const url = Store.urls[src]; if (!url || /^data:/.test(url)) return;
@@ -1159,8 +1161,15 @@ function queueSync(id, op) {
 }
 
 const Store = {
-  kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {},
+  kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {}, urlsVer: 0,
   get cloud() { return this.remote; },
+  async loadImgCache() {
+    try {
+      const [keys, vals] = await Promise.all([DB.keys('imgcache'), DB.all('imgcache')]);
+      let n = 0; keys.forEach((k, i) => { if (vals[i] && !/^data:/.test(this.urls[k] || '')) { this.urls[k] = vals[i]; n++; } });
+      if (n) { this.urlsVer++; if (this.onRemote) this.onRemote(); }
+    } catch {}
+  },
   async init() {
     try { this.remote = await claudeAdapter(); } catch { this.remote = null; }
     if (this.remote) {
@@ -1171,7 +1180,7 @@ const Store = {
     try { if (!DB.db) await DB.open(); }
     catch (e) { if (!this.remote) throw e; }   // 云端版里本地存储只用于草稿
     if (this.remote) { setSync('ok'); return; }
-    try { const keys = await DB.keys('imgcache'); for (const k of keys) this.urls[k] = await DB.get('imgcache', k); } catch {}   // 离线也能显示云端图片
+    this.loadImgCache();   // 在后台读取本机缓存的云端图片，不拖慢打开速度
     Sync.boot();   // 后台连接 Supabase，不阻塞打开
   },
   async absorb(docs, remote) {
@@ -1339,6 +1348,17 @@ const splitCp = s => String(s || '').split(/[,，、;；\n]+/).map(x => x.trim()
 const ipColor = ip => (ip && ip.color) || COLORS[hashStr(ip ? ip.id : '') % COLORS.length];
 
 /* ================= 锁屏 ================= */
+/* 刷新不用重新解锁：解锁状态记在这个标签页里（关掉标签页、或离开超过 3 分钟就要重新输密码） */
+const Sess = {
+  key: 'doumi-unlocked',
+  ok() { try { const v = JSON.parse(sessionStorage.getItem(this.key) || 'null'); return !!v && Date.now() - v.seen < 3 * 60 * 1000; } catch { return false; } },
+  mark() { try { sessionStorage.setItem(this.key, JSON.stringify({seen: Date.now()})); } catch {} },
+  clear() { try { sessionStorage.removeItem(this.key); } catch {} },
+};
+if (Sess.ok()) document.documentElement.classList.add('resuming');   // 刷新时先不显示锁屏，避免闪一下
+window.addEventListener('pagehide', () => { if (unlocked) Sess.mark(); });
+setInterval(() => { if (unlocked && !document.hidden) Sess.mark(); }, 30000);
+
 async function initLock() {
   if (!storeReady) {
     try { await Store.init(); storeReady = true; }
@@ -1350,6 +1370,8 @@ async function initLock() {
   }
   try { const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); } } catch {}
   const pw = await Store.get('meta', 'pw');
+  if (pw && Sess.ok()) { document.documentElement.classList.remove('resuming'); return enter(); }
+  document.documentElement.classList.remove('resuming');
   const form = $('#lock-form'); form.hidden = false;
   if (!pw) {
     $('#lock-sub').textContent = '第一次使用，先设一个解锁密码';
@@ -1399,7 +1421,7 @@ function afterWipe() {
 }
 /* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
 let lastSig = '';
-const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME, USER_THEMES]);
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME, USER_THEMES, Store.urlsVer]);   // 图片地址到了也要刷新
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
@@ -1414,6 +1436,7 @@ async function onRemoteChange() {
 }
 Store.onRemote = onRemoteChange;
 async function enter() {
+  Sess.mark();
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
   startView = (await Store.get('meta', 'startView')) || '';
@@ -1427,14 +1450,14 @@ async function enter() {
   route();
 }
 function lockNow() {
-  unlocked = false; closeModal(); closeLightbox();
+  unlocked = false; Sess.clear(); closeModal(); closeLightbox();
   S.ips = []; S.books = []; $('#view').innerHTML = '';
   $('#app').hidden = true; $('#lock').hidden = false;
   $('#pw2').hidden = true; $('#forgot-box').hidden = true;
   initLock();
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) hiddenAt = Date.now();
+  if (document.hidden) { hiddenAt = Date.now(); if (unlocked) Sess.mark(); }
   else if (unlocked && hiddenAt && Date.now() - hiddenAt > 3 * 60 * 1000) lockNow();
 });
 
@@ -1477,9 +1500,11 @@ function cardText(b) {
   </div>`;
 }
 function coverHtml(b, c, big) {
-  return b.images && b.images.length
-    ? `<img src="${imgSrc(b.images[0])}" alt="${esc(b.title)}" loading="lazy">`
-    : `<div class="ph${big ? ' big' : ''}" style="--c:${c};color:${textOn(c)}"><span>${esc(b.title || '无题')}</span></div>`;
+  const src = b.images && b.images.length ? imgSrc(b.images[0]) : '';
+  // 云端图片的地址还没拿到（网慢 / 刚打开）时，先显示色块封面，拿到后会自动换成图片
+  return src
+    ? `<img src="${src}" alt="${esc(b.title)}" ${big ? '' : 'loading="lazy" decoding="async"'} onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph${big ? ' big' : ''}',style:'--c:${c};color:${textOn(c)}',innerHTML:'<span>'+this.alt+'</span>'}))">`
+    : `<div class="ph${big ? ' big' : ''}${b.images && b.images.length ? ' loading' : ''}" style="--c:${c};color:${textOn(c)}"><span>${esc(b.title || '无题')}</span></div>`;
 }
 function renderHome() {
   const ips = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0));
@@ -1681,7 +1706,7 @@ function renderBook(id) {
       <a class="crumb" href="#ip-${esc(b.ipId)}">‹ ${esc(ip ? ip.name : '书架')}</a>
       <div class="gallery">
         <button class="gallery-main" data-act="zoom" ${imgs.length ? '' : 'disabled'} aria-label="查看大图">
-          ${imgs.length ? `<img src="${imgSrc(imgs[galleryIdx])}" alt="${esc(b.title)}">` : coverHtml(b, c, true)}</button>
+          ${imgs.length && imgSrc(imgs[galleryIdx]) ? `<img src="${imgSrc(imgs[galleryIdx])}" alt="${esc(b.title)}">` : coverHtml(b, c, true)}</button>
         ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((src, i) => `<button class="${i === galleryIdx ? 'on' : ''}" data-act="thumb" data-i="${i}"><img src="${imgSrc(src)}" alt=""></button>`).join('')}</div>` : ''}
       </div>
       ${b.transit ? `<div class="transit-bar"><span>还在路上</span><button class="btn small" data-act="arrive" data-id="${esc(b.id)}">标记为到手</button></div>` : ''}
@@ -1697,12 +1722,12 @@ function renderBook(id) {
         ${spec('本子类型', b.kind)}
         ${spec('本子尺寸', b.size, SIZE_MM[b.size])}
         ${spec('地区', normOrigin(b.origin))}
-        ${spec('形式', b.format)}
         ${spec('页数', b.pages ? b.pages + 'p' : '')}
         ${spec('字数', wordsText(b))}
         ${spec('语言', b.lang)}
+        ${spec('形式', b.format)}
+        ${spec('数量', qtyOf(b) + ' 本')}
         ${spec('品相', b.condition)}
-        ${spec('购买数量', qtyOf(b) + ' 本')}
       </div>
       <div class="dates">
         <span><em>发行日</em>${b.releaseDate ? esc(ymd(b.releaseDate)) : '<i>未填</i>'}</span>
@@ -2413,7 +2438,7 @@ function compressImage(file, max = 1600, q = 0.85) {
       ctx.drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('读不了这张图片')); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error(/heic|heif/i.test(file.type + file.name) ? '这个浏览器读不了 HEIC 格式的照片，请在相机设置里改成“兼容性最佳”，或先截图再上传' : '读不了这张图片，请换一张 JPG 或 PNG 试试')); };
     img.src = url;
   });
 }
@@ -2504,19 +2529,19 @@ async function openBookForm(book, presetIp) {
       <div class="fgroup"><h3>本子信息</h3>
         <div class="two">
           ${selField('bk-kind', '本子类型', OPT.kind, d.kind, {custom: true})}
-          ${selField('bk-lang', '语言', OPT.lang, d.lang, {optional: true, custom: true})}
-        </div>
-        <div class="two">
-          <label class="field"><span>页数<i>选填</i></span><div class="unit-in"><input class="input num" type="number" id="bk-pages" min="1" max="9999" step="1" inputmode="numeric" placeholder="例如 40" value="${esc(d.pages || '')}"><em>p</em></div></label>
-          <div class="field"><span>字数<i>选填</i></span><div class="words-in"><input class="input num" type="number" id="bk-words" min="0" step="any" inputmode="decimal" placeholder="例如 5" value="${esc(d.words && d.words.n ? d.words.n : '')}" aria-label="字数">
-            <select class="input" id="bk-wordunit" aria-label="字数单位"><option value="w" ${!d.words || d.words.unit !== 'z' ? 'selected' : ''}>W字</option><option value="z" ${d.words && d.words.unit === 'z' ? 'selected' : ''}>字</option></select></div></div>
-        </div>
-        <div class="two">
-          ${selField('bk-format', '本子性质 · 形式', OPT.format, d.format)}
           ${selField('bk-size', '本子尺寸', OPT.size, d.size, {custom: true, labels: SIZE_MM})}
         </div>
         <div class="two">
           ${selField('bk-origin', '地区', OPT.origin, normOrigin(d.origin))}
+          <label class="field"><span>页数<i>选填</i></span><div class="unit-in"><input class="input num" type="number" id="bk-pages" min="1" max="9999" step="1" inputmode="numeric" placeholder="例如 40" value="${esc(d.pages || '')}"><em>p</em></div></label>
+        </div>
+        <div class="two">
+          <div class="field"><span>字数<i>选填</i></span><div class="words-in"><input class="input num" type="number" id="bk-words" min="0" step="any" inputmode="decimal" placeholder="例如 5" value="${esc(d.words && d.words.n ? d.words.n : '')}" aria-label="字数">
+            <select class="input" id="bk-wordunit" aria-label="字数单位"><option value="w" ${!d.words || d.words.unit !== 'z' ? 'selected' : ''}>W字</option><option value="z" ${d.words && d.words.unit === 'z' ? 'selected' : ''}>字</option></select></div></div>
+          ${selField('bk-lang', '语言', OPT.lang, d.lang, {optional: true, custom: true})}
+        </div>
+        <div class="two">
+          ${selField('bk-format', '本子性质 · 形式', OPT.format, d.format)}
           ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
         </div>
         <div class="two">
