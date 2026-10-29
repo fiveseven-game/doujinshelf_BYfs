@@ -158,8 +158,19 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .wf:hover .pic{opacity:.9}
 .wf .pic img{width:100%;height:auto}
 .wf .pic .ph{aspect-ratio:5/7;height:auto}
-.wf-title{font-size:14px;font-weight:500;margin-top:6px;line-height:1.4;overflow-wrap:anywhere}
-.wf-sub{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.wf .pic{position:relative}
+.wf .pic .tag{position:absolute;top:6px;left:6px}
+.wf .pic .tag.qty{left:auto;right:6px;background:rgba(0,0,0,.55);color:#fff}
+.wf-title{font-size:15px;font-weight:600;margin-top:8px;line-height:1.35;overflow-wrap:anywhere;letter-spacing:.01em}
+.wf-by{font-size:13px;color:var(--ink);opacity:.72;margin-top:3px;line-height:1.35;overflow-wrap:anywhere}
+.wf-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--muted);line-height:1.3}
+.wf-meta i{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.wf-cp{padding:0 6px;border-radius:4px;background:var(--soft);line-height:18px}
+.spine.has-img{background-size:cover;background-position:center}
+.spine.has-img .spine-title{text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.buy-qty{font-size:13px;color:var(--muted);margin-top:4px;display:block}
+.buy-when .buy-qty b{display:inline;font-size:15px;color:var(--ink);font-weight:600}
+.buy-sum small{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
 
 /* 合集 */
 .coll-head{display:flex;gap:12px;align-items:center;margin-bottom:20px}
@@ -332,6 +343,15 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .buy-sum span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
 .buy-link{display:inline-flex;margin-top:12px;font-size:14px;text-decoration:none;font-weight:500;overflow-wrap:anywhere}
 
+.ip-top{display:flex;gap:14px;align-items:flex-end}
+.ip-preview{width:44px;height:120px;flex:none;border-radius:2px 2px 0 0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 8px;border-bottom:2px solid var(--line-2)}
+.ip-preview .spine-title{font-size:13px}
+.ip-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.ip-custom{position:relative;overflow:hidden}
+.ip-custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ip-thumb{width:56px;height:56px;border-radius:6px;object-fit:cover}
+.swatches{gap:7px}
+.swatches button{width:30px;height:30px}
 /* 统计：可视化 */
 .viz{display:grid;gap:32px;margin-bottom:36px}
 @media (min-width:860px){.viz{grid-template-columns:1fr 1fr;gap:36px 40px}.viz .wide{grid-column:1/-1}}
@@ -365,6 +385,82 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .heat-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:10px;font-size:11px;color:var(--muted)}
 .heat-legend .cell{width:14px;height:14px}
 
+/* 统计页（低饱和 · 跟随主题） */
+.st{--st-gap:14px}
+.st .page-head{align-items:flex-end}
+.st-theme{display:inline-flex;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font-size:12px;padding:6px 10px;border-radius:99px;background:var(--soft)}
+.st-theme i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.st-theme span{margin-left:5px}
+.st-hero{display:grid;gap:18px;padding:22px 20px;border-radius:14px;background:color-mix(in srgb,var(--p1) 13%,var(--bg));margin-bottom:34px}
+@media (min-width:760px){.st-hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);align-items:center;padding:26px 28px}}
+.st-k{display:block;font-size:12px;color:var(--muted);letter-spacing:.08em}
+.st-hero-main strong{display:block;font:600 40px/1.1 var(--num);letter-spacing:-.01em;margin:6px 0 8px;overflow-wrap:anywhere}
+.st-hero-sub{font-size:13px;color:var(--muted)}
+.st-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+@media (min-width:560px){.st-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.st-kpis>div{min-width:0;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--p1) 45%,transparent)}
+.st-kpis b{display:block;font:600 24px/1.25 var(--num);margin-top:3px}
+.st-kpis em{display:block;font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.18em;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.st-label::after{content:"";flex:1;height:1px;background:var(--line)}
+.st-grid{display:grid;gap:var(--st-gap);margin-bottom:34px}
+@media (min-width:860px){.st-grid{grid-template-columns:1fr 1fr}.st-grid.three{grid-template-columns:1.25fr 1fr 1fr}.st-grid .wide{grid-column:1/-1}}
+.st-panel{border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.st-panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.st-panel-head h3{font-size:15px;font-weight:600}
+.st-panel-head small{font-size:12px;color:var(--muted)}
+.st-years{margin-bottom:10px}
+.st-note{margin:0 0 10px;font-size:12px;color:var(--muted)}
+.st-note b{font-size:17px;color:var(--ink);font-weight:600;margin-right:8px}
+.st .mbars{height:160px}
+.st .mbar i{background:color-mix(in srgb,var(--p1) 45%,var(--soft))}
+.st .mbar.peak i{background:var(--p1)}
+.st .mbar small{color:var(--muted)}
+.st .mbar.peak small{color:var(--ink);font-weight:600}
+.st .cell.l1{background:color-mix(in srgb,var(--p1) 24%,var(--soft))}
+.st .cell.l2{background:color-mix(in srgb,var(--p1) 48%,var(--soft))}
+.st .cell.l3{background:color-mix(in srgb,var(--p1) 74%,var(--soft));color:var(--p1-ink)}
+.st .cell.l4{background:var(--p1);color:var(--p1-ink)}
+.st-foot{margin:10px 0 0;font-size:12px;color:var(--muted)}
+.st-donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.st-donut{width:132px;height:132px;flex:none}
+.st-legend{list-style:none;margin:0;padding:0;display:grid;gap:7px;flex:1;min-width:150px}
+.st-legend li{display:flex;align-items:center;gap:8px;font-size:13px}
+.st-legend i{width:9px;height:9px;border-radius:3px;background:var(--c);flex:none}
+.st-legend span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-legend b{font-weight:600;font-variant-numeric:tabular-nums}
+.st-legend em{font-style:normal;color:var(--muted);font-size:12px;width:3em;text-align:right;font-variant-numeric:tabular-nums}
+.st-stack{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin-bottom:14px}
+.st-stack i{display:block;background:var(--c);min-width:3px}
+.st-bars{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+.st-bar-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:5px}
+.st-bar-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-bar-name em{font-style:normal;color:var(--muted);font-size:12px;margin-left:6px}
+.st-bar-val{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.st-bar-val b{color:var(--ink);font-weight:600}
+.st-dim{color:var(--muted)}
+.st-track{height:5px;border-radius:99px;background:var(--soft);overflow:hidden}
+.st-track i{display:block;height:100%;border-radius:99px;background:var(--c)}
+.st-more{margin-top:12px;border:0;background:none;color:var(--muted);font-size:13px;padding:4px 0}
+.st-more:hover{color:var(--ink)}
+.st-top{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.st-top a{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.st-top li:last-child a{border-bottom:0}
+.st-rank{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--p1) 18%,var(--bg));color:var(--ink);flex:none}
+.st-top-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.st-top-name em{font-style:normal;color:var(--muted);font-size:12px;margin-left:6px}
+.st-top b{font-weight:600}
+/* 设置：主题 */
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.theme-opt{border:2px solid transparent;border-radius:10px;background:var(--bg);padding:10px;text-align:left;display:grid;gap:8px}
+.theme-opt.on{border-color:var(--ink)}
+.theme-opt .strip{display:flex;height:22px;border-radius:5px;overflow:hidden}
+.theme-opt .strip i{flex:1;background:var(--c)}
+.theme-opt b{font-size:14px;font-weight:600;display:block}
+.theme-opt small{font-size:11px;color:var(--muted)}
+.theme-names{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.theme-names span{display:inline-flex;align-items:center;gap:4px}
+.theme-names i{width:8px;height:8px;border-radius:2px;background:var(--c)}
 /* 设置：品牌与实时汇率 */
 .brand-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .logo-preview{width:56px;height:56px;border-radius:12px;background:var(--bg);display:grid;place-items:center;overflow:hidden;flex:none}
@@ -468,6 +564,22 @@ const num = (v, d = 2) => (Number(v) || 0).toLocaleString('zh-CN', {maximumFract
 const money = n => '¥' + num(Math.round((Number(n) || 0) * 100) / 100);
 const clone = o => typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 const COLORS = ['#e4574c','#3d6fd9','#3aa17e','#e3a33b','#8a63d2','#2a9bb0','#a7795a','#e06c9f','#5d6678','#8fa33b','#d9733b','#4f9fd9'];
+/* 书脊预设色：分组展示（鲜明 / 莫兰迪 / 中国传统色 / 日本传统色 / 粉彩） */
+const SPINE_SETS = [
+  {name: '鲜明', colors: COLORS},
+  {name: '莫兰迪', colors: ['#8a9ba8','#a3b09a','#c9a99a','#b8a07e','#9c8fa8','#7f9c97','#c2b49c','#a08f8a','#6f7d8c','#b5a6a0','#8e9a7c','#c4b2a0']},
+  {name: '中国传统色', colors: ['#9d2933','#425066','#789262','#b36d61','#1685a9','#d9b611','#e4c6d0','#a88462','#3d3b4f','#c3272b','#56004f','#6b6882']},
+  {name: '日本传统色', colors: ['#0d5661','#33a6b8','#5dac81','#ffb11b','#e16b8c','#8b81c3','#6c6a2d','#656765','#b5495b','#cb4042','#2e5c6e','#a35e47']},
+  {name: '粉彩', colors: ['#f4a6b7','#8ec5e8','#9ed9c0','#f6d88a','#b9a7e0','#f7b89a','#ee8e8e','#8fa7c9','#c8e6a0','#f2c4de','#a0d2db','#e8c8a0']},
+];
+/* 根据底色深浅决定文字用白色还是深色 */
+function textOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '#fff';
+  const n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return L > 0.66 ? '#2a2a30' : '#fff';
+}
+const qtyOf = b => Math.max(1, parseInt(b && b.qty, 10) || 1);
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5-4.8-4.5 6.5-.8z"/></svg>';
 let toastTimer;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
@@ -611,7 +723,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.29-5';
+const APP_VERSION = '2026.10.30-1';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -741,7 +853,7 @@ const Store = {
     const ips = new Map(), books = new Map(), meta = {}, srcs = [];
     docs.forEach(({id, body: v}) => {
       if (!v) return;
-      if (id.startsWith('ip_')) ips.set(v.id, clone(v));
+      if (id.startsWith('ip_')) { ips.set(v.id, clone(v)); if (v.spineImg) srcs.push(v.spineImg); }
       else if (id.startsWith('book_')) { books.set(v.id, clone(v)); (v.images || []).forEach(x => srcs.push(x)); }
       else if (id.startsWith('meta_')) { meta[id.slice(5)] = v.v; if (id === 'meta_brand' && v.v && v.v.logo) srcs.push(v.v.logo); }
     });
@@ -755,6 +867,7 @@ const Store = {
       for (let i = 0; i < v.images.length; i++) if (/^data:/.test(v.images[i])) v.images[i] = await this.remote.upload(v.images[i]);
     }
     if (s === 'meta' && k === 'brand' && v && /^data:/.test(v.logo || '')) v.logo = await this.remote.upload(v.logo);
+    if (s === 'ips' && v && /^data:/.test(v.spineImg || '')) v.spineImg = await this.remote.upload(v.spineImg);
   },
   async write(fn) { this.pending++; setSync('busy'); try { return await fn(); } catch (e) { setSync('error'); throw e; } finally { this.pending--; if (this.pending === 0 && document.getElementById('sync').dataset.state !== 'error') setSync('ok'); } },
   async all(s) { if (!this.remote) return DB.all(s); return [...this.cache[s].values()].map(clone); },
@@ -762,6 +875,7 @@ const Store = {
   imagesOf(s, k, v) {   // 一条记录引用的云端图片
     if (s === 'books') return ((v || this.cache.books.get(k) || {}).images || []).slice();
     if (s === 'meta' && k === 'brand') { const b = v || this.cache.meta.brand; return b && b.logo ? [b.logo] : []; }
+    if (s === 'ips') { const i = v || this.cache.ips.get(k); return i && i.spineImg ? [i.spineImg] : []; }
     return [];
   },
   async cleanup(srcs) { if (srcs.length && this.remote.remove) { try { await this.remote.remove(srcs); } catch {} } },
@@ -949,12 +1063,13 @@ function afterWipe() {
 }
 /* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
 let lastSig = '';
-const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo]);
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME]);
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
+  THEME = (await Store.get('meta', 'theme')) || THEME;
   const sig = sigOf(); if (sig === lastSig) return; lastSig = sig;
   const a = document.activeElement;
   if (a && $('#view').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
@@ -965,6 +1080,7 @@ async function enter() {
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
   viewMode = (await Store.get('meta', 'view')) || 'shelf';
+  THEME = (await Store.get('meta', 'theme')) || 'morandi';
   await Drafts.get('new');
   unlocked = true; lastSig = sigOf();
   $('#lock').hidden = true; $('#app').hidden = false;
@@ -1008,7 +1124,7 @@ function renderCurrent() {
 function coverHtml(b, c, big) {
   return b.images && b.images.length
     ? `<img src="${imgSrc(b.images[0])}" alt="${esc(b.title)}" loading="lazy">`
-    : `<div class="ph${big ? ' big' : ''}" style="--c:${c}"><span>${esc(b.title || '无题')}</span></div>`;
+    : `<div class="ph${big ? ' big' : ''}" style="--c:${c};color:${textOn(c)}"><span>${esc(b.title || '无题')}</span></div>`;
 }
 function renderHome() {
   const ips = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0));
@@ -1025,20 +1141,23 @@ function renderHome() {
       ${ips.map(ip => `<button class="${flowIp === ip.id ? 'on' : ''}" data-act="flow-ip" data-v="${esc(ip.id)}">${esc(ip.name)} ${S.books.filter(b => b.ipId === ip.id).length}</button>`).join('')}</div>
       ${list.length ? `<div class="flow">${list.map(b => {
         const ip = ipById(b.ipId);
-        return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}</div>
+        const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
+        return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
           <div class="wf-title">${esc(b.title || '无题')}</div>
-          <div class="wf-sub">${b.transit ? '<span class="tag transit">在途</span>' : ''}<span>${esc(ip ? ip.name : '')}${b.cp ? ' · ' + esc(b.cp) : ''}</span></div></button>`;
+          ${by ? `<div class="wf-by">${by}</div>` : ''}
+          <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div></button>`;
       }).join('')}</div>` : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
     body = `<div class="shelf">${ips.map(ip => {
-      const n = S.books.filter(b => b.ipId === ip.id).length;
-      return `<button class="spine" style="--c:${ipColor(ip)};height:${156 + (hashStr(ip.id) % 6) * 8}px" data-go="ip-${esc(ip.id)}" title="${esc(ip.name)}">
+      const n = sum(S.books.filter(b => b.ipId === ip.id).map(qtyOf));
+      const c = ipColor(ip), img = ip.spineImg ? imgSrc(ip.spineImg) : '';
+      return `<button class="spine${img ? ' has-img' : ''}" style="--c:${c};color:${img ? '#fff' : textOn(c)};height:${156 + (hashStr(ip.id) % 6) * 8}px${img ? `;background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}')` : ''}" data-go="ip-${esc(ip.id)}" title="${esc(ip.name)}">
         <span class="spine-title">${esc(ip.name)}</span><span class="spine-count">${n}</span></button>`;
     }).join('')}<button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">＋ 新建IP</span></button></div>`;
   }
   $('#view').innerHTML = `
     ${hasSample ? `<div class="notice"><span>书架上有示例数据，熟悉之后可以一键删掉。</span><button class="btn small" data-act="del-sample">删除示例</button></div>` : ''}
-    <div class="page-head"><div><h1>我的书架</h1><p class="num">${S.ips.length} 个IP · ${S.books.length} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
+    <div class="page-head"><div><h1>我的书架</h1><p class="num">${S.ips.length} 个IP · ${sum(S.books.map(qtyOf))} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
       <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
     <section class="section">
       <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2></div>
@@ -1065,7 +1184,7 @@ function renderIp(id) {
     <a class="crumb" href="#">‹ 书架</a>
     <div class="coll-head"><div class="coll-mark" style="--c:${c}"></div>
       <div style="min-width:0"><h1>${esc(ip.name)} ${ip.sample ? '<span class="tag">示例</span>' : ''}</h1>
-      <p class="num">${books.length} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
+      <p class="num">${sum(books.map(qtyOf))} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
       <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
     <div class="covers">
       ${books.map(b => `<button class="cover-card" data-go="book-${esc(b.id)}">
@@ -1120,8 +1239,8 @@ function renderBook(id) {
         <div class="buy">
           <div class="buy-head">
             <div class="buy-when"><b>${buyLine ? esc(buyLine) : '<span class="muted">未填写购入时间和地点</span>'}</b>
-              <span>总价格${cs.foreign ? '（已折合人民币）' : ''}</span></div>
-            <div class="buy-sum"><strong>${money(cs.cny)}</strong>${cs.foreign ? `<span class="num">原币 ${esc(cs.orig)}</span>` : ''}</div>
+              <span class="buy-qty"><b class="num">${qtyOf(b)}</b> 本${qtyOf(b) > 1 ? ` · 平均每本 ${money(cs.cny / qtyOf(b))}` : ''}</span></div>
+            <div class="buy-sum"><small>总价格${cs.foreign ? '（已折合人民币）' : ''}</small><strong>${money(cs.cny)}</strong>${cs.foreign ? `<span class="num">原币 ${esc(cs.orig)}</span>` : ''}</div>
           </div>
           ${costs.length ? `<ul class="price-lines">${costs.map(x => `<li><span>${esc(x.label || '其他')}</span><span>${fmtCur(x.amount, x.cur || 'CNY')}${(x.cur || 'CNY') !== 'CNY' ? `<small>≈${money(toCny(x))}</small>` : ''}</span></li>`).join('')}</ul>` : ''}
           ${b.link ? `<a class="buy-link" href="${esc(b.link)}" target="_blank" rel="noopener noreferrer">打开购入链接 · ${esc(hostOf(b.link))} ↗</a>` : ''}
@@ -1140,126 +1259,165 @@ function renderBook(id) {
 }
 
 /* ================= 统计 ================= */
-function barList(rows, max, color) {
-  return `<ol class="bars">${rows.map(r => `<li><div class="bar-top"><span class="bar-name">${esc(r.name)}${r.sub ? `<em>${esc(r.sub)}</em>` : ''}</span><span class="bar-val">${r.val}</span></div>
-    <div class="bar-track"><i style="${r.c || color ? `--c:${r.c || color};` : ''}width:${Math.max(2, r.v / max * 100)}%"></i></div></li>`).join('')}</ol>`;
-}
-function countBy(books, key, fallback) {
+/* ================= 统计配色主题（设置里可换） =================
+   参考：中国传统色（zhongguose.com）、日本の伝統色（nipponcolors.com）等配色网站 */
+const THEMES = [
+  {id: 'morandi', name: '莫兰迪', group: '低饱和 · 默认', colors: [['雾蓝', '#7d8fa0'], ['灰绿', '#a3b09a'], ['灰粉', '#c9a99a'], ['驼色', '#b8a07e'], ['灰紫', '#9c8fa8'], ['青灰', '#7f9c97'], ['米色', '#c2b49c'], ['灰褐', '#a08f8a']]},
+  {id: 'zhongguo', name: '中国传统色', group: '古典', colors: [['黛蓝', '#425066'], ['胭脂', '#9d2933'], ['竹青', '#789262'], ['檀色', '#b36d61'], ['石青', '#1685a9'], ['秋香', '#d9b611'], ['藕荷', '#e4c6d0'], ['苍色', '#75878a']]},
+  {id: 'nippon', name: '日本传统色', group: '和风', colors: [['藍', '#0d5661'], ['浅葱', '#33a6b8'], ['若竹', '#5dac81'], ['山吹', '#ffb11b'], ['紅梅', '#e16b8c'], ['藤', '#8b81c3'], ['鶯', '#6c6a2d'], ['鈍', '#656765']]},
+  {id: 'acg', name: '二次元粉彩', group: '二次元', colors: [['樱粉', '#f4a6b7'], ['天空', '#8ec5e8'], ['薄荷', '#9ed9c0'], ['奶油', '#f6d88a'], ['薰衣草', '#b9a7e0'], ['蜜桃', '#f7b89a'], ['珊瑚', '#ee8e8e'], ['雾霾蓝', '#8fa7c9']]},
+  {id: 'seasalt', name: '海盐北欧', group: '清爽', colors: [['海雾', '#6b8fa3'], ['盐绿', '#a7c4c2'], ['沙丘', '#d9c5a0'], ['陶土', '#c48b7a'], ['苔藓', '#8a9a5b'], ['石板', '#5c6b7a'], ['亚麻', '#d6ccbc'], ['暮紫', '#9e8b9e']]},
+  {id: 'ink', name: '水墨', group: '单色', colors: [['焦墨', '#3f4a5a'], ['浓墨', '#56617a'], ['重墨', '#6e7891'], ['淡墨', '#8b94a8'], ['清墨', '#a8b0c0'], ['烟灰', '#c2c8d3'], ['宣白', '#d8dce3'], ['砚色', '#5f6670']]},
+];
+let THEME = 'morandi';
+const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
+const pal = i => themeOf(THEME).colors[i % 8][1];
+const themeVars = () => themeOf(THEME).colors.map(([, c], i) => `--p${i + 1}:${c}`).join(';') + `;--p1-ink:${textOn(pal(0))}`;
+
+let statYear = null, statMetric = 'count', statAll = {ip: false, cp: false};
+function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
   const m = new Map();
-  books.forEach(b => { const k = b[key] || fallback; if (k) m.set(k, (m.get(k) || 0) + 1); });
-  return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  books.forEach(b => (keyFn(b) || []).forEach(k => { const e = m.get(k) || {name: k, count: 0, cost: 0, titles: 0}; e.count += qtyOf(b); e.cost += bookTotal(b); e.titles++; m.set(k, e); }));
+  return [...m.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
 }
-let statYear = null, statMetric = 'count';
+function barRows(rows, {valFn, colorFn, max, limit, moreKey}) {
+  const shown = limit && !statAll[moreKey] ? rows.slice(0, limit) : rows;
+  const m = max || Math.max(1, ...rows.map(r => r.v));
+  return `<ol class="st-bars">${shown.map((r, i) => `<li>
+      <div class="st-bar-top"><span class="st-bar-name">${esc(r.name)}${r.sub ? `<em>${esc(r.sub)}</em>` : ''}</span><span class="st-bar-val">${valFn(r)}</span></div>
+      <div class="st-track"><i style="--c:${colorFn ? colorFn(r, i) : 'var(--p1)'};width:${Math.max(2, r.v / m * 100)}%"></i></div></li>`).join('')}</ol>
+    ${limit && rows.length > limit ? `<button class="st-more" data-act="stat-more" data-v="${moreKey}">${statAll[moreKey] ? '收起' : `查看全部 ${rows.length} 个`}</button>` : ''}`;
+}
+function stackBar(rows, total, unitFn) {   // 一条横向分段条 + 图例
+  if (!total) return '<div class="empty-box">暂无数据</div>';
+  return `<div class="st-stack">${rows.map((r, i) => `<i style="--c:${pal(i)};flex:${r.v}" title="${esc(r.name)} ${unitFn(r)}"></i>`).join('')}</div>
+    <ul class="st-legend">${rows.map((r, i) => `<li><i style="--c:${pal(i)}"></i><span>${esc(r.name)}</span><b>${unitFn(r)}</b><em>${Math.round(r.v / total * 100)}%</em></li>`).join('')}</ul>`;
+}
 function donutSvg(rows, total) {
-  const r = 58, C = 2 * Math.PI * r; let off = 0;
-  const segs = rows.map(([k, v]) => {
-    const len = v / total * C, gap = rows.length > 1 ? Math.min(2, len / 2) : 0;
-    const s = `<circle cx="75" cy="75" r="${r}" fill="none" stroke="${REGION_COLORS[k] || '#9aa0aa'}" stroke-width="20" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"><title>${esc(k)} ${v} 本</title></circle>`;
+  const r = 56, C = 2 * Math.PI * r; let off = 0;
+  const segs = rows.map((x, i) => {
+    const len = x.v / total * C, gap = rows.length > 1 ? Math.min(2.5, len / 2) : 0;
+    const s = `<circle cx="75" cy="75" r="${r}" fill="none" stroke="${pal(i)}" stroke-width="16" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"><title>${esc(x.name)} ${x.v} 本</title></circle>`;
     off += len; return s;
   }).join('');
-  return `<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="地区分布环形图">
-    <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--soft)" stroke-width="20"/>${segs}
-    <text x="75" y="72" text-anchor="middle" font-size="26" font-weight="600" font-family="var(--num)">${total}</text>
-    <text x="75" y="92" text-anchor="middle" font-size="11" fill="var(--muted)" style="fill:var(--muted)">本</text></svg>`;
+  return `<svg class="st-donut" viewBox="0 0 150 150" role="img" aria-label="地区分布环形图">
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--soft)" stroke-width="16"/>${segs}
+    <text x="75" y="74" text-anchor="middle" font-size="28" font-weight="600" style="fill:var(--ink);font-family:var(--num)">${total}</text>
+    <text x="75" y="94" text-anchor="middle" font-size="11" style="fill:var(--muted)">本</text></svg>`;
 }
-function vizHtml(books) {
-  // 地区
-  const regions = countBy(books, 'origin', '未填写');
-  const regionHtml = books.length ? `<div class="donut-wrap">${donutSvg(regions, books.length)}
-    <ul class="legend">${regions.map(([k, v]) => `<li><i style="--c:${REGION_COLORS[k] || '#9aa0aa'}"></i><span>${esc(k)}</span><b>${v}</b><em>${Math.round(v / books.length * 100)}%</em></li>`).join('')}</ul></div>`
-    : '<div class="empty-box">还没有本子</div>';
-
-  // 按月汇总
+function timeHtml(books) {
   const dated = books.filter(b => /^\d{4}-\d{2}/.test(b.buyDate || ''));
-  const undated = books.length - dated.length;
+  const undated = sum(books.filter(b => !/^\d{4}-\d{2}/.test(b.buyDate || '')).map(qtyOf));
   const ym = new Map();
-  dated.forEach(b => { const k = b.buyDate.slice(0, 7); const e = ym.get(k) || {count: 0, cost: 0}; e.count++; e.cost += bookTotal(b); ym.set(k, e); });
+  dated.forEach(b => { const k = b.buyDate.slice(0, 7); const e = ym.get(k) || {count: 0, cost: 0}; e.count += qtyOf(b); e.cost += bookTotal(b); ym.set(k, e); });
   const years = [...new Set(dated.map(b => +b.buyDate.slice(0, 4)))].sort((a, b) => b - a);
+  if (!years.length) return `<div class="st-grid"><div class="st-panel wide"><div class="empty-box">填写购买时间后，这里会显示每月买了多少</div></div></div>`;
   if (!years.includes(statYear)) statYear = years.includes(new Date().getFullYear()) ? new Date().getFullYear() : years[0];
   const val = e => e ? (statMetric === 'cost' ? e.cost : e.count) : 0;
   const fmtV = v => statMetric === 'cost' ? (v >= 10000 ? '¥' + (v / 10000).toFixed(1) + '万' : '¥' + Math.round(v)) : String(v);
-
-  let monthHtml = '<div class="empty-box">还没有填写购买时间的本子</div>', heatHtml = monthHtml;
-  if (years.length) {
-    const months = Array.from({length: 12}, (_, i) => ym.get(`${statYear}-${String(i + 1).padStart(2, '0')}`));
-    const maxM = Math.max(1, ...months.map(val));
-    const yearTotal = sum(months.map(val));
-    monthHtml = `
-      <div class="viz-tools">
-        <div class="chips">${years.map(y => `<button class="${y === statYear ? 'on' : ''}" data-act="stat-year" data-v="${y}">${y}</button>`).join('')}</div>
-        <div class="seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></div>
-      </div>
-      <p class="hint" style="margin:0 0 8px">${statYear} 年共 ${statMetric === 'cost' ? money(yearTotal) : yearTotal + ' 本'}</p>
-      <div class="mbars">${months.map((e, i) => { const v = val(e); return `<div class="mbar" title="${i + 1}月：${e ? e.count + ' 本 · ' + money(e.cost) : '0 本'}">
+  const months = Array.from({length: 12}, (_, i) => ym.get(`${statYear}-${String(i + 1).padStart(2, '0')}`));
+  const maxM = Math.max(1, ...months.map(val)), yearTotal = sum(months.map(val));
+  const peak = months.reduce((best, e, i) => val(e) > val(months[best]) ? i : best, 0);
+  const all = [...years].sort((a, b) => a - b), full = []; for (let y = all[0]; y <= all[all.length - 1]; y++) full.push(y);
+  const maxC = Math.max(1, ...[...ym.values()].map(e => e.count));
+  const lvl = n => n ? Math.min(4, Math.ceil(n / maxC * 4)) : 0;
+  return `<div class="st-grid">
+    <div class="st-panel">
+      <div class="st-panel-head"><h3>月份统计</h3>
+        <div class="seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></div></div>
+      <div class="chips st-years">${years.map(y => `<button class="${y === statYear ? 'on' : ''}" data-act="stat-year" data-v="${y}">${y}</button>`).join('')}</div>
+      <p class="st-note"><b class="num">${statMetric === 'cost' ? money(yearTotal) : yearTotal + ' 本'}</b>${statYear} 年合计${yearTotal ? ` · 最多在 ${peak + 1} 月` : ''}</p>
+      <div class="mbars">${months.map((e, i) => { const v = val(e); return `<div class="mbar${i === peak && v ? ' peak' : ''}" title="${i + 1}月：${e ? e.count + ' 本 · ' + money(e.cost) : '0 本'}">
         ${v ? `<small>${fmtV(v)}</small>` : ''}<i class="${v ? '' : 'zero'}" style="height:calc((100% - 18px) * ${v / maxM})"></i></div>`; }).join('')}</div>
-      <div class="mlabels">${months.map((_, i) => `<span>${i + 1}月</span>`).join('')}</div>`;
-
-    const allYears = [...years].sort((a, b) => a - b);
-    const full = []; for (let y = allYears[0]; y <= allYears[allYears.length - 1]; y++) full.push(y);
-    const maxC = Math.max(1, ...[...ym.values()].map(e => e.count));
-    const lvl = n => n ? Math.min(4, Math.ceil(n / maxC * 4)) : 0;
-    heatHtml = `<div class="heat-scroll"><div class="heat">
+      <div class="mlabels">${months.map((_, i) => `<span>${i + 1}</span>`).join('')}</div>
+    </div>
+    <div class="st-panel">
+      <div class="st-panel-head"><h3>时间方块</h3><small>每格一个月 · 颜色越深买得越多</small></div>
+      <div class="heat-scroll"><div class="heat">
         <span></span>${Array.from({length: 12}, (_, i) => `<span class="h">${i + 1}</span>`).join('')}
         ${full.reverse().map(y => `<span class="y">${y}</span>${Array.from({length: 12}, (_, i) => {
           const e = ym.get(`${y}-${String(i + 1).padStart(2, '0')}`), n = e ? e.count : 0;
           return `<div class="cell l${lvl(n)}" title="${y}年${i + 1}月：${n} 本${e ? ' · ' + money(e.cost) : ''}">${n || ''}</div>`;
         }).join('')}`).join('')}
       </div></div>
-      <div class="heat-legend">少<span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span>多</div>`;
-  }
-  return `<div class="viz">
-    <section class="panel"><h2>地区统计 <small>按本子性质 · 地区</small></h2>${regionHtml}</section>
-    <section class="panel"><h2>月份统计 <small>按购买时间</small></h2>${monthHtml}</section>
-    <section class="panel wide"><h2>时间方块 <small>每格一个月，颜色越深买得越多</small></h2>${heatHtml}
-      ${undated ? `<p class="hint" style="margin:10px 0 0">另有 ${undated} 本没填购买时间，未计入月份统计</p>` : ''}</section>
+      <div class="heat-legend">少<span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span>多</div>
+      ${undated ? `<p class="st-foot">另有 ${undated} 本没填购买时间，未计入</p>` : ''}
+    </div>
   </div>`;
 }
 function renderStats() {
-  const books = S.books, total = sum(books.map(bookTotal));
-  const transit = books.filter(b => b.transit);
-  const byIp = S.ips.map(ip => { const bs = books.filter(b => b.ipId === ip.id); return {ip, count: bs.length, cost: sum(bs.map(bookTotal))}; })
-    .sort((a, b) => b.count - a.count || b.cost - a.cost);
-  const cpMap = new Map(); let noCp = 0;
-  books.forEach(b => {
-    const cps = splitCp(b.cp); if (!cps.length) noCp++;
-    cps.forEach(name => { const e = cpMap.get(name) || {name, count: 0, cost: 0, ips: new Set()}; e.count++; e.cost += bookTotal(b); const ip = ipById(b.ipId); if (ip) e.ips.add(ip.name); cpMap.set(name, e); });
-  });
-  const cps = [...cpMap.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
+  const books = S.books, total = sum(books.map(bookTotal)), copies = sum(books.map(qtyOf));
+  const thisYear = String(new Date().getFullYear());
+  const yearCost = sum(books.filter(b => (b.buyDate || '').startsWith(thisYear)).map(bookTotal));
+  const transit = sum(books.filter(b => b.transit).map(qtyOf));
+  const rated = books.filter(b => b.rating), avgRate = rated.length ? sum(rated.map(b => b.rating)) / rated.length : 0;
+  const byIp = S.ips.map(ip => { const bs = books.filter(b => b.ipId === ip.id); return {name: ip.name, ip, v: sum(bs.map(qtyOf)), cost: sum(bs.map(bookTotal))}; })
+    .filter(x => x.v).sort((a, b) => b.v - a.v || b.cost - a.cost);
+  const cps = sumBy(books, b => splitCp(b.cp)).map(x => ({...x, v: x.count, sub: [...new Set(books.filter(b => splitCp(b.cp).includes(x.name)).map(b => (ipById(b.ipId) || {}).name).filter(Boolean))].join('、')}));
+  const noCp = sum(books.filter(b => !splitCp(b.cp).length).map(qtyOf));
+  const regions = sumBy(books, b => [b.origin || '未填写']).map(x => ({...x, v: x.count}));
+  const kinds = sumBy(books, b => [b.kind || '未填写']).map(x => ({...x, v: x.count}));
+  const reads = sumBy(books, b => [b.read || '未标记']).map(x => ({...x, v: x.count}));
   const labMap = new Map();
   books.forEach(b => (b.costs || []).forEach(x => { const k = (x.label || '其他').trim() || '其他'; labMap.set(k, (labMap.get(k) || 0) + toCny(x)); }));
-  const labs = [...labMap.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-  const rated = books.filter(b => b.rating), avgRate = rated.length ? sum(rated.map(b => b.rating)) / rated.length : 0;
-  const kinds = countBy(books, 'kind'), reads = countBy(books, 'read', '未标记');
-  const maxIp = Math.max(1, ...byIp.map(x => x.count)), maxCp = Math.max(1, ...cps.map(x => x.count)), maxLab = Math.max(1, ...labs.map(x => x[1]));
+  const labs = [...labMap.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([name, v]) => ({name, v}));
+  const top = [...books].sort((a, b) => bookTotal(b) / qtyOf(b) - bookTotal(a) / qtyOf(a)).slice(0, 3);
   const anyForeign = books.some(b => (b.costs || []).some(x => (x.cur || 'CNY') !== 'CNY' && Number(x.amount)));
+  const th = themeOf(THEME);
 
-  $('#view').innerHTML = `
-    <div class="page-head"><div><h1>统计</h1><p>按当前书架里的 ${books.length} 本计算${anyForeign ? '，外币按设置里的汇率折合人民币' : ''}</p></div></div>
-    <div class="tiles">
-      <div class="tile lead"><span>总花费</span><strong>${money(total)}</strong><em>平均每本 ${money(books.length ? total / books.length : 0)}</em></div>
-      <div class="tile"><span>本子</span><strong>${books.length}<small>本</small></strong><em>${transit.length ? `在途 ${transit.length} 本` : rated.length ? `平均 ${avgRate.toFixed(1)} 星` : '—'}</em></div>
-      <div class="tile"><span>IP</span><strong>${S.ips.length}<small>个</small></strong><em>${byIp[0] && byIp[0].count ? `最多：${esc(byIp[0].ip.name)}` : '—'}</em></div>
-      <div class="tile"><span>CP</span><strong>${cps.length}<small>个</small></strong><em>${cps[0] ? `最多：${esc(cps[0].name)}` : '—'}</em></div>
+  if (!books.length) {
+    $('#view').innerHTML = `<div class="page-head"><div><h1>统计</h1></div></div><div class="empty-box">书架上还没有本子，添加几本后这里会出现统计</div>`;
+    return;
+  }
+  $('#view').innerHTML = `<div class="st" style="${themeVars()}">
+    <div class="page-head"><div><h1>统计</h1><p>${books.length} 种 · ${copies} 本${anyForeign ? ' · 外币已按设置里的汇率折合人民币' : ''}</p></div>
+      <a class="st-theme" href="#prefs" title="在设置里更换配色">${th.colors.slice(0, 5).map(([, c]) => `<i style="--c:${c}"></i>`).join('')}<span>${esc(th.name)}</span></a></div>
+
+    <section class="st-hero">
+      <div class="st-hero-main">
+        <span class="st-k">累计花费</span>
+        <strong class="num">${money(total)}</strong>
+        <span class="st-hero-sub">平均每本 ${money(copies ? total / copies : 0)} · ${thisYear} 年花了 ${money(yearCost)}</span>
+      </div>
+      <div class="st-kpis">
+        <div><span class="st-k">本子</span><b class="num">${copies}</b><em>${books.length} 种${transit ? ` · 在途 ${transit}` : ''}</em></div>
+        <div><span class="st-k">IP</span><b class="num">${S.ips.length}</b><em>${byIp[0] ? '最多 ' + esc(byIp[0].name) : '—'}</em></div>
+        <div><span class="st-k">CP</span><b class="num">${cps.length}</b><em>${cps[0] ? '最多 ' + esc(cps[0].name) : '—'}</em></div>
+        <div><span class="st-k">评分</span><b class="num">${rated.length ? avgRate.toFixed(1) : '—'}</b><em>${rated.length ? `${rated.length} 本已打分` : '还没有打分'}</em></div>
+      </div>
+    </section>
+
+    <h2 class="st-label">时间</h2>
+    ${timeHtml(books)}
+
+    <h2 class="st-label">分布</h2>
+    <div class="st-grid three">
+      <div class="st-panel"><div class="st-panel-head"><h3>地区</h3><small>本子性质</small></div>
+        <div class="st-donut-wrap">${donutSvg(regions, copies)}
+          <ul class="st-legend">${regions.map((r, i) => `<li><i style="--c:${pal(i)}"></i><span>${esc(r.name)}</span><b>${r.v}</b><em>${Math.round(r.v / copies * 100)}%</em></li>`).join('')}</ul></div></div>
+      <div class="st-panel"><div class="st-panel-head"><h3>本子类型</h3></div>
+        ${barRows(kinds, {valFn: r => `<b>${r.v}</b> 本`, colorFn: (r, i) => pal(i)})}</div>
+      <div class="st-panel"><div class="st-panel-head"><h3>阅读状态</h3></div>
+        ${stackBar(reads, copies, r => r.v + ' 本')}</div>
     </div>
-    ${vizHtml(books)}
-    <div class="stat-grid">
-      <section class="panel"><h2>每个IP多少本 <small>本数 · 花费</small></h2>
-        ${byIp.length ? barList(byIp.map(x => ({name: x.ip.name, v: x.count, c: ipColor(x.ip), val: `<b>${x.count}</b> 本 · ${money(x.cost)}`})), maxIp) : '<div class="empty-box">还没有IP</div>'}
-      </section>
-      <section class="panel"><h2>每个CP多少本 <small>本数 · 花费</small></h2>
-        ${cps.length ? barList(cps.map(x => ({name: x.name, sub: [...x.ips].join('、'), v: x.count, val: `<b>${x.count}</b> 本 · ${money(x.cost)}`})), maxCp) : '<div class="empty-box">还没有填写CP的本子</div>'}
-        ${noCp ? `<p class="hint" style="margin:10px 0 0">另有 ${noCp} 本没填CP</p>` : ''}
-      </section>
-      <section class="panel"><h2>钱花在哪儿 <small>按价格细则汇总</small></h2>
-        ${labs.length ? barList(labs.map(([k, v]) => ({name: k, v, val: `<b>${money(v)}</b> · ${total ? Math.round(v / total * 100) : 0}%`})), maxLab, 'var(--star)') : '<div class="empty-box">还没有价格记录</div>'}
-      </section>
-      <section class="panel"><h2>本子类型 <small>本数</small></h2>
-        ${kinds.length ? barList(kinds.map(([k, v]) => ({name: k, v, val: `<b>${v}</b> 本`})), Math.max(...kinds.map(x => x[1])), 'var(--accent)') : '<div class="empty-box">还没有填写类型</div>'}
-      </section>
-      <section class="panel"><h2>阅读状态 <small>本数</small></h2>
-        ${books.length ? barList(reads.map(([k, v]) => ({name: k, v, val: `<b>${v}</b> 本`})), Math.max(...reads.map(x => x[1])), 'var(--muted)') : '<div class="empty-box">还没有本子</div>'}
-      </section>
-    </div>`;
+
+    <h2 class="st-label">IP 与 CP</h2>
+    <div class="st-grid">
+      <div class="st-panel"><div class="st-panel-head"><h3>每个IP多少本</h3><small>本数 · 花费</small></div>
+        ${byIp.length ? barRows(byIp, {valFn: r => `<b>${r.v}</b> 本<span class="st-dim"> · ${money(r.cost)}</span>`, colorFn: () => 'var(--p1)', limit: 8, moreKey: 'ip'}) : '<div class="empty-box">还没有IP</div>'}</div>
+      <div class="st-panel"><div class="st-panel-head"><h3>每个CP多少本</h3><small>本数 · 花费</small></div>
+        ${cps.length ? barRows(cps, {valFn: r => `<b>${r.v}</b> 本<span class="st-dim"> · ${money(r.cost)}</span>`, colorFn: () => 'var(--p2)', limit: 8, moreKey: 'cp'}) : '<div class="empty-box">还没有填写CP的本子</div>'}
+        ${noCp ? `<p class="st-foot">另有 ${noCp} 本没填CP</p>` : ''}</div>
+    </div>
+
+    <h2 class="st-label">花费</h2>
+    <div class="st-grid">
+      <div class="st-panel"><div class="st-panel-head"><h3>钱花在哪儿</h3><small>按价格细则</small></div>
+        ${labs.length ? stackBar(labs, total, r => money(r.v)) : '<div class="empty-box">还没有价格记录</div>'}</div>
+      <div class="st-panel"><div class="st-panel-head"><h3>单本最贵</h3><small>总价 ÷ 购买数量</small></div>
+        <ol class="st-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="st-rank">${i + 1}</span><span class="st-top-name">${esc(b.title || '无题')}<em>${esc((ipById(b.ipId) || {}).name || '')}</em></span><b class="num">${money(bookTotal(b) / qtyOf(b))}</b></a></li>`).join('')}</ol></div>
+    </div>
+  </div>`;
 }
 
 /* ================= 设置 ================= */
@@ -1284,6 +1442,12 @@ function renderSettings() {
           </ul>
           <div class="row"><button class="btn primary" type="submit">保存名称</button></div>
         </form>
+      </div>
+      <div class="set-card"><h2>配色主题</h2>
+        <p>更换统计页的配色。配色参考中国传统色、日本の伝統色等配色网站。</p>
+        <div class="themes">${THEMES.map(t => `<button type="button" class="theme-opt ${t.id === THEME ? 'on' : ''}" data-act="set-theme" data-v="${t.id}">
+          <span class="strip">${t.colors.map(([, c]) => `<i style="--c:${c}"></i>`).join('')}</span><span><b>${esc(t.name)}</b><small>${esc(t.group)}</small></span></button>`).join('')}</div>
+        <div class="theme-names">${themeOf(THEME).colors.map(([n, c]) => `<span><i style="--c:${c}"></i>${esc(n)} ${c}</span>`).join('')}</div>
       </div>
       <div class="set-card"><h2>备份与迁移</h2>
         <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
@@ -1405,14 +1569,15 @@ async function fetchLiveRates() {
       <button class="btn small primary" type="button" data-act="use-all-rates">全部填入并保存</button></div>`;
 }
 async function exportBackup() {
-  let books = S.books, brand = BRAND;
+  let books = S.books, brand = BRAND, ips = S.ips;
   if (Store.cloud) {
     toast('正在打包图片…');
-    books = clone(S.books); brand = clone(BRAND);
+    books = clone(S.books); brand = clone(BRAND); ips = clone(S.ips);
+    for (const ip of ips) { try { if (ip.spineImg && !/^data:/.test(ip.spineImg)) ip.spineImg = await blobToDataUrl(imgSrc(ip.spineImg)); } catch {} }
     for (const b of books) for (let i = 0; i < (b.images || []).length; i++) { try { if (!/^data:/.test(b.images[i])) b.images[i] = await blobToDataUrl(imgSrc(b.images[i])); } catch {} }
     try { if (brand.logo && !/^data:/.test(brand.logo)) brand.logo = await blobToDataUrl(imgSrc(brand.logo)); } catch {}
   }
-  const data = {app: 'doujin-shelf', version: 3, exportedAt: new Date().toISOString(), rates: RATES, brand, ips: S.ips, books};
+  const data = {app: 'doujin-shelf', version: 3, exportedAt: new Date().toISOString(), rates: RATES, theme: THEME, brand, ips, books};
   const filename = `同人本棚备份-${today().replace(/-/g, '')}.json`;
   if (Store.kind === 'claude') {
     if (!Store.cloud.downloads) return toast('这个窗口不支持保存文件');
@@ -1440,6 +1605,7 @@ function importBackup(file) {
       if (mode === 'replace') { await Store.clear('ips'); await Store.clear('books'); }
       await Store.putMany('ips', data.ips); await Store.putMany('books', data.books, (i, n) => toast(`正在导入 ${i} / ${n}`));
       if (data.brand) { BRAND = {...BRAND, ...data.brand}; await Store.put('meta', BRAND, 'brand'); applyBrand(); }
+      if (data.theme) { THEME = data.theme; await Store.put('meta', THEME, 'theme'); }
       if (data.rates) { RATES = {...DEFAULT_RATES, ...data.rates}; await Store.put('meta', RATES, 'rates'); }
       S.ips = await Store.all('ips'); S.books = await Store.all('books');
       toast('导入完成'); location.hash = ''; route();
@@ -1475,30 +1641,120 @@ function choose(text, options) {
 const confirmBox = (text, okText = '删除') => choose(text, [{v: 'ok', t: okText, cls: 'danger solid'}]).then(v => v === 'ok');
 
 /* ---------- IP 编辑 ---------- */
+/* 从图片提取主要颜色（最多 n 个，去掉接近纯白/纯黑和相近的颜色） */
+function extractPalette(src, n = 10) {
+  return new Promise(res => {
+    if (!src) return res([]);
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const w = 64, h = Math.max(1, Math.round(64 * img.naturalHeight / img.naturalWidth));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+        const d = x.getImageData(0, 0, w, h).data, bins = new Map();
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 128) continue;
+          const k = (d[i] >> 4) << 8 | (d[i + 1] >> 4) << 4 | (d[i + 2] >> 4);
+          const e = bins.get(k) || {r: 0, g: 0, b: 0, n: 0}; e.r += d[i]; e.g += d[i + 1]; e.b += d[i + 2]; e.n++; bins.set(k, e);
+        }
+        const cols = [...bins.values()].map(e => ({r: e.r / e.n, g: e.g / e.n, b: e.b / e.n, n: e.n})).sort((a, b) => b.n - a.n);
+        const out = [];
+        for (const c of cols) {
+          const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b), l = (mx + mn) / 510;
+          if (l > 0.94 || l < 0.05) continue;
+          if (out.every(o => Math.hypot(o.r - c.r, o.g - c.g, o.b - c.b) > 46)) out.push(c);
+          if (out.length >= n) break;
+        }
+        res(out.map(c => '#' + [c.r, c.g, c.b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('')));
+      } catch { res([]); }
+    };
+    img.onerror = () => res([]);
+    img.src = src;
+  });
+}
+
 function openIpForm(ip) {
   const isNew = !ip;
   const d = ip ? clone(ip) : {id: uid(), name: '', color: COLORS[S.ips.length % COLORS.length], created: Date.now()};
   const n = isNew ? 0 : S.books.filter(b => b.ipId === d.id).length;
+  const covers = isNew ? [] : S.books.filter(b => b.ipId === d.id && b.images && b.images.length).map(b => b.images[0]).slice(0, 6);
+  let setIdx = d.palette && d.palette.length ? -1 : 0, pendingImg = '';
   openModal(`
     <div class="sheet-head"><h2>${isNew ? '新建IP合集' : '编辑IP合集'}</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
     <form class="form" id="ip-form" style="margin-top:12px">
-      <label class="field"><span>IP 名称</span><input class="input" id="ip-name" value="${esc(d.name)}" placeholder="例如：原神、排球少年" maxlength="40"></label>
-      <div class="field"><span>书脊颜色</span><div class="swatches" id="ip-sw">${COLORS.map(c => `<button type="button" style="--c:${c}" data-c="${c}" class="${c === d.color ? 'on' : ''}" aria-label="颜色 ${c}"></button>`).join('')}</div></div>
+      <div class="ip-top">
+        <div class="ip-preview" id="ip-prev"><span class="spine-title"></span><span class="spine-count">${n}</span></div>
+        <label class="field" style="flex:1"><span>IP 名称</span><input class="input" id="ip-name" value="${esc(d.name)}" placeholder="例如：原神、排球少年" maxlength="40"></label>
+      </div>
+      <div class="field"><span>书脊颜色</span>
+        <div class="chips" id="ip-sets" style="margin:0"></div>
+        <div class="swatches" id="ip-sw"></div>
+        <div class="row ip-tools">
+          <label class="btn small ip-custom">自定义颜色<input type="color" id="ip-color" value="${esc(/^#[0-9a-f]{6}$/i.test(d.color || '') ? d.color : '#8a9ba8')}"></label>
+          <label class="btn small" for="ip-file">上传图片取色</label><input type="file" id="ip-file" accept="image/*" hidden>
+          ${covers.length ? '<button type="button" class="btn small" id="ip-from-cover">从本子封面取色</button>' : ''}
+        </div>
+      </div>
+      <div class="field" id="ip-imgbox"></div>
       <div class="sheet-actions" style="position:static">
         ${isNew ? '' : `<button type="button" class="btn danger left" id="ip-del">删除合集</button>`}
         <button type="button" class="btn" data-close>取消</button><button class="btn primary" type="submit">保存</button>
       </div>
     </form>`, root => {
     $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    const prev = $('#ip-prev', root), sw = $('#ip-sw', root), setsBox = $('#ip-sets', root), imgBox = $('#ip-imgbox', root);
+    const drawPrev = () => {
+      const img = d.spineImg ? imgSrc(d.spineImg) : '';
+      prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
+      prev.style.color = img ? '#fff' : textOn(d.color);
+      $('.spine-title', prev).textContent = $('#ip-name', root).value.trim() || 'IP 名称';
+    };
+    const sets = () => (d.palette && d.palette.length ? [{name: '图片取色', colors: d.palette}] : []).concat(SPINE_SETS);
+    const drawSets = () => {
+      const all = sets(), cur = setIdx < 0 ? 0 : setIdx + (d.palette && d.palette.length ? 1 : 0);
+      setsBox.innerHTML = all.map((s, i) => `<button type="button" class="${i === cur ? 'on' : ''}" data-set="${i}">${esc(s.name)}</button>`).join('');
+      sw.innerHTML = all[cur].colors.map(c => `<button type="button" style="--c:${c}" data-c="${c}" class="${c.toLowerCase() === String(d.color).toLowerCase() ? 'on' : ''}" title="${c}" aria-label="颜色 ${c}"></button>`).join('');
+    };
+    const drawImgBox = () => {
+      if (d.spineImg) imgBox.innerHTML = `<span>书脊图片</span><div class="row" style="align-items:center"><img class="ip-thumb" src="${imgSrc(d.spineImg)}" alt=""><button type="button" class="btn small" id="ip-noimg">不用图片，只用颜色</button></div>`;
+      else if (pendingImg) imgBox.innerHTML = `<span>刚上传的图片</span><div class="row" style="align-items:center"><img class="ip-thumb" src="${pendingImg}" alt=""><button type="button" class="btn small" id="ip-useimg">用这张图做书脊背景</button></div><span class="hint">上面“图片取色”里是从这张图提取的颜色，可以直接选一个。</span>`;
+      else imgBox.innerHTML = '';
+      const no = $('#ip-noimg', root); if (no) no.onclick = () => { d.spineImg = ''; drawImgBox(); drawPrev(); };
+      const use = $('#ip-useimg', root); if (use) use.onclick = () => { d.spineImg = pendingImg; pendingImg = ''; drawImgBox(); drawPrev(); };
+    };
+    const usePalette = cols => {
+      if (!cols.length) return toast('没能从图片里取到颜色，换一张试试');
+      d.palette = cols; setIdx = -1; d.color = cols[0]; drawSets(); drawPrev(); toast(`取到 ${cols.length} 个颜色`);
+    };
+    setsBox.onclick = e => { const b = e.target.closest('[data-set]'); if (!b) return; const i = +b.dataset.set, off = d.palette && d.palette.length ? 1 : 0; setIdx = i - off; drawSets(); };
+    sw.onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; d.color = b.dataset.c; $('#ip-color', root).value = d.color; drawSets(); drawPrev(); };
+    $('#ip-color', root).oninput = e => { d.color = e.target.value; drawSets(); drawPrev(); };
+    $('#ip-name', root).oninput = drawPrev;
+    $('#ip-file', root).onchange = async e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      try { pendingImg = await compressImage(f, 480, 0.82); } catch (err) { return toast(err.message); }
+      usePalette(await extractPalette(pendingImg)); drawImgBox();
+    };
+    const fc = $('#ip-from-cover', root);
+    if (fc) fc.onclick = async () => {
+      const all = [];
+      for (const src of covers) (await extractPalette(imgSrc(src), 6)).forEach(c => all.push(c));
+      const uniq = [];
+      all.forEach(c => { const v = parseInt(c.slice(1), 16), r = v >> 16, g = (v >> 8) & 255, b = v & 255;
+        if (uniq.every(u => { const w = parseInt(u.slice(1), 16); return Math.hypot(r - (w >> 16), g - ((w >> 8) & 255), b - (w & 255)) > 46; })) uniq.push(c); });
+      usePalette(uniq.slice(0, 12));
+    };
+    drawSets(); drawImgBox(); drawPrev();
     $('#ip-name', root).focus();
-    $('#ip-sw', root).onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; d.color = b.dataset.c; $$('#ip-sw button', root).forEach(x => x.classList.toggle('on', x === b)); };
     $('#ip-form', root).onsubmit = async e => {
       e.preventDefault();
       d.name = $('#ip-name', root).value.trim();
       if (!d.name) return toast('请填写IP名称');
       if (S.ips.some(x => x.id !== d.id && x.name === d.name)) return toast('已经有同名的IP了');
-      delete d.sample;
-      if (!(await save('ips', d))) return;
+      delete d.sample; if (!d.spineImg) delete d.spineImg;
+      const btn = $('#ip-form button[type=submit]', root); btn.disabled = true;
+      const ok = await save('ips', d); btn.disabled = false;
+      if (!ok) return;
       const i = S.ips.findIndex(x => x.id === d.id); i >= 0 ? S.ips[i] = d : S.ips.push(d);
       closeModal(); toast(isNew ? '已新建' : '已保存');
       if (isNew) location.hash = 'ip-' + d.id; else route();
@@ -1612,8 +1868,9 @@ async function openBookForm(book, presetIp) {
       <div class="fgroup"><h3>购买信息</h3>
         <div class="two">
           <label class="field"><span>购买时间</span><input class="input" type="date" id="bk-buy" value="${esc(d.buyDate)}"></label>
-          ${selField('bk-place', '购买地点', OPT.place, d.place, {optional: true, custom: true})}
+          <label class="field"><span>购买数量（本）</span><input class="input num" type="number" id="bk-qty" min="1" max="999" step="1" inputmode="numeric" value="${esc(qtyOf(d))}"></label>
         </div>
+        ${selField('bk-place', '购买地点', OPT.place, d.place, {optional: true, custom: true})}
         <label class="field"><span>购入链接<i>选填</i></span><input class="input" type="url" id="bk-link" value="${esc(d.link)}" placeholder="https://" inputmode="url"></label>
         <div class="field"><span>价格细则（每项可选币种）</span>
           <div id="bk-costs"></div>
@@ -1634,6 +1891,7 @@ async function openBookForm(book, presetIp) {
       d.title = v('bk-title'); d.author = v('bk-author'); d.club = v('bk-club'); d.cp = v('bk-cp'); d.note = v('bk-note');
       d.kind = readSel(root, 'bk-kind'); d.size = readSel(root, 'bk-size'); d.origin = readSel(root, 'bk-origin'); d.format = readSel(root, 'bk-format');
       d.condition = readSel(root, 'bk-cond'); d.age = readSel(root, 'bk-age'); d.read = readSel(root, 'bk-read'); d.place = readSel(root, 'bk-place');
+      d.qty = Math.min(999, Math.max(1, parseInt(v('bk-qty'), 10) || 1));
       d.buyDate = v('bk-buy'); d.releaseDate = v('bk-release'); d.transit = $('#bk-transit', root).checked; d.link = v('bk-link');
       d._ipSel = $('#bk-ip', root).value; d._newIp = $('#bk-newip', root).value;
       if (d._ipSel !== '__new') d.ipId = d._ipSel;
@@ -1776,7 +2034,7 @@ async function loadSample() {
   const books = [
     mk('sx-b1', 'sx-ip1', {title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆本子', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
       costs: [{label: '本子本体', amount: 68, cur: 'CNY'}, {label: '邮费', amount: 12, cur: 'CNY'}], note: '这是示例本子，可以随时删掉。\n场贩购入，附赠明信片一张。'}),
-    mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本本子', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
+    mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', qty: 2, cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本本子', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
       costs: [{label: '本子本体', amount: 1100, cur: 'JPY'}, {label: '代购费', amount: 15, cur: 'CNY'}, {label: '国际运费', amount: 800, cur: 'JPY'}]}),
     mk('sx-b3', 'sx-ip1', {title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆本子', place: '通贩', buyDate: '2026-10-25', transit: true,
       costs: [{label: '本子本体', amount: 52, cur: 'CNY'}, {label: '邮费', amount: 10, cur: 'CNY'}]}),
@@ -1824,6 +2082,12 @@ document.addEventListener('click', async e => {
       const y = window.scrollY; renderStats(); window.scrollTo(0, y); break;
     }
     case 'live-rates': fetchLiveRates(); break;
+    case 'stat-more': { statAll[el.dataset.v] = !statAll[el.dataset.v]; const y = window.scrollY; renderStats(); window.scrollTo(0, y); break; }
+    case 'set-theme': {
+      THEME = el.dataset.v; const y = window.scrollY; renderSettings(); window.scrollTo(0, y);
+      try { await Store.put('meta', THEME, 'theme'); toast(`已换成“${themeOf(THEME).name}”，去统计页看看`); } catch (e) { toast(errMsg(e)); }
+      break;
+    }
     case 'sign-out': {
       if (Store.kind !== 'sb') break;
       if (!(await confirmBox('退出当前账号？书架数据仍保存在云端，重新登录即可看到。', '退出登录'))) break;
