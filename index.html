@@ -1,0 +1,1819 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="同人本棚">
+<meta name="theme-color" content="#ffffff">
+<title>同人本棚</title>
+<style>
+/* 布局：极简扁平。首页 = 在途栏 + 收藏（书脊书架 / 瀑布流）；IP 合集 → 封面墙 → 详情 */
+:root{
+  --bg:#ffffff; --ink:#16181d; --muted:#8b909a; --line:#ececef; --line-2:#d7d9de; --soft:#f4f5f7;
+  --accent:#2f5bd3; --accent-soft:#eaf0ff; --btn:#16181d; --btn-ink:#ffffff;
+  --danger:#d64545; --star:#f2b233; --transit:#e58a1f; --transit-soft:#fdf2e4;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --num:-apple-system,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1013; --ink:#ececf0; --muted:#8d929c; --line:#22242a; --line-2:#33363d; --soft:#18191d;
+    --accent:#7d9cff; --accent-soft:#1c2440; --btn:#ececf0; --btn-ink:#0f1013;
+    --danger:#ff6b6b; --star:#f5c04a; --transit:#f0a04a; --transit-soft:#2a2116;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#0f1013; --ink:#ececf0; --muted:#8d929c; --line:#22242a; --line-2:#33363d; --soft:#18191d;
+    --accent:#7d9cff; --accent-soft:#1c2440; --btn:#ececf0; --btn-ink:#0f1013;
+    --danger:#ff6b6b; --star:#f5c04a; --transit:#f0a04a; --transit-soft:#2a2116;
+    color-scheme:dark;
+  }
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--sans);-webkit-tap-highlight-color:transparent;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0;font-weight:600}
+a{color:var(--accent)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+
+/* 锁屏 */
+#lock{min-height:100vh;display:grid;place-items:center;padding-block:40px}
+.lock-card{width:min(340px,100%);display:grid;gap:16px;text-align:center}
+.lock-mark{display:flex;justify-content:center;align-items:flex-end;gap:4px;height:44px;border-bottom:2px solid var(--ink);width:84px;margin:0 auto}
+.lock-mark i{display:block;width:10px;border-radius:2px 2px 0 0;background:var(--c)}
+.lock-title{font-size:22px;font-weight:600;letter-spacing:.08em}
+.lock-sub{color:var(--muted);margin:-8px 0 0;font-size:14px}
+.lock-form{display:grid;gap:10px}
+.lock-msg{min-height:1.4em;font-size:13px;color:var(--danger)}
+.lock-link{background:none;border:0;color:var(--muted);font-size:13px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* 控件 */
+.field{display:grid;gap:6px;min-width:0}
+.field>span{font-size:12px;color:var(--muted)}
+.field>span i{font-style:normal;margin-left:4px;opacity:.7}
+.input{width:100%;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid transparent;background:var(--soft);outline:none;appearance:none;-webkit-appearance:none}
+select.input{padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.input:focus{border-color:var(--accent);background-color:var(--bg)}
+input[type=date].input{min-height:44px}
+textarea.input{resize:vertical;min-height:90px;line-height:1.6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:8px;border:0;background:var(--soft);font-weight:500;font-size:14px;white-space:nowrap}
+.btn:hover{background:var(--line)}
+.btn.primary{background:var(--btn);color:var(--btn-ink)}
+.btn.primary:hover{opacity:.88}
+.btn.danger{color:var(--danger)}
+.btn.danger.solid{background:var(--danger);color:#fff}
+.btn.small{padding:5px 11px;font-size:13px}
+.btn.block{width:100%}
+.btn.text{background:none;padding:6px 4px;color:var(--muted)}
+.icon-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;border:0;background:transparent;color:var(--ink)}
+.icon-btn:hover{background:var(--soft)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.seg{display:inline-flex;background:var(--soft);border-radius:8px;padding:3px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:6px;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--bg);color:var(--ink);font-weight:500}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none}
+.chips button{flex:none;border:0;background:var(--soft);color:var(--muted);padding:5px 12px;border-radius:99px;font-size:13px}
+.chips button.on{background:var(--btn);color:var(--btn-ink)}
+.tag{display:inline-block;font-size:11px;line-height:18px;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted);font-weight:500;vertical-align:middle;white-space:nowrap}
+.tag.transit{background:var(--transit-soft);color:var(--transit)}
+.tag.age{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
+
+/* 顶栏/标签 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;height:54px}
+.brand{font-weight:600;font-size:17px;letter-spacing:.06em;display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.brand-dots{display:flex;align-items:flex-end;gap:2px;height:16px;border-bottom:1.5px solid var(--ink)}
+.brand-dots i{width:4px;background:var(--c)}
+.toptabs{display:none;gap:2px;margin-left:16px}
+.spacer{flex:1}
+.tab{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:14px}
+.tab.on{color:var(--ink);font-weight:600}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;background:var(--bg);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tabbar .tab{flex-direction:column;gap:1px;font-size:11px;padding:3px 18px}
+.tabbar .tab.on{color:var(--ink)}
+main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
+@media (min-width:720px){.toptabs{display:flex}.tabbar{display:none}main{padding-bottom:56px}}
+
+/* 通用 */
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.page-head h1{font-size:24px}
+.page-head p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.head-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 12px}
+.sec-head h2{font-size:16px}
+.sec-head h2 small{font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.crumb{display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:14px;margin-bottom:12px}
+.crumb:hover{color:var(--ink)}
+.notice{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;padding:10px 14px;border-radius:8px;background:var(--accent-soft);font-size:13px;margin-bottom:18px}
+.section{margin-bottom:32px}
+
+/* 在途 */
+.transit-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.t-card{flex:none;width:250px;display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:var(--soft);min-width:0}
+.t-card .mini{width:44px;height:60px;flex:none;border-radius:3px;overflow:hidden;border:0;padding:0;background:var(--line)}
+.t-card .mini img{width:100%;height:100%;object-fit:cover}
+.t-card .mini .ph span{font-size:10px}
+.t-info{min-width:0;flex:1;display:grid;gap:1px;text-align:left;border:0;background:none;padding:0}
+.t-info b{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-info span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-card .btn{flex:none}
+.transit-empty{padding:14px;border-radius:10px;background:var(--soft);color:var(--muted);font-size:13px}
+
+/* 书脊书架 */
+.shelf{
+  --row:228px;
+  display:grid;grid-template-columns:repeat(auto-fill,54px);grid-auto-rows:var(--row);column-gap:6px;
+  background-image:linear-gradient(to bottom,transparent 0 208px,var(--line-2) 208px 210px,transparent 210px);
+  background-size:100% var(--row);
+}
+.spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .16s ease;min-height:0}
+.spine:hover,.spine:focus-visible{transform:translateY(-6px)}
+.spine-title{writing-mode:vertical-rl;text-orientation:mixed;font-weight:600;font-size:15px;letter-spacing:.1em;flex:1;min-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.spine-count{font:500 12px/1 var(--num);opacity:.85}
+.spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
+.spine.add .spine-title{font-weight:500;font-size:13px}
+.shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
+.shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
+.shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+
+/* 瀑布流 */
+.flow{columns:2 150px;column-gap:12px}
+@media (min-width:720px){.flow{columns:4 180px;column-gap:16px}}
+.wf{break-inside:avoid;display:block;width:100%;border:0;background:none;padding:0;margin:0 0 16px;text-align:left}
+.wf .pic{border-radius:6px;overflow:hidden;background:var(--soft);transition:opacity .16s}
+.wf:hover .pic{opacity:.9}
+.wf .pic img{width:100%;height:auto}
+.wf .pic .ph{aspect-ratio:5/7;height:auto}
+.wf-title{font-size:14px;font-weight:500;margin-top:6px;line-height:1.4;overflow-wrap:anywhere}
+.wf-sub{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+
+/* 合集 */
+.coll-head{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+.coll-mark{width:6px;align-self:stretch;min-height:44px;border-radius:2px;background:var(--c)}
+.coll-head h1{font-size:24px}
+.coll-head p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.coll-head .btn{margin-left:auto}
+.covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:20px 12px}
+@media (min-width:720px){.covers{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:24px 16px}}
+.cover-card{border:0;background:none;padding:0;text-align:left;display:grid;gap:6px;align-content:start;min-width:0}
+.cover{aspect-ratio:5/7;max-width:100%;border-radius:4px;overflow:hidden;background:var(--soft);position:relative;transition:transform .16s}
+.cover-card:hover .cover{transform:translateY(-3px)}
+.cover img{width:100%;height:100%;object-fit:cover}
+.cover .tag{position:absolute;left:6px;top:6px}
+.cover-title{font-weight:500;font-size:14px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cover-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
+.ph{width:100%;height:100%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;padding:12%}
+.ph span{writing-mode:vertical-rl;font-weight:600;font-size:16px;letter-spacing:.12em;max-height:100%;overflow:hidden}
+.ph.big span{font-size:26px}
+.cover-add{aspect-ratio:5/7;max-width:100%;border-radius:4px;border:1.5px dashed var(--line-2);display:grid;place-items:center;align-content:center;gap:2px;color:var(--muted);font-size:13px}
+.cover-add b{font-size:26px;line-height:1;font-weight:300}
+.cover-card:hover .cover-add{border-color:var(--ink);color:var(--ink)}
+
+/* 详情 */
+.detail{max-width:620px;margin:0 auto}
+.gallery{display:grid;gap:10px;margin-bottom:22px}
+.gallery-main{border:0;padding:0;border-radius:8px;overflow:hidden;background:var(--soft);display:grid;place-items:center;max-height:62vh}
+.gallery-main img{max-height:62vh;width:auto;max-width:100%;object-fit:contain}
+.gallery-main .ph{aspect-ratio:5/7;height:auto;width:min(260px,64vw)}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.thumbs button{flex:none;width:52px;height:70px;padding:0;border:2px solid transparent;border-radius:4px;overflow:hidden;background:var(--soft)}
+.thumbs button.on{border-color:var(--ink)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.transit-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:8px;background:var(--transit-soft);color:var(--transit);font-size:14px;font-weight:500;margin-bottom:14px}
+.book-title{font-size:24px;line-height:1.35}
+.title-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.meta{margin:16px 0 0}
+.meta>div{display:grid;grid-template-columns:5.5em 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.meta>div:first-child{border-top:1px solid var(--line)}
+.meta dt{color:var(--muted);font-size:13px;padding-top:1px}
+.meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.meta dd a{text-decoration:none;font-weight:500}
+.block{margin-top:24px}
+.block h3{font-size:12px;letter-spacing:.1em;color:var(--muted);font-weight:500;margin-bottom:8px}
+.price{background:var(--soft);border-radius:10px;padding:14px 16px}
+.price-total{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.price-total strong{font:600 26px/1.1 var(--num);font-variant-numeric:tabular-nums}
+.price-orig{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+.price-lines{list-style:none;margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line-2);display:grid;gap:4px}
+.price-lines li{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted)}
+.price-lines li span:last-child{font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.price-lines li small{color:var(--muted);margin-left:6px}
+.stars{display:flex;gap:2px}
+.stars button{border:0;background:none;padding:3px;width:38px;height:38px;color:var(--line-2);transition:transform .12s}
+.stars button.on{color:var(--star)}
+.stars button:active{transform:scale(.88)}
+.stars svg{width:100%;height:100%;fill:currentColor}
+.stars-note{font-size:12px;color:var(--muted);margin-top:2px}
+.note{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:var(--soft);border-radius:10px;padding:14px 16px}
+.note.empty{color:var(--muted)}
+.actions{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap}
+
+/* 统计 */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:30px}
+@media (min-width:720px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{background:var(--soft);border-radius:10px;padding:14px 16px;min-width:0}
+.tile span{font-size:12px;color:var(--muted)}
+.tile strong{display:block;font:600 26px/1.25 var(--num);font-variant-numeric:tabular-nums;margin-top:4px;overflow-wrap:anywhere}
+.tile small{font-size:13px;font-weight:500;color:var(--muted);margin-left:2px}
+.tile em{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.lead{background:var(--btn);color:var(--btn-ink)}
+.tile.lead span,.tile.lead em{color:inherit;opacity:.7}
+.stat-grid{display:grid;gap:32px}
+@media (min-width:860px){.stat-grid{grid-template-columns:1fr 1fr;gap:36px 40px}}
+.panel h2{font-size:16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.panel h2 small{font-size:12px;color:var(--muted);font-weight:400}
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.bars li{min-width:0}
+.bar-top{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:5px}
+.bar-name{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-name em{font-style:normal;color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.bar-val{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar-val b{color:var(--ink);font-weight:600}
+.bar-track{height:6px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar-track i{display:block;height:100%;border-radius:99px;background:var(--c,var(--ink))}
+.muted{color:var(--muted)}
+.empty-box{padding:24px 16px;text-align:center;color:var(--muted);background:var(--soft);border-radius:10px;font-size:14px}
+.hint{font-size:12px;color:var(--muted)}
+
+/* 设置 */
+.settings{max-width:560px;display:grid;gap:12px}
+.set-card{background:var(--soft);border-radius:10px;padding:16px;display:grid;gap:10px}
+.set-card h2{font-size:15px}
+.set-card p{margin:0;color:var(--muted);font-size:13px}
+.set-card .row{display:flex;gap:8px;flex-wrap:wrap}
+.set-card .input{background:var(--bg)}
+.set-card .btn:not(.primary):not(.text):not(.solid){background:var(--bg)}
+.set-card .btn:not(.primary):not(.text):not(.solid):hover{background:var(--line)}
+.rates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.rate{display:flex;align-items:center;gap:8px;font-size:13px}
+.rate span{flex:none;width:4.2em;color:var(--muted)}
+
+/* 弹层 */
+#modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,12,18,.4)}
+.sheet{width:100%;max-height:92vh;overflow:auto;background:var(--bg);border-radius:16px 16px 0 0;
+  padding:18px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:up .2s ease}
+@media (min-width:720px){#modal{align-items:center}.sheet{width:min(600px,calc(100% - 32px));border-radius:14px;padding:22px 26px}}
+@keyframes up{from{transform:translateY(24px);opacity:.5}}
+.sheet.drag{box-shadow:inset 0 0 0 2px var(--accent)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.sheet-head h2{font-size:18px}
+.form{display:grid;gap:14px}
+.fgroup{display:grid;gap:12px;padding-top:16px;border-top:1px solid var(--line)}
+.fgroup:first-child{border-top:0;padding-top:6px}
+.fgroup>h3{font-size:13px;font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.two.wrap-sm{grid-template-columns:1fr}}
+.check{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--transit-soft);color:var(--transit);font-size:14px;font-weight:500;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--transit);margin:0}
+.img-row{display:flex;gap:8px;flex-wrap:wrap}
+.img-item{position:relative;width:70px;height:94px;border-radius:6px;overflow:hidden;background:var(--soft);cursor:pointer}
+.img-item img{width:100%;height:100%;object-fit:cover}
+.img-item .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:22px;padding:0}
+.img-item .badge{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:11px;text-align:center}
+.img-add{width:70px;height:94px;border-radius:6px;border:1.5px dashed var(--line-2);display:grid;place-items:center;align-content:center;gap:2px;color:var(--muted);font-size:12px;cursor:pointer}
+.img-add:hover{border-color:var(--ink);color:var(--ink)}
+.paste-hint{font-size:12px;color:var(--muted)}
+.paste-hint kbd{font:inherit;font-size:11px;padding:0 5px;border-radius:4px;background:var(--soft);border:1px solid var(--line-2)}
+.cost-row{display:grid;grid-template-columns:minmax(0,1fr) 5.6em minmax(0,6.2em) 30px;gap:6px;align-items:center;margin-bottom:6px}
+.cost-row .x{width:30px;height:40px;border:0;background:none;color:var(--muted);font-size:20px;border-radius:6px;padding:0}
+.cost-row .x:hover{color:var(--danger)}
+.cost-row select.input{padding-left:8px;padding-right:22px;background-position:calc(100% - 12px) 50%,calc(100% - 7px) 50%;font-size:14px}
+.cost-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cost-foot strong{font:600 17px var(--num);font-variant-numeric:tabular-nums}
+.cost-foot small{display:block;text-align:right;color:var(--muted);font-size:12px}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:32px;height:32px;border-radius:50%;border:0;background:var(--c)}
+.swatches button.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));background:var(--bg);padding:12px 0 4px}
+.sheet-actions .left{margin-right:auto}
+
+#lightbox{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.94);display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+#lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+#lightbox .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:26px;border-radius:8px}
+#lightbox .prev{left:max(10px,env(safe-area-inset-left,0px))}#lightbox .next{right:max(10px,env(safe-area-inset-right,0px))}
+#lightbox .count{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#fff;font-size:13px;opacity:.8}
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;background:var(--btn);color:var(--btn-ink);padding:8px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 32px);text-align:center}
+#toast.show{opacity:1}
+@media (min-width:720px){#toast{bottom:32px}}
+/* 详情：层级 */
+.byline{margin-top:6px;color:var(--muted);font-size:14px}
+.byline b{color:var(--ink);font-weight:500}
+.who{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:var(--soft);font-size:14px;text-decoration:none;color:var(--ink);max-width:100%}
+.pill small{color:var(--muted);font-size:12px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:20px}
+@media (min-width:560px){.specs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.spec{background:var(--bg);padding:12px 14px;min-width:0}
+.spec span{display:block;font-size:12px;color:var(--muted)}
+.spec b{display:block;font-weight:600;font-size:15px;margin-top:2px;overflow-wrap:anywhere}
+.spec small{display:block;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:1px}
+.spec.empty b{color:var(--line-2);font-weight:400}
+.buy{background:var(--soft);border-radius:10px;padding:16px}
+.buy-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.buy-when b{display:block;font-size:16px;font-weight:600}
+.buy-when span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.buy-sum{text-align:right;flex:none}
+.buy-sum strong{display:block;font:600 26px/1.1 var(--num);font-variant-numeric:tabular-nums}
+.buy-sum span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+.buy-link{display:inline-flex;margin-top:12px;font-size:14px;text-decoration:none;font-weight:500;overflow-wrap:anywhere}
+
+/* 统计：可视化 */
+.viz{display:grid;gap:32px;margin-bottom:36px}
+@media (min-width:860px){.viz{grid-template-columns:1fr 1fr;gap:36px 40px}.viz .wide{grid-column:1/-1}}
+.viz-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.viz-tools .chips{margin:0}
+.donut-wrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.donut{width:150px;height:150px;flex:none}
+.donut text{fill:var(--ink)}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:8px;flex:1;min-width:160px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:14px}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.legend span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend b{font-weight:600;font-variant-numeric:tabular-nums}
+.legend em{font-style:normal;color:var(--muted);font-size:12px;width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+.mbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:180px;border-bottom:1px solid var(--line-2);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% 25%}
+.mbar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+.mbar i{display:block;width:100%;max-width:28px;background:var(--accent);border-radius:3px 3px 0 0;min-height:0}
+.mbar i.zero{background:transparent}
+.mbar small{font-size:11px;color:var(--ink);font-variant-numeric:tabular-nums;margin-bottom:3px;white-space:nowrap}
+.mlabels{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:6px}
+.mlabels span{text-align:center;font-size:11px;color:var(--muted)}
+.heat-scroll{overflow-x:auto}
+.heat{display:grid;grid-template-columns:3.4em repeat(12,minmax(22px,1fr));gap:4px;min-width:360px}
+.heat .h{font-size:11px;color:var(--muted);text-align:center}
+.heat .y{font-size:12px;color:var(--muted);display:flex;align-items:center;font-variant-numeric:tabular-nums}
+.cell{aspect-ratio:1;border-radius:4px;background:var(--soft);display:grid;place-items:center;font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cell.l1{background:color-mix(in srgb,var(--accent) 22%,var(--soft))}
+.cell.l2{background:color-mix(in srgb,var(--accent) 45%,var(--soft))}
+.cell.l3{background:color-mix(in srgb,var(--accent) 70%,var(--soft));color:#fff}
+.cell.l4{background:var(--accent);color:#fff}
+.heat-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:10px;font-size:11px;color:var(--muted)}
+.heat-legend .cell{width:14px;height:14px}
+
+/* 设置：品牌与实时汇率 */
+.brand-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.logo-preview{width:56px;height:56px;border-radius:12px;background:var(--bg);display:grid;place-items:center;overflow:hidden;flex:none}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+.req{margin:0;padding-left:18px;color:var(--muted);font-size:12px;display:grid;gap:2px}
+.live{display:grid;gap:8px}
+.live-table{width:100%;border-collapse:collapse;font-size:13px}
+.live-table th{text-align:left;font-weight:500;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line-2)}
+.live-table td{padding:7px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.live-table td:last-child,.live-table th:last-child{text-align:right}
+.diff{font-size:11px;color:var(--muted)}
+.sync{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#3aa17e}
+.sync[data-state=busy]::before{background:var(--transit)}
+.sync[data-state=error]::before{background:var(--danger)}
+.link-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.link-box code{flex:1;min-width:0;font-size:12px;background:var(--bg);padding:8px 10px;border-radius:6px;overflow-wrap:anywhere;user-select:all}
+.steps{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:grid;gap:3px}
+.brand-img{width:22px;height:22px;border-radius:5px;object-fit:cover}
+.lock-logo-img{width:64px;height:64px;border-radius:14px;object-fit:cover;margin:0 auto}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="lock">
+  <div class="lock-card wrap">
+    <div id="lock-logo"><div class="lock-mark" aria-hidden="true">
+      <i style="--c:#e4574c;height:30px"></i><i style="--c:#3d6fd9;height:38px"></i><i style="--c:#e3a33b;height:26px"></i><i style="--c:#3aa17e;height:34px"></i><i style="--c:#8a63d2;height:29px"></i>
+    </div></div>
+    <div class="lock-title" id="lock-title">同人本棚</div>
+    <p class="lock-sub" id="lock-sub">正在打开…</p>
+    <form class="lock-form" id="auth-form" hidden>
+      <div class="seg" style="justify-self:center"><button type="button" data-mode="login" class="on">登录</button><button type="button" data-mode="signup">注册</button></div>
+      <input class="input" type="email" id="au-email" placeholder="邮箱" autocomplete="email" inputmode="email">
+      <input class="input" type="password" id="au-pw" placeholder="账号密码（至少 6 位）" autocomplete="current-password">
+      <button class="btn primary block" id="au-btn" type="submit">登录</button>
+      <div class="lock-msg" id="au-msg"></div>
+      <button class="lock-link" id="au-forgot" type="button">忘记账号密码？</button>
+    </form>
+    <p class="lock-sub" id="lock-acct" hidden style="margin:0;font-size:12px"></p>
+    <form class="lock-form" id="lock-form" autocomplete="off" hidden>
+      <input class="input" type="password" id="pw1" placeholder="密码" autocomplete="current-password">
+      <input class="input" type="password" id="pw2" placeholder="再输入一次" hidden autocomplete="new-password">
+      <button class="btn primary block" id="lock-btn" type="submit">解锁</button>
+      <div class="lock-msg" id="lock-msg"></div>
+    </form>
+    <div id="forgot-wrap" hidden>
+      <button class="lock-link" id="forgot-btn" type="button">忘记密码？</button>
+      <div id="forgot-box" hidden style="display:grid;gap:10px;margin-top:10px;text-align:left">
+        <p class="lock-sub" style="margin:0">密码无法找回。只能清空这个浏览器里的全部收藏，重新设置密码。如有备份文件，清空后可以在“设置”里导入。</p>
+        <input class="input" id="wipe-confirm" placeholder="输入“清空”两个字确认">
+        <button class="btn danger solid block" id="wipe-btn" type="button">清空全部数据</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#">
+        <span id="brand-logo"><span class="brand-dots" aria-hidden="true"><i style="--c:#e4574c;height:11px"></i><i style="--c:#3d6fd9;height:15px"></i><i style="--c:#e3a33b;height:9px"></i></span></span>
+        <span id="brand-name">同人本棚</span>
+      </a>
+      <nav class="toptabs">
+        <a class="tab" data-tab="shelf" href="#">书架</a>
+        <a class="tab" data-tab="stats" href="#stats">统计</a>
+        <a class="tab" data-tab="prefs" href="#prefs">设置</a>
+      </nav>
+      <div class="spacer"></div>
+      <span class="sync" id="sync" hidden></span>
+      <button class="icon-btn" data-act="lock" title="上锁" aria-label="上锁">
+        <svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      </button>
+    </div>
+  </header>
+  <main><div class="wrap" id="view"></div></main>
+  <nav class="tabbar">
+    <a class="tab" data-tab="shelf" href="#"><svg class="i" viewBox="0 0 24 24"><path d="M5 4v15M10 6v13M15 4l4 15M3 20h18"/></svg>书架</a>
+    <a class="tab" data-tab="stats" href="#stats"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>统计</a>
+    <a class="tab" data-tab="prefs" href="#prefs"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>设置</a>
+  </nav>
+</div>
+
+<div id="modal" hidden></div>
+<div id="lightbox" hidden></div>
+<div id="toast" role="status"></div>
+
+<!-- 账号版配置：放在 GitHub Pages 上时，在 config.js 里填 Supabase 的地址和密钥；直接打开离线文件时没有这个文件也没关系 -->
+<script src="config.js"></script>
+<script>
+'use strict';
+/* ================= 工具 ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const sum = arr => arr.reduce((a, b) => a + (Number(b) || 0), 0);
+const num = (v, d = 2) => (Number(v) || 0).toLocaleString('zh-CN', {maximumFractionDigits: d});
+const money = n => '¥' + num(Math.round((Number(n) || 0) * 100) / 100);
+const clone = o => typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+const COLORS = ['#e4574c','#3d6fd9','#3aa17e','#e3a33b','#8a63d2','#2a9bb0','#a7795a','#e06c9f','#5d6678','#8fa33b','#d9733b','#4f9fd9'];
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5-4.8-4.5 6.5-.8z"/></svg>';
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+const today = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+
+/* 选项 */
+const OPT = {
+  size: ['A4', 'B5', 'A5', 'B6', 'A6', '新书判', '文库本', '正方形'],
+  kind: ['漫画', '小说 / 文本', '图文本', '原画集 / 插画集', '设定集', '合志', '杂志 / 会刊', '画册周边'],
+  origin: ['日本本子', '中国大陆本子', '港台本子', '韩国本子', '欧美本子', '其他地区'],
+  format: ['实体本', '电子本'],
+  condition: ['全新', '99新', '95新', '9成新', '8成新', '7成新及以下', '有瑕疵'],
+  place: ['通贩', '场贩', '二手', '代购', '书店 / 漫展店', '网店', '委托 / 拼本'],
+  read: ['未读', '在读', '已读', '弃读'],
+  age: ['全年龄', 'R15', 'R18（18X）', 'R18G'],
+};
+/* 尺寸对应的毫米数（宽×高）。B 系列按日本同人常用的 JIS B 规格 */
+const SIZE_MM = {
+  'A4': '210 × 297 mm', 'B5': '182 × 257 mm', 'A5': '148 × 210 mm', 'B6': '128 × 182 mm',
+  'A6': '105 × 148 mm', '新书判': '103 × 182 mm', '文库本': '105 × 148 mm', '正方形': '边长不一',
+};
+const REGION_COLORS = {'日本本子': '#e4574c', '中国大陆本子': '#3d6fd9', '港台本子': '#3aa17e', '韩国本子': '#8a63d2', '欧美本子': '#e3a33b', '其他地区': '#2a9bb0', '未填写': '#c3c6cd'};
+
+/* 自定义名称与 LOGO */
+const DEFAULT_NAME = '同人本棚';
+let BRAND = {name: DEFAULT_NAME, logo: ''};
+const DEFAULT_TOP_LOGO = $('#brand-logo').innerHTML, DEFAULT_LOCK_LOGO = $('#lock-logo').innerHTML;
+function applyBrand() {
+  const name = BRAND.name || DEFAULT_NAME;
+  $('#brand-name').textContent = name; $('#lock-title').textContent = name; document.title = name;
+  $('#brand-logo').innerHTML = BRAND.logo ? `<img class="brand-img" src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_TOP_LOGO;
+  $('#lock-logo').innerHTML = BRAND.logo ? `<img class="lock-logo-img" src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_LOCK_LOGO;
+  let link = document.querySelector('link[rel=icon]');
+  if (BRAND.logo) {
+    if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+    link.href = imgSrc(BRAND.logo);
+    let t = document.querySelector('link[rel=apple-touch-icon]');
+    if (!t) { t = document.createElement('link'); t.rel = 'apple-touch-icon'; document.head.appendChild(t); }
+    t.href = imgSrc(BRAND.logo);
+  } else if (link) link.remove();
+  const m = document.querySelector('meta[name=apple-mobile-web-app-title]'); if (m) m.content = name;
+}
+/* LOGO 处理：裁成正方形，缩放到 256×256 PNG；SVG 原样保存 */
+function processLogo(file) {
+  return new Promise((res, rej) => {
+    const okTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!okTypes.includes(file.type)) return rej(new Error('只支持 PNG、JPG、WebP、GIF 或 SVG 格式'));
+    if (file.size > 2 * 1024 * 1024) return rej(new Error('图片超过 2 MB，请压缩后再上传'));
+    if (file.type === 'image/svg+xml') {
+      if (file.size > 200 * 1024) return rej(new Error('SVG 文件请控制在 200 KB 以内'));
+      const r = new FileReader(); r.onload = () => res({src: r.result}); r.onerror = () => rej(new Error('读不了这个文件')); r.readAsDataURL(file); return;
+    }
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth, h = img.naturalHeight; URL.revokeObjectURL(url);
+      if (Math.min(w, h) < 64) return rej(new Error(`图片太小（${w}×${h}），至少需要 64×64 像素`));
+      const s = Math.min(w, h), out = 256, c = document.createElement('canvas'); c.width = c.height = out;
+      c.getContext('2d').drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, out, out);
+      res({src: c.toDataURL('image/png'), warn: w !== h ? '图片不是正方形，已自动裁切中间部分' : ''});
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('读不了这张图片')); };
+    img.src = url;
+  });
+}
+
+/* 币种 & 默认汇率（1 单位外币 ≈ 多少人民币，可在设置里改） */
+const CUR = {
+  CNY: {n: '人民币', f: v => '¥' + num(v)},
+  JPY: {n: '日元', f: v => num(v, 0) + '円'},
+  USD: {n: '美元', f: v => '$' + num(v)},
+  HKD: {n: '港币', f: v => 'HK$' + num(v)},
+  TWD: {n: '新台币', f: v => 'NT$' + num(v)},
+  KRW: {n: '韩元', f: v => '₩' + num(v, 0)},
+  EUR: {n: '欧元', f: v => '€' + num(v)},
+  GBP: {n: '英镑', f: v => '£' + num(v)},
+};
+const DEFAULT_RATES = {JPY: 0.047, USD: 7.1, HKD: 0.91, TWD: 0.22, KRW: 0.0051, EUR: 7.7, GBP: 9.2};
+let RATES = {...DEFAULT_RATES};
+const fmtCur = (v, c) => (CUR[c] || CUR.CNY).f(v);
+const toCny = x => (Number(x.amount) || 0) * ((x.cur || 'CNY') === 'CNY' ? 1 : (Number(RATES[x.cur]) || 0));
+
+/* SHA-256 */
+const ror = (x, n) => (x >>> n) | (x << (32 - n));
+const SHA_P = (() => { const p = []; for (let n = 2; p.length < 64; n++) if (p.every(q => n % q)) p.push(n); return p; })();
+function sha256(str) {
+  const frac = x => ((x - Math.floor(x)) * 4294967296) >>> 0;
+  const K = SHA_P.map(p => frac(Math.cbrt(p)));
+  let H = SHA_P.slice(0, 8).map(p => frac(Math.sqrt(p)));
+  const b = new TextEncoder().encode(str), l = b.length, total = ((l + 9 + 63) >> 6) << 6;
+  const m = new Uint8Array(total); m.set(b); m[l] = 0x80;
+  const dv = new DataView(m.buffer);
+  dv.setUint32(total - 4, (l * 8) >>> 0); dv.setUint32(total - 8, Math.floor(l * 8 / 4294967296));
+  const W = new Uint32Array(64);
+  for (let o = 0; o < total; o += 64) {
+    for (let i = 0; i < 16; i++) W[i] = dv.getUint32(o + i * 4);
+    for (let i = 16; i < 64; i++) { const a = W[i - 15], c = W[i - 2]; W[i] = (W[i - 16] + (ror(a, 7) ^ ror(a, 18) ^ (a >>> 3)) + W[i - 7] + (ror(c, 17) ^ ror(c, 19) ^ (c >>> 10))) >>> 0; }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (ror(e, 6) ^ ror(e, 11) ^ ror(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + W[i]) >>> 0;
+      const t2 = ((ror(a, 2) ^ ror(a, 13) ^ ror(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = bb; bb = a; a = (t1 + t2) >>> 0;
+    }
+    H = [a, bb, c, d, e, f, g, h].map((v, i) => (v + H[i]) >>> 0);
+  }
+  return H.map(v => v.toString(16).padStart(8, '0')).join('');
+}
+
+/* ================= IndexedDB ================= */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (!window.indexedDB) return rej(new Error('no-idb'));
+      const r = indexedDB.open('doujin-shelf', 1);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        ['ips', 'books'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, {keyPath: 'id'}); });
+        if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta');
+      };
+      r.onsuccess = () => { this.db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  run(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(store, mode), req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  all: s => DB.run(s, 'readonly', st => st.getAll()),
+  get: (s, k) => DB.run(s, 'readonly', st => st.get(k)),
+  put: (s, v, k) => DB.run(s, 'readwrite', st => k === undefined ? st.put(v) : st.put(v, k)),
+  del: (s, k) => DB.run(s, 'readwrite', st => st.delete(k)),
+  clear: s => DB.run(s, 'readwrite', st => st.clear()),
+  putMany: (s, arr) => DB.run(s, 'readwrite', st => { arr.forEach(v => st.put(v)); return null; }),
+};
+/* ================= 存储层 =================
+   三种模式，界面完全一样：
+   · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
+   · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
+   · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
+const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
+function dataUrlToBlob(u) {
+  const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
+  const bin = atob(body), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type: mime});
+}
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); });
+}
+const imgSrc = x => (x && x.startsWith('sb:')) ? (Store.urls[x] || '') : (x || '');
+
+async function claudeAdapter() {
+  if (!(window.claude && typeof window.claude.use === 'function')) return null;
+  const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+  const id = db && user ? await user.id() : null;
+  if (!db || !id) return null;
+  const [assets, downloads] = await Promise.all([claude.use('assets'), claude.use('downloads')]);
+  const col = db.collection('data/users/' + id);
+  const toDocs = docs => docs.filter(d => d.exists).map(d => ({id: d.id, body: d.data()}));
+  return {
+    kind: 'claude', label: 'Claude 账号', downloads,
+    async load() { return toDocs((await col.get()).docs); },
+    async put(id, body) { await col.doc(id).set(body); },
+    async del(id) { await col.doc(id).delete(); },
+    async upload(dataUrl) { if (!assets) throw new Error('暂时不能上传图片'); const r = await assets.upload(dataUrlToBlob(dataUrl)); return '/_blob/' + r.id; },
+    async sign() {},
+    subscribe(cb) { col.onSnapshot(s => cb(toDocs(s.docs)), () => setSync('error')); },
+  };
+}
+
+async function sbAdapter(cfg) {
+  try { await loadScript('supabase.js').catch(() => loadScript(SB_CDN)); } catch { throw Object.assign(new Error('offline'), {userMsg: '需要联网才能打开账号版。请检查网络后刷新页面。'}); }
+  const client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true}});
+  client.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') showRecovery(client); });
+  let {data: {session}} = await client.auth.getSession();
+  if (!session) session = await showAuth(client);
+  const uid = session.user.id, T = 'shelf_docs', B = 'covers';
+  const fail = error => { if (error) throw Object.assign(new Error(error.message), {code: error.code || 'sb'}); };
+  const ad = {
+    kind: 'sb', label: '账号', client, email: session.user.email,
+    async load() {
+      const out = [];
+      for (let from = 0; ; from += 1000) {
+        const {data, error} = await client.from(T).select('doc_id,body').range(from, from + 999); fail(error);
+        out.push(...data.map(r => ({id: r.doc_id, body: r.body})));
+        if (data.length < 1000) break;
+      }
+      return out;
+    },
+    async put(id, body) { const {error} = await client.from(T).upsert({user_id: uid, doc_id: id, body, updated_at: new Date().toISOString()}); fail(error); },
+    async del(id) { const {error} = await client.from(T).delete().eq('doc_id', id); fail(error); },
+    async upload(dataUrl) {
+      const blob = dataUrlToBlob(dataUrl), ext = /png/.test(blob.type) ? 'png' : /svg/.test(blob.type) ? 'svg' : /webp/.test(blob.type) ? 'webp' : /gif/.test(blob.type) ? 'gif' : 'jpg';
+      const path = `${uid}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+      const {error} = await client.storage.from(B).upload(path, blob, {contentType: blob.type, upsert: false}); fail(error);
+      Store.urls['sb:' + path] = dataUrl;
+      return 'sb:' + path;
+    },
+    async sign(srcs) {   // 私有图片：批量换成 7 天有效的访问地址
+      const paths = [...new Set(srcs.filter(s => s && s.startsWith('sb:') && !Store.urls[s]).map(s => s.slice(3)))];
+      for (let i = 0; i < paths.length; i += 100) {
+        const {data, error} = await client.storage.from(B).createSignedUrls(paths.slice(i, i + 100), 7 * 24 * 3600);
+        if (error || !data) continue;
+        data.forEach(d => { if (d.signedUrl && d.path) Store.urls['sb:' + d.path] = d.signedUrl; });
+      }
+    },
+    subscribe(cb) {
+      let t = null; const refetch = () => { clearTimeout(t); t = setTimeout(async () => { try { cb(await ad.load()); setSync(Store.pending ? 'busy' : 'ok'); } catch { setSync('error'); } }, 500); };
+      try { client.channel('shelf-' + uid).on('postgres_changes', {event: '*', schema: 'public', table: T, filter: 'user_id=eq.' + uid}, refetch).subscribe(); } catch {}
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) refetch(); });
+      window.addEventListener('focus', refetch);
+      window.addEventListener('online', refetch);
+    },
+    async signOut() { await client.auth.signOut(); },
+  };
+  return ad;
+}
+
+const Store = {
+  kind: 'local', remote: null, cache: {ips: new Map(), books: new Map(), meta: {}}, pending: 0, onRemote: null, urls: {},
+  get cloud() { return this.remote; },
+  async init() {
+    const cfg = window.SHELF_CONFIG;
+    if (cfg && cfg.supabaseUrl && cfg.supabaseKey && /^https?:/.test(location.protocol)) this.remote = await sbAdapter(cfg);
+    else { try { this.remote = await claudeAdapter(); } catch { this.remote = null; } }
+    if (this.remote) {
+      this.kind = this.remote.kind;
+      await this.absorb(await this.remote.load());
+      this.remote.subscribe(docs => this.absorb(docs, true));
+    }
+    try { if (!DB.db) await DB.open(); }
+    catch (e) { if (!this.remote) throw e; }   // 账号/云端模式下本地存储只用于草稿
+    setSync(this.remote ? 'ok' : 'local');
+  },
+  async absorb(docs, remote) {
+    const ips = new Map(), books = new Map(), meta = {}, srcs = [];
+    docs.forEach(({id, body: v}) => {
+      if (!v) return;
+      if (id.startsWith('ip_')) ips.set(v.id, clone(v));
+      else if (id.startsWith('book_')) { books.set(v.id, clone(v)); (v.images || []).forEach(x => srcs.push(x)); }
+      else if (id.startsWith('meta_')) { meta[id.slice(5)] = v.v; if (id === 'meta_brand' && v.v && v.v.logo) srcs.push(v.v.logo); }
+    });
+    try { await this.remote.sign(srcs); } catch {}
+    this.cache = {ips, books, meta};
+    if (remote && this.onRemote) this.onRemote();
+  },
+  docId: (s, k) => s === 'meta' ? 'meta_' + k : (s === 'ips' ? 'ip_' : 'book_') + k,
+  async prepare(s, v, k) {   // 把新图片上传，换成云端地址
+    if (s === 'books' && Array.isArray(v.images)) {
+      for (let i = 0; i < v.images.length; i++) if (/^data:/.test(v.images[i])) v.images[i] = await this.remote.upload(v.images[i]);
+    }
+    if (s === 'meta' && k === 'brand' && v && /^data:/.test(v.logo || '')) v.logo = await this.remote.upload(v.logo);
+  },
+  async write(fn) { this.pending++; setSync('busy'); try { return await fn(); } catch (e) { setSync('error'); throw e; } finally { this.pending--; if (this.pending === 0 && document.getElementById('sync').dataset.state !== 'error') setSync('ok'); } },
+  async all(s) { if (!this.remote) return DB.all(s); return [...this.cache[s].values()].map(clone); },
+  async get(s, k) { if (!this.remote) return DB.get(s, k); return s === 'meta' ? clone(this.cache.meta[k]) : clone(this.cache[s].get(k)); },
+  async put(s, v, k) {
+    if (!this.remote) return DB.put(s, v, k);
+    const key = s === 'meta' ? k : v.id;
+    return this.write(async () => {
+      await this.prepare(s, v, k);
+      const body = s === 'meta' ? {v: v === undefined ? null : JSON.parse(JSON.stringify(v))} : JSON.parse(JSON.stringify(v));
+      await this.remote.put(this.docId(s, key), body);
+      if (s === 'meta') this.cache.meta[k] = clone(v); else this.cache[s].set(key, clone(v));
+    });
+  },
+  async del(s, k) {
+    if (!this.remote) return DB.del(s, k);
+    return this.write(async () => { await this.remote.del(this.docId(s, k)); if (s === 'meta') delete this.cache.meta[k]; else this.cache[s].delete(k); });
+  },
+  async putMany(s, arr, progress) {
+    if (!this.remote) return DB.putMany(s, arr);
+    let i = 0; for (const v of arr) { await this.put(s, v); if (progress) progress(++i, arr.length); }
+  },
+  async clear(s) {
+    if (!this.remote) return DB.clear(s);
+    const keys = s === 'meta' ? Object.keys(this.cache.meta) : [...this.cache[s].keys()];
+    for (const k of keys) await this.del(s, k);
+  },
+};
+
+/* ---------- 账号：注册 / 登录 / 找回密码 ---------- */
+function authErr(e) {
+  const m = (e && e.message) || '';
+  if (/Invalid login credentials/i.test(m)) return '邮箱或密码不对';
+  if (/Email not confirmed/i.test(m)) return '邮箱还没确认，请先去邮箱点确认链接';
+  if (/already registered|already been registered/i.test(m)) return '这个邮箱已经注册过了，请直接登录';
+  if (/Password should be at least/i.test(m)) return '账号密码至少 6 位';
+  if (/rate limit|too many/i.test(m)) return '操作太频繁了，请稍后再试';
+  if (/fetch|network/i.test(m)) return '连不上服务器，请检查网络';
+  return m || '出错了，请再试一次';
+}
+function showAuth(client) {
+  return new Promise(resolve => {
+    const f = $('#auth-form'), msg = $('#au-msg'), btn = $('#au-btn'); let mode = 'login';
+    f.hidden = false; $('#lock-sub').textContent = '登录账号后，手机和电脑看到同一个书架';
+    const say = (t, ok) => { msg.textContent = t; msg.style.color = ok ? 'var(--muted)' : ''; };
+    $$('[data-mode]', f).forEach(b => b.onclick = () => {
+      mode = b.dataset.mode; $$('[data-mode]', f).forEach(x => x.classList.toggle('on', x === b));
+      btn.textContent = mode === 'login' ? '登录' : '注册'; $('#au-pw').autocomplete = mode === 'login' ? 'current-password' : 'new-password'; say('');
+    });
+    const back = location.origin + location.pathname;
+    f.onsubmit = async e => {
+      e.preventDefault();
+      const email = $('#au-email').value.trim(), password = $('#au-pw').value;
+      if (!/^\S+@\S+\.\S+$/.test(email)) return say('请填写正确的邮箱');
+      if (password.length < 6) return say('账号密码至少 6 位');
+      btn.disabled = true; say('');
+      try {
+        const r = mode === 'signup' ? await client.auth.signUp({email, password, options: {emailRedirectTo: back}}) : await client.auth.signInWithPassword({email, password});
+        if (r.error) return say(authErr(r.error));
+        if (!r.data.session) return say('注册成功！请去邮箱点确认链接，确认后回到这里登录。', true);
+        f.hidden = true; resolve(r.data.session);
+      } catch (err) { say(authErr(err)); } finally { btn.disabled = false; }
+    };
+    $('#au-forgot').onclick = async () => {
+      const email = $('#au-email').value.trim();
+      if (!/^\S+@\S+\.\S+$/.test(email)) return say('先在上面填写注册时用的邮箱');
+      const {error} = await client.auth.resetPasswordForEmail(email, {redirectTo: back});
+      say(error ? authErr(error) : '重置邮件已发送，请到邮箱点链接设置新密码', !error);
+    };
+  });
+}
+function showRecovery(client) {
+  openModal(`<div class="sheet-head"><h2>设置新的账号密码</h2></div>
+    <form class="form" id="rc-form"><input class="input" type="password" id="rc-pw" placeholder="新密码（至少 6 位）" autocomplete="new-password">
+    <div class="sheet-actions" style="position:static"><button class="btn primary" type="submit">保存新密码</button></div></form>`, root => {
+    $('#rc-form', root).onsubmit = async e => {
+      e.preventDefault(); const password = $('#rc-pw', root).value;
+      if (password.length < 6) return toast('账号密码至少 6 位');
+      const {error} = await client.auth.updateUser({password});
+      if (error) return toast(authErr(error));
+      closeModal(); toast('账号密码已更新');
+    };
+  });
+}
+
+function setSync(state) {
+  const el = document.getElementById('sync'); if (!el) return;
+  el.hidden = state === 'local';
+  el.dataset.state = state;
+  el.textContent = {ok: '已同步', busy: '同步中…', error: '同步中断'}[state] || '';
+}
+async function save(store, v) {
+  try { await Store.put(store, v); return true; }
+  catch (e) {
+    const msg = e && (e.name === 'QuotaExceededError' || e.code === 'quota_exceeded' || e.code === 'too_large') ? '存储空间不够了，删掉一些图片后再试'
+      : e && e.code ? `云端保存失败（${e.code}），请检查网络后再试` : '保存失败：' + (e && e.message || e);
+    toast(msg); return false;
+  }
+}
+
+/* 草稿：添加/编辑本子时自动记住，存在这台设备上 */
+const Drafts = {
+  mem: {},
+  async get(k) { if (k in this.mem) return this.mem[k]; let v = null; try { if (DB.db) v = await DB.get('meta', 'draft:' + k); } catch {} this.mem[k] = v || null; return this.mem[k]; },
+  async set(k, v) { this.mem[k] = v; try { if (DB.db) await DB.put('meta', v, 'draft:' + k); } catch {} },
+  async del(k) { this.mem[k] = null; try { if (DB.db) await DB.del('meta', 'draft:' + k); } catch {} },
+};
+
+/* ================= 状态 ================= */
+const S = {ips: [], books: []};
+let unlocked = false, hiddenAt = 0, viewMode = 'shelf', flowIp = '';
+const ipById = id => S.ips.find(i => i.id === id);
+const bookById = id => S.books.find(b => b.id === id);
+const byRecent = (a, b) => (b.buyDate || '').localeCompare(a.buyDate || '') || (b.created || 0) - (a.created || 0);
+const booksOf = ipId => S.books.filter(b => b.ipId === ipId).sort(byRecent);
+const bookTotal = b => sum((b.costs || []).map(toCny));
+const splitCp = s => String(s || '').split(/[,，、;；\n]+/).map(x => x.trim()).filter(Boolean);
+const ipColor = ip => (ip && ip.color) || COLORS[hashStr(ip ? ip.id : '') % COLORS.length];
+
+/* ================= 锁屏 ================= */
+async function initLock() {
+  if (!storeReady) {
+    try { await Store.init(); storeReady = true; }
+    catch (e) { $('#lock-sub').textContent = (e && e.userMsg) || (Store.kind === 'local' && !window.SHELF_CONFIG ? '这个浏览器在当前打开方式下不允许保存数据。请换用 Chrome、Edge 或 Safari 打开，或者不要使用无痕模式。' : '读取数据失败：' + ((e && e.message) || e) + '。请检查网络后刷新页面。'); return; }
+  }
+  if (Store.kind === 'sb') { const a = $('#lock-acct'); a.hidden = false; a.innerHTML = `账号 ${esc(Store.remote.email || '')} · <button class="lock-link" type="button" data-act="sign-out">切换账号</button>`; }
+  try { const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); } } catch {}
+  const pw = await Store.get('meta', 'pw');
+  const form = $('#lock-form'); form.hidden = false;
+  if (!pw) {
+    $('#lock-sub').textContent = '第一次使用，先设一个解锁密码';
+    $('#pw1').placeholder = '设置密码（至少 4 位）';
+    $('#pw2').hidden = false; $('#lock-btn').textContent = '设好了，打开书架';
+  } else {
+    $('#lock-sub').textContent = '输入密码打开书架';
+    $('#pw1').placeholder = '密码'; $('#lock-btn').textContent = '解锁';
+    $('#forgot-wrap').hidden = false;
+  }
+  setTimeout(() => $('#pw1').focus(), 60);
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const v1 = $('#pw1').value, cur = await Store.get('meta', 'pw');
+    if (!cur) {
+      if (v1.length < 4) return fail('密码至少 4 位');
+      if (v1 !== $('#pw2').value) return fail('两次输入的密码不一样');
+      const salt = uid(); await Store.put('meta', {salt, hash: sha256(salt + v1)}, 'pw');
+      return enter();
+    }
+    if (sha256(cur.salt + v1) === cur.hash) return enter();
+    fail('密码不对，再试一次');
+    function fail(t) { $('#lock-msg').textContent = t; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); $('#pw1').select(); }
+  };
+  $('#forgot-btn').onclick = () => { $('#forgot-box').hidden = false; };
+  $('#wipe-btn').onclick = async () => {
+    if ($('#wipe-confirm').value.trim() !== '清空') return toast('请输入“清空”两个字确认');
+    await wipeAll(); afterWipe();
+  };
+}
+let storeReady = false;
+async function wipeAll() {
+  await Store.clear('ips'); await Store.clear('books'); await Store.clear('meta');
+  try { if (DB.db) await DB.clear('meta'); } catch {}
+  Drafts.mem = {};
+}
+function afterWipe() {
+  BRAND = {name: DEFAULT_NAME, logo: ''}; RATES = {...DEFAULT_RATES}; applyBrand();
+  history.replaceState(null, '', location.pathname + location.search);
+  $('#forgot-wrap').hidden = true; $('#wipe-confirm').value = '';
+  lockNow(); toast('已清空，请重新设置密码');
+}
+/* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
+let lastSig = '';
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo]);
+async function onRemoteChange() {
+  const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
+  if (!unlocked) return;
+  S.ips = await Store.all('ips'); S.books = await Store.all('books');
+  const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
+  const sig = sigOf(); if (sig === lastSig) return; lastSig = sig;
+  const a = document.activeElement;
+  if (a && $('#view').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+  const y = window.scrollY; renderCurrent(); window.scrollTo(0, y);
+}
+Store.onRemote = onRemoteChange;
+async function enter() {
+  S.ips = await Store.all('ips'); S.books = await Store.all('books');
+  const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
+  viewMode = (await Store.get('meta', 'view')) || 'shelf';
+  await Drafts.get('new');
+  unlocked = true; lastSig = sigOf();
+  $('#lock').hidden = true; $('#app').hidden = false;
+  $('#pw1').value = ''; $('#pw2').value = ''; $('#lock-msg').textContent = '';
+  route();
+}
+function lockNow() {
+  unlocked = false; closeModal(); closeLightbox();
+  S.ips = []; S.books = []; $('#view').innerHTML = '';
+  $('#app').hidden = true; $('#lock').hidden = false;
+  $('#pw2').hidden = true; $('#forgot-box').hidden = true;
+  initLock();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (unlocked && hiddenAt && Date.now() - hiddenAt > 3 * 60 * 1000) lockNow();
+});
+
+/* ================= 路由 ================= */
+let galleryIdx = 0, lastBookId = null;
+window.addEventListener('hashchange', route);
+function route() {
+  if (!unlocked) return;
+  closeLightbox(); renderCurrent(); window.scrollTo(0, 0);
+}
+function renderCurrent() {
+  if (!unlocked) return;
+  const h = decodeURIComponent(location.hash.slice(1));
+  let tab = 'shelf';
+  if (h === 'stats') { tab = 'stats'; renderStats(); }
+  else if (h === 'prefs') { tab = 'prefs'; renderSettings(); }
+  else if (h.startsWith('ip-') && ipById(h.slice(3))) renderIp(h.slice(3));
+  else if (h.startsWith('book-') && bookById(h.slice(5))) {
+    if (lastBookId !== h.slice(5)) { galleryIdx = 0; lastBookId = h.slice(5); }
+    renderBook(h.slice(5));
+  } else renderHome();
+  $$('[data-tab]').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
+}
+
+/* ================= 首页 ================= */
+function coverHtml(b, c, big) {
+  return b.images && b.images.length
+    ? `<img src="${imgSrc(b.images[0])}" alt="${esc(b.title)}" loading="lazy">`
+    : `<div class="ph${big ? ' big' : ''}" style="--c:${c}"><span>${esc(b.title || '无题')}</span></div>`;
+}
+function renderHome() {
+  const ips = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0));
+  const transit = S.books.filter(b => b.transit).sort(byRecent);
+  const hasSample = S.ips.some(i => i.sample);
+  let body;
+  if (!ips.length) {
+    body = `<div class="shelf-empty"><strong>书架还是空的</strong>先建一个 IP 合集，再往里面放本子。
+      <div class="row"><button class="btn primary" data-act="new-ip">新建IP合集</button><button class="btn" data-act="sample">放几本示例看看</button></div></div>`;
+  } else if (viewMode === 'flow') {
+    if (flowIp && !ipById(flowIp)) flowIp = '';
+    const list = S.books.filter(b => !flowIp || b.ipId === flowIp).sort(byRecent);
+    body = `<div class="chips"><button class="${flowIp ? '' : 'on'}" data-act="flow-ip" data-v="">全部 ${S.books.length}</button>
+      ${ips.map(ip => `<button class="${flowIp === ip.id ? 'on' : ''}" data-act="flow-ip" data-v="${esc(ip.id)}">${esc(ip.name)} ${S.books.filter(b => b.ipId === ip.id).length}</button>`).join('')}</div>
+      ${list.length ? `<div class="flow">${list.map(b => {
+        const ip = ipById(b.ipId);
+        return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}</div>
+          <div class="wf-title">${esc(b.title || '无题')}</div>
+          <div class="wf-sub">${b.transit ? '<span class="tag transit">在途</span>' : ''}<span>${esc(ip ? ip.name : '')}${b.cp ? ' · ' + esc(b.cp) : ''}</span></div></button>`;
+      }).join('')}</div>` : `<div class="empty-box">这里还没有本子</div>`}`;
+  } else {
+    body = `<div class="shelf">${ips.map(ip => {
+      const n = S.books.filter(b => b.ipId === ip.id).length;
+      return `<button class="spine" style="--c:${ipColor(ip)};height:${156 + (hashStr(ip.id) % 6) * 8}px" data-go="ip-${esc(ip.id)}" title="${esc(ip.name)}">
+        <span class="spine-title">${esc(ip.name)}</span><span class="spine-count">${n}</span></button>`;
+    }).join('')}<button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">＋ 新建IP</span></button></div>`;
+  }
+  $('#view').innerHTML = `
+    ${hasSample ? `<div class="notice"><span>书架上有示例数据，熟悉之后可以一键删掉。</span><button class="btn small" data-act="del-sample">删除示例</button></div>` : ''}
+    <div class="page-head"><div><h1>我的书架</h1><p class="num">${S.ips.length} 个IP · ${S.books.length} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
+      <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
+    <section class="section">
+      <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2></div>
+      ${transit.length ? `<div class="transit-list">${transit.map(b => {
+        const ip = ipById(b.ipId);
+        return `<div class="t-card"><button class="mini" data-go="book-${esc(b.id)}">${coverHtml(b, ipColor(ip))}</button>
+          <button class="t-info" data-go="book-${esc(b.id)}"><b>${esc(b.title || '无题')}</b>
+          <span>${esc(ip ? ip.name : '')}${b.place ? ' · ' + esc(b.place) : ''}</span>
+          <span class="num">${b.buyDate ? esc(b.buyDate) + ' 购入' : '未填购买时间'}</span></button>
+          <button class="btn small" data-act="arrive" data-id="${esc(b.id)}">到手</button></div>`;
+      }).join('')}</div>` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
+    </section>
+    <section class="section">
+      <div class="sec-head"><h2>收藏</h2>
+        ${ips.length ? `<div class="seg" role="tablist"><button class="${viewMode === 'shelf' ? 'on' : ''}" data-act="view" data-v="shelf">书架</button><button class="${viewMode === 'flow' ? 'on' : ''}" data-act="view" data-v="flow">瀑布流</button></div>` : ''}</div>
+      ${body}
+    </section>`;
+}
+
+/* ================= IP 合集 ================= */
+function renderIp(id) {
+  const ip = ipById(id), books = booksOf(id), c = ipColor(ip);
+  $('#view').innerHTML = `
+    <a class="crumb" href="#">‹ 书架</a>
+    <div class="coll-head"><div class="coll-mark" style="--c:${c}"></div>
+      <div style="min-width:0"><h1>${esc(ip.name)} ${ip.sample ? '<span class="tag">示例</span>' : ''}</h1>
+      <p class="num">${books.length} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
+      <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
+    <div class="covers">
+      ${books.map(b => `<button class="cover-card" data-go="book-${esc(b.id)}">
+        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}</div>
+        <div class="cover-title">${esc(b.title || '无题')}</div>
+        <div class="cover-sub">${esc(b.cp || b.author || '')}</div></button>`).join('')}
+      <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
+    </div>`;
+}
+
+/* ================= 详情 ================= */
+function costSummary(costs) {
+  const by = new Map();
+  costs.forEach(x => { const c = x.cur || 'CNY'; by.set(c, (by.get(c) || 0) + (Number(x.amount) || 0)); });
+  const foreign = [...by.keys()].some(c => c !== 'CNY');
+  return {cny: sum(costs.map(toCny)), foreign, orig: [...by.entries()].filter(([, v]) => v).map(([c, v]) => fmtCur(v, c)).join(' + ')};
+}
+function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } }
+function renderBook(id) {
+  const b = bookById(id), ip = ipById(b.ipId), c = ipColor(ip), imgs = b.images || [];
+  if (galleryIdx >= imgs.length) galleryIdx = 0;
+  const costs = (b.costs || []).filter(x => x.label || Number(x.amount));
+  const cs = costSummary(costs);
+  const spec = (k, v, sub) => `<div class="spec${v ? '' : ' empty'}"><span>${k}</span><b>${v ? esc(v) : '—'}</b>${v && sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+  const cnDate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${m[1]}年${+m[2]}月${+m[3]}日` : (s || ''); };
+  const buyLine = b.buyDate || b.place ? [cnDate(b.buyDate), b.place ? b.place + '购入' : (b.buyDate ? '购入' : '')].filter(Boolean).join(' · ') : '';
+  $('#view').innerHTML = `
+    <div class="detail">
+      <a class="crumb" href="#ip-${esc(b.ipId)}">‹ ${esc(ip ? ip.name : '书架')}</a>
+      <div class="gallery">
+        <button class="gallery-main" data-act="zoom" ${imgs.length ? '' : 'disabled'} aria-label="查看大图">
+          ${imgs.length ? `<img src="${imgSrc(imgs[galleryIdx])}" alt="${esc(b.title)}">` : coverHtml(b, c, true)}</button>
+        ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((src, i) => `<button class="${i === galleryIdx ? 'on' : ''}" data-act="thumb" data-i="${i}"><img src="${imgSrc(src)}" alt=""></button>`).join('')}</div>` : ''}
+      </div>
+      ${b.transit ? `<div class="transit-bar"><span>还在路上</span><button class="btn small" data-act="arrive" data-id="${esc(b.id)}">标记为到手</button></div>` : ''}
+      <h1 class="book-title">${esc(b.title || '无题')}</h1>
+      <div class="byline">${b.author ? `<b>${esc(b.author)}</b>` : '作者未填写'}${b.club ? ` · 社团 ${esc(b.club)}` : ''}</div>
+      <div class="who">
+        ${ip ? `<a class="pill" href="#ip-${esc(ip.id)}" style="--c:${c}"><i></i>${esc(ip.name)}</a>` : ''}
+        ${splitCp(b.cp).map(x => `<span class="pill"><small>CP</small>${esc(x)}</span>`).join('')}
+        ${b.read ? `<span class="tag">${esc(b.read)}</span>` : ''}${b.age ? `<span class="tag age">${esc(b.age)}</span>` : ''}
+      </div>
+      <div class="specs">
+        ${spec('本子类型', b.kind)}
+        ${spec('本子尺寸', b.size, SIZE_MM[b.size])}
+        ${spec('地区', b.origin)}
+        ${spec('形式', b.format)}
+        ${spec('品相', b.condition)}
+        ${spec('发行日', cnDate(b.releaseDate))}
+      </div>
+      <section class="block"><h3>购入</h3>
+        <div class="buy">
+          <div class="buy-head">
+            <div class="buy-when"><b>${buyLine ? esc(buyLine) : '<span class="muted">未填写购入时间和地点</span>'}</b>
+              <span>总价格${cs.foreign ? '（已折合人民币）' : ''}</span></div>
+            <div class="buy-sum"><strong>${money(cs.cny)}</strong>${cs.foreign ? `<span class="num">原币 ${esc(cs.orig)}</span>` : ''}</div>
+          </div>
+          ${costs.length ? `<ul class="price-lines">${costs.map(x => `<li><span>${esc(x.label || '其他')}</span><span>${fmtCur(x.amount, x.cur || 'CNY')}${(x.cur || 'CNY') !== 'CNY' ? `<small>≈${money(toCny(x))}</small>` : ''}</span></li>`).join('')}</ul>` : ''}
+          ${b.link ? `<a class="buy-link" href="${esc(b.link)}" target="_blank" rel="noopener noreferrer">打开购入链接 · ${esc(hostOf(b.link))} ↗</a>` : ''}
+        </div>
+      </section>
+      <section class="block"><h3>评分</h3>
+        <div class="stars">${[1,2,3,4,5].map(n => `<button class="${n <= (b.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}" aria-label="${n} 星">${STAR}</button>`).join('')}</div>
+        <div class="stars-note">${b.rating ? `${b.rating} 星 · 再点一次当前星可清除` : '点星星打分'}</div>
+      </section>
+      <section class="block"><h3>备注</h3><p class="note ${b.note ? '' : 'empty'}">${esc(b.note) || '还没有备注'}</p></section>
+      <div class="actions">
+        <button class="btn primary" data-act="edit-book" data-id="${esc(b.id)}">编辑</button>
+        <button class="btn danger" data-act="del-book" data-id="${esc(b.id)}">删除</button>
+      </div>
+    </div>`;
+}
+
+/* ================= 统计 ================= */
+function barList(rows, max, color) {
+  return `<ol class="bars">${rows.map(r => `<li><div class="bar-top"><span class="bar-name">${esc(r.name)}${r.sub ? `<em>${esc(r.sub)}</em>` : ''}</span><span class="bar-val">${r.val}</span></div>
+    <div class="bar-track"><i style="${r.c || color ? `--c:${r.c || color};` : ''}width:${Math.max(2, r.v / max * 100)}%"></i></div></li>`).join('')}</ol>`;
+}
+function countBy(books, key, fallback) {
+  const m = new Map();
+  books.forEach(b => { const k = b[key] || fallback; if (k) m.set(k, (m.get(k) || 0) + 1); });
+  return [...m.entries()].sort((a, b) => b[1] - a[1]);
+}
+let statYear = null, statMetric = 'count';
+function donutSvg(rows, total) {
+  const r = 58, C = 2 * Math.PI * r; let off = 0;
+  const segs = rows.map(([k, v]) => {
+    const len = v / total * C, gap = rows.length > 1 ? Math.min(2, len / 2) : 0;
+    const s = `<circle cx="75" cy="75" r="${r}" fill="none" stroke="${REGION_COLORS[k] || '#9aa0aa'}" stroke-width="20" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"><title>${esc(k)} ${v} 本</title></circle>`;
+    off += len; return s;
+  }).join('');
+  return `<svg class="donut" viewBox="0 0 150 150" role="img" aria-label="地区分布环形图">
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--soft)" stroke-width="20"/>${segs}
+    <text x="75" y="72" text-anchor="middle" font-size="26" font-weight="600" font-family="var(--num)">${total}</text>
+    <text x="75" y="92" text-anchor="middle" font-size="11" fill="var(--muted)" style="fill:var(--muted)">本</text></svg>`;
+}
+function vizHtml(books) {
+  // 地区
+  const regions = countBy(books, 'origin', '未填写');
+  const regionHtml = books.length ? `<div class="donut-wrap">${donutSvg(regions, books.length)}
+    <ul class="legend">${regions.map(([k, v]) => `<li><i style="--c:${REGION_COLORS[k] || '#9aa0aa'}"></i><span>${esc(k)}</span><b>${v}</b><em>${Math.round(v / books.length * 100)}%</em></li>`).join('')}</ul></div>`
+    : '<div class="empty-box">还没有本子</div>';
+
+  // 按月汇总
+  const dated = books.filter(b => /^\d{4}-\d{2}/.test(b.buyDate || ''));
+  const undated = books.length - dated.length;
+  const ym = new Map();
+  dated.forEach(b => { const k = b.buyDate.slice(0, 7); const e = ym.get(k) || {count: 0, cost: 0}; e.count++; e.cost += bookTotal(b); ym.set(k, e); });
+  const years = [...new Set(dated.map(b => +b.buyDate.slice(0, 4)))].sort((a, b) => b - a);
+  if (!years.includes(statYear)) statYear = years.includes(new Date().getFullYear()) ? new Date().getFullYear() : years[0];
+  const val = e => e ? (statMetric === 'cost' ? e.cost : e.count) : 0;
+  const fmtV = v => statMetric === 'cost' ? (v >= 10000 ? '¥' + (v / 10000).toFixed(1) + '万' : '¥' + Math.round(v)) : String(v);
+
+  let monthHtml = '<div class="empty-box">还没有填写购买时间的本子</div>', heatHtml = monthHtml;
+  if (years.length) {
+    const months = Array.from({length: 12}, (_, i) => ym.get(`${statYear}-${String(i + 1).padStart(2, '0')}`));
+    const maxM = Math.max(1, ...months.map(val));
+    const yearTotal = sum(months.map(val));
+    monthHtml = `
+      <div class="viz-tools">
+        <div class="chips">${years.map(y => `<button class="${y === statYear ? 'on' : ''}" data-act="stat-year" data-v="${y}">${y}</button>`).join('')}</div>
+        <div class="seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></div>
+      </div>
+      <p class="hint" style="margin:0 0 8px">${statYear} 年共 ${statMetric === 'cost' ? money(yearTotal) : yearTotal + ' 本'}</p>
+      <div class="mbars">${months.map((e, i) => { const v = val(e); return `<div class="mbar" title="${i + 1}月：${e ? e.count + ' 本 · ' + money(e.cost) : '0 本'}">
+        ${v ? `<small>${fmtV(v)}</small>` : ''}<i class="${v ? '' : 'zero'}" style="height:calc((100% - 18px) * ${v / maxM})"></i></div>`; }).join('')}</div>
+      <div class="mlabels">${months.map((_, i) => `<span>${i + 1}月</span>`).join('')}</div>`;
+
+    const allYears = [...years].sort((a, b) => a - b);
+    const full = []; for (let y = allYears[0]; y <= allYears[allYears.length - 1]; y++) full.push(y);
+    const maxC = Math.max(1, ...[...ym.values()].map(e => e.count));
+    const lvl = n => n ? Math.min(4, Math.ceil(n / maxC * 4)) : 0;
+    heatHtml = `<div class="heat-scroll"><div class="heat">
+        <span></span>${Array.from({length: 12}, (_, i) => `<span class="h">${i + 1}</span>`).join('')}
+        ${full.reverse().map(y => `<span class="y">${y}</span>${Array.from({length: 12}, (_, i) => {
+          const e = ym.get(`${y}-${String(i + 1).padStart(2, '0')}`), n = e ? e.count : 0;
+          return `<div class="cell l${lvl(n)}" title="${y}年${i + 1}月：${n} 本${e ? ' · ' + money(e.cost) : ''}">${n || ''}</div>`;
+        }).join('')}`).join('')}
+      </div></div>
+      <div class="heat-legend">少<span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span>多</div>`;
+  }
+  return `<div class="viz">
+    <section class="panel"><h2>地区统计 <small>按本子性质 · 地区</small></h2>${regionHtml}</section>
+    <section class="panel"><h2>月份统计 <small>按购买时间</small></h2>${monthHtml}</section>
+    <section class="panel wide"><h2>时间方块 <small>每格一个月，颜色越深买得越多</small></h2>${heatHtml}
+      ${undated ? `<p class="hint" style="margin:10px 0 0">另有 ${undated} 本没填购买时间，未计入月份统计</p>` : ''}</section>
+  </div>`;
+}
+function renderStats() {
+  const books = S.books, total = sum(books.map(bookTotal));
+  const transit = books.filter(b => b.transit);
+  const byIp = S.ips.map(ip => { const bs = books.filter(b => b.ipId === ip.id); return {ip, count: bs.length, cost: sum(bs.map(bookTotal))}; })
+    .sort((a, b) => b.count - a.count || b.cost - a.cost);
+  const cpMap = new Map(); let noCp = 0;
+  books.forEach(b => {
+    const cps = splitCp(b.cp); if (!cps.length) noCp++;
+    cps.forEach(name => { const e = cpMap.get(name) || {name, count: 0, cost: 0, ips: new Set()}; e.count++; e.cost += bookTotal(b); const ip = ipById(b.ipId); if (ip) e.ips.add(ip.name); cpMap.set(name, e); });
+  });
+  const cps = [...cpMap.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
+  const labMap = new Map();
+  books.forEach(b => (b.costs || []).forEach(x => { const k = (x.label || '其他').trim() || '其他'; labMap.set(k, (labMap.get(k) || 0) + toCny(x)); }));
+  const labs = [...labMap.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const rated = books.filter(b => b.rating), avgRate = rated.length ? sum(rated.map(b => b.rating)) / rated.length : 0;
+  const kinds = countBy(books, 'kind'), reads = countBy(books, 'read', '未标记');
+  const maxIp = Math.max(1, ...byIp.map(x => x.count)), maxCp = Math.max(1, ...cps.map(x => x.count)), maxLab = Math.max(1, ...labs.map(x => x[1]));
+  const anyForeign = books.some(b => (b.costs || []).some(x => (x.cur || 'CNY') !== 'CNY' && Number(x.amount)));
+
+  $('#view').innerHTML = `
+    <div class="page-head"><div><h1>统计</h1><p>按当前书架里的 ${books.length} 本计算${anyForeign ? '，外币按设置里的汇率折合人民币' : ''}</p></div></div>
+    <div class="tiles">
+      <div class="tile lead"><span>总花费</span><strong>${money(total)}</strong><em>平均每本 ${money(books.length ? total / books.length : 0)}</em></div>
+      <div class="tile"><span>本子</span><strong>${books.length}<small>本</small></strong><em>${transit.length ? `在途 ${transit.length} 本` : rated.length ? `平均 ${avgRate.toFixed(1)} 星` : '—'}</em></div>
+      <div class="tile"><span>IP</span><strong>${S.ips.length}<small>个</small></strong><em>${byIp[0] && byIp[0].count ? `最多：${esc(byIp[0].ip.name)}` : '—'}</em></div>
+      <div class="tile"><span>CP</span><strong>${cps.length}<small>个</small></strong><em>${cps[0] ? `最多：${esc(cps[0].name)}` : '—'}</em></div>
+    </div>
+    ${vizHtml(books)}
+    <div class="stat-grid">
+      <section class="panel"><h2>每个IP多少本 <small>本数 · 花费</small></h2>
+        ${byIp.length ? barList(byIp.map(x => ({name: x.ip.name, v: x.count, c: ipColor(x.ip), val: `<b>${x.count}</b> 本 · ${money(x.cost)}`})), maxIp) : '<div class="empty-box">还没有IP</div>'}
+      </section>
+      <section class="panel"><h2>每个CP多少本 <small>本数 · 花费</small></h2>
+        ${cps.length ? barList(cps.map(x => ({name: x.name, sub: [...x.ips].join('、'), v: x.count, val: `<b>${x.count}</b> 本 · ${money(x.cost)}`})), maxCp) : '<div class="empty-box">还没有填写CP的本子</div>'}
+        ${noCp ? `<p class="hint" style="margin:10px 0 0">另有 ${noCp} 本没填CP</p>` : ''}
+      </section>
+      <section class="panel"><h2>钱花在哪儿 <small>按价格细则汇总</small></h2>
+        ${labs.length ? barList(labs.map(([k, v]) => ({name: k, v, val: `<b>${money(v)}</b> · ${total ? Math.round(v / total * 100) : 0}%`})), maxLab, 'var(--star)') : '<div class="empty-box">还没有价格记录</div>'}
+      </section>
+      <section class="panel"><h2>本子类型 <small>本数</small></h2>
+        ${kinds.length ? barList(kinds.map(([k, v]) => ({name: k, v, val: `<b>${v}</b> 本`})), Math.max(...kinds.map(x => x[1])), 'var(--accent)') : '<div class="empty-box">还没有填写类型</div>'}
+      </section>
+      <section class="panel"><h2>阅读状态 <small>本数</small></h2>
+        ${books.length ? barList(reads.map(([k, v]) => ({name: k, v, val: `<b>${v}</b> 本`})), Math.max(...reads.map(x => x[1])), 'var(--muted)') : '<div class="empty-box">还没有本子</div>'}
+      </section>
+    </div>`;
+}
+
+/* ================= 设置 ================= */
+function renderSettings() {
+  $('#view').innerHTML = `
+    <div class="page-head"><div><h1>设置</h1><p>${{sb: '账号版：数据保存在你自己的 Supabase 项目里，登录同一账号的设备自动同步', claude: '云端版：数据保存在你 Claude 账号下的私有空间，多台设备自动同步'}[Store.kind] || '离线版：数据只保存在这个浏览器里，不会上传到任何地方'}</p></div></div>
+    <div class="settings">
+      ${syncCard()}
+      <div class="set-card"><h2>名称与 LOGO</h2>
+        <p>改的是左上角的主按钮、锁屏页和浏览器标签上显示的名称和图标。</p>
+        <form id="brand-form" class="form">
+          <label class="field"><span>名称（1–12 个字）</span><input class="input" id="brand-input" maxlength="12" value="${esc(BRAND.name || DEFAULT_NAME)}" placeholder="${DEFAULT_NAME}"></label>
+          <div class="brand-row">
+            <div class="logo-preview" id="logo-preview">${BRAND.logo ? `<img src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_TOP_LOGO}</div>
+            <div class="row"><label class="btn" for="logo-file">上传 LOGO</label><input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
+              ${BRAND.logo ? '<button class="btn text" type="button" data-act="reset-logo">恢复默认 LOGO</button>' : ''}</div>
+          </div>
+          <ul class="req">
+            <li>格式：PNG、JPG、WebP、GIF 或 SVG，推荐透明底 PNG</li>
+            <li>尺寸：正方形，建议 512×512 像素，最小 64×64 像素；不是正方形会自动裁切中间</li>
+            <li>大小：不超过 2 MB（SVG 不超过 200 KB），保存时会缩放为 256×256</li>
+          </ul>
+          <div class="row"><button class="btn primary" type="submit">保存名称</button></div>
+        </form>
+      </div>
+      <div class="set-card"><h2>备份与迁移</h2>
+        <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
+        <div class="row"><button class="btn primary" data-act="export">导出备份</button>
+          <label class="btn" for="import-file">导入备份</label><input type="file" id="import-file" accept=".json,application/json" hidden></div>
+      </div>
+      <div class="set-card"><h2>汇率</h2>
+        <p>1 单位外币折合多少人民币，用于总价和统计。按需要改成你实际的汇率。</p>
+        <form id="rate-form" class="form">
+          <div class="rates">${Object.keys(DEFAULT_RATES).map(c => `<label class="rate"><span>${CUR[c].n}</span><input class="input num" id="rate-${c}" type="number" step="any" min="0" inputmode="decimal" value="${esc(RATES[c])}"></label>`).join('')}</div>
+          <div class="row"><button class="btn" type="submit">保存汇率</button><button class="btn text" type="button" data-act="reset-rates">恢复默认</button></div>
+        </form>
+        <div class="live">
+          <div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:14px;font-weight:600">实时汇率参考</b>
+            ${Store.kind === 'claude' ? '' : '<button class="btn small" type="button" data-act="live-rates">联网获取</button>'}</div>
+          <div id="live-box"><p>${Store.kind === 'claude' ? '云端版出于安全限制不能访问其他网站，联网获取汇率请在离线文件版里操作，或对照汇率网站手动填写。' : '点“联网获取”会访问公开汇率接口（open.er-api.com），只下载汇率，不会上传你的任何数据。'}</p></div>
+        </div>
+      </div>
+      <div class="set-card"><h2>修改密码</h2>
+        <form id="pw-form" class="form" autocomplete="off">
+          <input class="input" type="password" id="pw-old" placeholder="当前密码">
+          <input class="input" type="password" id="pw-new" placeholder="新密码（至少 4 位）">
+          <input class="input" type="password" id="pw-new2" placeholder="再输入一次新密码">
+          <div class="row"><button class="btn" type="submit">保存新密码</button></div>
+        </form>
+      </div>
+      <div class="set-card"><h2>上锁</h2><p>离开页面超过 3 分钟会自动上锁，也可以现在手动上锁。</p>
+        <div class="row"><button class="btn" data-act="lock">立即上锁</button></div></div>
+      <div class="set-card"><h2>清空所有数据</h2><p>删除全部 IP、本子、图片和密码，无法恢复。</p>
+        <div class="row"><button class="btn danger" data-act="wipe">清空所有数据</button></div></div>
+      <p class="hint" id="storage-hint"></p>
+    </div>`;
+  $('#pw-form').onsubmit = async e => {
+    e.preventDefault();
+    const cur = await Store.get('meta', 'pw');
+    if (sha256(cur.salt + $('#pw-old').value) !== cur.hash) return toast('当前密码不对');
+    const n = $('#pw-new').value;
+    if (n.length < 4) return toast('新密码至少 4 位');
+    if (n !== $('#pw-new2').value) return toast('两次输入的新密码不一样');
+    const salt = uid(); await Store.put('meta', {salt, hash: sha256(salt + n)}, 'pw');
+    e.target.reset(); toast('密码已更新');
+  };
+  $('#rate-form').onsubmit = async e => {
+    e.preventDefault();
+    const r = {}; Object.keys(DEFAULT_RATES).forEach(c => { const v = parseFloat($('#rate-' + c).value); r[c] = v >= 0 ? v : DEFAULT_RATES[c]; });
+    RATES = r; await Store.put('meta', r, 'rates'); toast('汇率已保存');
+  };
+  $('#brand-form').onsubmit = async e => {
+    e.preventDefault();
+    const name = $('#brand-input').value.trim();
+    if (!name) return toast('名称不能为空');
+    BRAND.name = name; await Store.put('meta', BRAND, 'brand'); applyBrand(); toast('名称已更新');
+  };
+  $('#logo-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      const r = await processLogo(f);
+      BRAND.logo = r.src; await Store.put('meta', BRAND, 'brand'); applyBrand(); renderSettings();
+      toast(r.warn || 'LOGO 已更新');
+    } catch (err) { toast(err.message); }
+  };
+  $('#import-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
+  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(r => { if (r && r.usage) $('#storage-hint').textContent = `已用存储约 ${(r.usage / 1048576).toFixed(1)} MB`; }).catch(() => {});
+}
+/* 云端同步说明卡片 */
+const CLOUD_URL = 'https://claude.ai/artifact/U3p7hkhHagKz5azQdWQMP8';
+function syncCard() {
+  const link = CLOUD_URL ? `<div class="link-box"><code id="cloud-url">${esc(CLOUD_URL)}</code><button class="btn small" type="button" data-act="copy-url">复制链接</button></div>` : '';
+  if (Store.kind === 'sb') return `<div class="set-card"><h2>账号同步 · 已开启</h2>
+    <p>当前登录：<b>${esc(Store.remote.email || '')}</b>。在任何设备打开这个网址、登录同一个账号，看到的都是同一个书架，改动会自动同步。</p>
+    <div class="link-box"><code id="cloud-url">${esc(location.origin + location.pathname)}</code><button class="btn small" type="button" data-act="copy-url">复制网址</button></div>
+    <div class="row"><button class="btn" type="button" data-act="sign-out">退出登录</button></div></div>`;
+  if (Store.kind === 'claude') return `<div class="set-card"><h2>云端同步 · 已开启</h2>
+    <p>你正在使用云端版。数据和图片保存在你 Claude 账号下的私有空间，只有你自己能看到。手机、平板、电脑登录同一个 Claude 账号，打开这个链接，看到的都是同一个书架，改动会自动同步。</p>
+    ${link}
+    <ol class="steps"><li>把链接发到手机，用浏览器或 Claude App 打开</li><li>登录同一个 Claude 账号</li><li>输入同一个解锁密码</li></ol></div>`;
+  return `<div class="set-card"><h2>云端同步</h2>
+    <p>当前是离线文件版，数据只在这台设备上。想让手机和电脑看到同一个书架，请改用云端版链接（需要联网并登录 Claude 账号）。</p>
+    ${link}
+    <ol class="steps"><li>在这里点“导出备份”</li><li>打开云端版链接，设置解锁密码</li><li>在云端版的设置里点“导入备份”，选刚才的文件</li><li>以后在电脑和手机上都打开云端版链接即可</li></ol></div>`;
+}
+async function blobToDataUrl(path) {
+  const r = await fetch(path); if (!r.ok) throw new Error(r.status);
+  const b = await r.blob();
+  return await new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); });
+}
+
+/* 实时汇率：先试 open.er-api.com，失败再试 frankfurter（后者没有新台币） */
+let LIVE = null;
+async function fetchLiveRates() {
+  const box = $('#live-box'); if (!box) return;
+  box.innerHTML = '<p>正在获取…</p>';
+  const getJson = async url => { const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
+    try { const r = await fetch(url, {signal: ctl.signal, cache: 'no-store'}); if (!r.ok) throw new Error(r.status); return await r.json(); } finally { clearTimeout(t); } };
+  let perCny = null, when = '', src = '';
+  try {
+    const j = await getJson('https://open.er-api.com/v6/latest/CNY');
+    if (j.result === 'success' && j.rates) { perCny = j.rates; when = j.time_last_update_utc ? new Date(j.time_last_update_utc).toLocaleString('zh-CN', {hour12: false}) : ''; src = 'open.er-api.com'; }
+  } catch {}
+  if (!perCny) {
+    try { const j = await getJson('https://api.frankfurter.app/latest?from=CNY'); if (j.rates) { perCny = j.rates; when = j.date || ''; src = 'frankfurter.app（欧洲央行数据）'; } } catch {}
+  }
+  if (!perCny) { box.innerHTML = '<p style="color:var(--danger)">没有获取到汇率。请确认已经联网后再试一次。</p>'; return; }
+  LIVE = {};
+  Object.keys(DEFAULT_RATES).forEach(c => { if (perCny[c]) LIVE[c] = 1 / perCny[c]; });
+  const fmt = v => v >= 1 ? v.toFixed(4) : v.toPrecision(4);
+  box.innerHTML = `
+    <div style="overflow-x:auto"><table class="live-table">
+      <thead><tr><th>币种</th><th>实时</th><th>你的设置</th><th></th></tr></thead>
+      <tbody>${Object.keys(DEFAULT_RATES).map(c => {
+        const v = LIVE[c], mine = Number(RATES[c]) || 0;
+        const d = v && mine ? Math.round((mine / v - 1) * 100) : null;
+        return `<tr><td>1 ${CUR[c].n}</td><td>${v ? '¥' + fmt(v) : '<span class="muted">无数据</span>'}</td>
+          <td>¥${fmt(mine)} ${d ? `<span class="diff">${d > 0 ? '+' : ''}${d}%</span>` : ''}</td>
+          <td>${v ? `<button class="btn small" type="button" data-act="use-rate" data-c="${c}">填入</button>` : ''}</td></tr>`;
+      }).join('')}</tbody></table></div>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <span class="hint">来源 ${esc(src)}${when ? ' · 更新于 ' + esc(when) : ''}，仅供参考</span>
+      <button class="btn small primary" type="button" data-act="use-all-rates">全部填入并保存</button></div>`;
+}
+async function exportBackup() {
+  let books = S.books, brand = BRAND;
+  if (Store.cloud) {
+    toast('正在打包图片…');
+    books = clone(S.books); brand = clone(BRAND);
+    for (const b of books) for (let i = 0; i < (b.images || []).length; i++) { try { if (!/^data:/.test(b.images[i])) b.images[i] = await blobToDataUrl(imgSrc(b.images[i])); } catch {} }
+    try { if (brand.logo && !/^data:/.test(brand.logo)) brand.logo = await blobToDataUrl(imgSrc(brand.logo)); } catch {}
+  }
+  const data = {app: 'doujin-shelf', version: 3, exportedAt: new Date().toISOString(), rates: RATES, brand, ips: S.ips, books};
+  const filename = `同人本棚备份-${today().replace(/-/g, '')}.json`;
+  if (Store.kind === 'claude') {
+    if (!Store.cloud.downloads) return toast('这个窗口不支持保存文件');
+    try { const r = await Store.cloud.downloads.save({filename, data: JSON.stringify(data)}); if (r && r.status === 'saved') toast('备份文件已保存'); }
+    catch (e) { toast('没有保存备份文件'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: 'application/json'}));
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('备份文件已生成');
+}
+function importBackup(file) {
+  const r = new FileReader();
+  r.onload = async () => {
+    let data;
+    try { data = JSON.parse(r.result); } catch { return toast('这不是有效的备份文件'); }
+    if (!data || !Array.isArray(data.ips) || !Array.isArray(data.books)) return toast('这不是同人本棚的备份文件');
+    const mode = await choose(`备份里有 ${data.ips.length} 个IP、${data.books.length} 本。要怎么导入？`,
+      [{v: 'merge', t: '合并到现有书架', cls: 'primary'}, {v: 'replace', t: '覆盖现有书架', cls: 'danger'}]);
+    if (!mode) return;
+    try {
+      if (mode === 'replace') { await Store.clear('ips'); await Store.clear('books'); }
+      await Store.putMany('ips', data.ips); await Store.putMany('books', data.books, (i, n) => toast(`正在导入 ${i} / ${n}`));
+      if (data.brand) { BRAND = {...BRAND, ...data.brand}; await Store.put('meta', BRAND, 'brand'); applyBrand(); }
+      if (data.rates) { RATES = {...DEFAULT_RATES, ...data.rates}; await Store.put('meta', RATES, 'rates'); }
+      S.ips = await Store.all('ips'); S.books = await Store.all('books');
+      toast('导入完成'); location.hash = ''; route();
+    } catch (e) { toast('导入失败：' + (e && e.message || e)); }
+  };
+  r.readAsText(file);
+}
+
+/* ================= 弹层 ================= */
+let pasteHandler = null, modalCloseHook = null;
+function openModal(html, onMount) {
+  if (modalCloseHook) { const h = modalCloseHook; modalCloseHook = null; try { h(); } catch {} }
+  const m = $('#modal'); m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; m.hidden = false;
+  document.body.style.overflow = 'hidden'; pasteHandler = null;
+  if (onMount) onMount(m.firstElementChild);
+}
+function closeModal() {
+  const hook = modalCloseHook; modalCloseHook = null;
+  if (hook) { try { hook(); } catch {} }
+  const m = $('#modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; pasteHandler = null;
+}
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#lightbox').hidden) closeLightbox(); else closeModal(); } });
+document.addEventListener('paste', e => { if (pasteHandler) pasteHandler(e); });
+
+function choose(text, options) {
+  return new Promise(res => {
+    openModal(`<p style="margin:0 0 18px;font-size:15px">${esc(text)}</p>
+      <div class="sheet-actions" style="position:static"><button class="btn" data-v="">取消</button>${options.map(o => `<button class="btn ${o.cls || ''}" data-v="${o.v}">${esc(o.t)}</button>`).join('')}</div>`,
+      root => $$('[data-v]', root).forEach(b => b.onclick = () => { closeModal(); res(b.dataset.v || null); }));
+  });
+}
+const confirmBox = (text, okText = '删除') => choose(text, [{v: 'ok', t: okText, cls: 'danger solid'}]).then(v => v === 'ok');
+
+/* ---------- IP 编辑 ---------- */
+function openIpForm(ip) {
+  const isNew = !ip;
+  const d = ip ? clone(ip) : {id: uid(), name: '', color: COLORS[S.ips.length % COLORS.length], created: Date.now()};
+  const n = isNew ? 0 : S.books.filter(b => b.ipId === d.id).length;
+  openModal(`
+    <div class="sheet-head"><h2>${isNew ? '新建IP合集' : '编辑IP合集'}</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
+    <form class="form" id="ip-form" style="margin-top:12px">
+      <label class="field"><span>IP 名称</span><input class="input" id="ip-name" value="${esc(d.name)}" placeholder="例如：原神、排球少年" maxlength="40"></label>
+      <div class="field"><span>书脊颜色</span><div class="swatches" id="ip-sw">${COLORS.map(c => `<button type="button" style="--c:${c}" data-c="${c}" class="${c === d.color ? 'on' : ''}" aria-label="颜色 ${c}"></button>`).join('')}</div></div>
+      <div class="sheet-actions" style="position:static">
+        ${isNew ? '' : `<button type="button" class="btn danger left" id="ip-del">删除合集</button>`}
+        <button type="button" class="btn" data-close>取消</button><button class="btn primary" type="submit">保存</button>
+      </div>
+    </form>`, root => {
+    $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    $('#ip-name', root).focus();
+    $('#ip-sw', root).onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; d.color = b.dataset.c; $$('#ip-sw button', root).forEach(x => x.classList.toggle('on', x === b)); };
+    $('#ip-form', root).onsubmit = async e => {
+      e.preventDefault();
+      d.name = $('#ip-name', root).value.trim();
+      if (!d.name) return toast('请填写IP名称');
+      if (S.ips.some(x => x.id !== d.id && x.name === d.name)) return toast('已经有同名的IP了');
+      delete d.sample;
+      if (!(await save('ips', d))) return;
+      const i = S.ips.findIndex(x => x.id === d.id); i >= 0 ? S.ips[i] = d : S.ips.push(d);
+      closeModal(); toast(isNew ? '已新建' : '已保存');
+      if (isNew) location.hash = 'ip-' + d.id; else route();
+    };
+    const del = $('#ip-del', root);
+    if (del) del.onclick = async () => {
+      const ok = await confirmBox(n ? `删除“${d.name}”会同时删除里面的 ${n} 本，确定吗？` : `删除“${d.name}”？`);
+      if (!ok) return openIpForm(ip);
+      for (const b of S.books.filter(b => b.ipId === d.id)) await Store.del('books', b.id);
+      await Store.del('ips', d.id);
+      S.books = S.books.filter(b => b.ipId !== d.id); S.ips = S.ips.filter(x => x.id !== d.id);
+      toast('已删除'); location.hash = ''; route();
+    };
+  });
+}
+
+/* ---------- 本子编辑 ---------- */
+function compressImage(file, max = 1600, q = 0.85) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('读不了这张图片')); };
+    img.src = url;
+  });
+}
+/* 下拉框：可选“不填”，部分可“自己填…” */
+function selField(id, label, opts, val, {optional = false, custom = false, labels = null} = {}) {
+  val = val || '';
+  const isCustom = custom && val && !opts.includes(val);
+  return `<label class="field"><span>${label}${optional ? '<i>选填</i>' : ''}</span>
+    <select class="input" id="${id}" ${custom ? 'data-custom="1"' : ''}>
+      <option value="">${optional ? '不填' : '请选择'}</option>
+      ${opts.map(o => `<option value="${esc(o)}" ${o === val ? 'selected' : ''}>${esc(labels && labels[o] && /mm/.test(labels[o]) ? `${o}（${labels[o]}）` : o)}</option>`).join('')}
+      ${custom ? `<option value="__custom" ${isCustom ? 'selected' : ''}>自己填…</option>` : ''}
+    </select>
+    ${custom ? `<input class="input" id="${id}-c" placeholder="自己填写" maxlength="30" value="${isCustom ? esc(val) : ''}" ${isCustom ? '' : 'hidden'}>` : ''}</label>`;
+}
+const readSel = (root, id) => { const s = $('#' + id, root); return s.value === '__custom' ? $('#' + id + '-c', root).value.trim() : s.value; };
+
+async function openBookForm(book, presetIp) {
+  const isNew = !book, draftKey = book ? book.id : 'new';
+  const draft = await Drafts.get(draftKey);
+  const d = draft ? clone(draft) : book ? clone(book) : {
+    id: uid(), ipId: presetIp || (S.ips[0] && S.ips[0].id) || '', title: '', author: '', club: '', cp: '', images: [],
+    buyDate: today(), size: '', kind: '', origin: '', format: '实体本', condition: '', place: '', read: '', age: '', link: '', releaseDate: '',
+    transit: false, costs: [{label: '本子本体', amount: '', cur: 'CNY'}, {label: '邮费', amount: '', cur: 'CNY'}], rating: 0, note: '', created: Date.now()
+  };
+  if (!d.costs || !d.costs.length) d.costs = [{label: '本子本体', amount: '', cur: 'CNY'}];
+  d.costs.forEach(c => { c.cur = c.cur || 'CNY'; });
+  if (draft && d.ipId && !ipById(d.ipId)) d.ipId = '';
+  const wantNew = d._ipSel === '__new' || !S.ips.length;
+  const ipOpts = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0))
+    .map(ip => `<option value="${esc(ip.id)}" ${ip.id === d.ipId && !wantNew ? 'selected' : ''}>${esc(ip.name)}</option>`).join('');
+  const curOpts = v => Object.entries(CUR).map(([k, c]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${c.n}</option>`).join('');
+  openModal(`
+    <div class="sheet-head"><h2>${isNew ? '添加本子' : '编辑本子'}</h2><button class="icon-btn" data-close aria-label="关闭（保留草稿）" title="关闭，内容会保留">✕</button></div>
+    ${draft ? `<div class="notice"><span>已恢复上次没保存的内容</span><button type="button" class="btn small" id="bk-fresh">${isNew ? '清空重填' : '放弃这些改动'}</button></div>` : ''}
+    <form class="form" id="bk-form">
+      <div class="fgroup">
+        <div class="field"><span>图片（第一张是封面，点缩略图设为封面）</span>
+          <div class="img-row" id="bk-imgs"></div>
+          <input type="file" id="bk-cam" accept="image/*" capture="environment" hidden>
+          <input type="file" id="bk-pick" accept="image/*" multiple hidden>
+          <span class="paste-hint" id="bk-imghint">电脑上截图后按 <kbd>Ctrl</kbd>+<kbd>V</kbd>（Mac 为 <kbd>⌘</kbd>+<kbd>V</kbd>）直接粘贴，也可以把图片拖进来</span>
+        </div>
+        <label class="check"><input type="checkbox" id="bk-transit" ${d.transit ? 'checked' : ''}>还在路上（在途本子）</label>
+      </div>
+
+      <div class="fgroup"><h3>基本信息</h3>
+        <label class="field"><span>本子名</span><input class="input" id="bk-title" value="${esc(d.title)}" placeholder="本子标题" maxlength="80"></label>
+        <div class="two wrap-sm">
+          <label class="field"><span>作者</span><input class="input" id="bk-author" value="${esc(d.author)}" maxlength="60"></label>
+          <label class="field"><span>社团<i>选填</i></span><input class="input" id="bk-club" value="${esc(d.club)}" maxlength="60"></label>
+        </div>
+        <div class="two wrap-sm">
+          <label class="field"><span>CP<i>多个用逗号隔开</i></span><input class="input" id="bk-cp" value="${esc(d.cp)}" placeholder="例如：A×B" maxlength="80"></label>
+          <label class="field"><span>所属IP</span>
+            <select class="input" id="bk-ip">${ipOpts}<option value="__new" ${wantNew ? 'selected' : ''}>＋ 新建IP…</option></select>
+            <input class="input" id="bk-newip" placeholder="新IP的名称" maxlength="40" value="${esc(d._newIp || '')}" ${wantNew ? '' : 'hidden'}></label>
+        </div>
+      </div>
+
+      <div class="fgroup"><h3>本子信息</h3>
+        <div class="two">
+          ${selField('bk-kind', '本子类型', OPT.kind, d.kind, {custom: true})}
+          ${selField('bk-size', '本子尺寸', OPT.size, d.size, {custom: true, labels: SIZE_MM})}
+        </div>
+        <div class="two">
+          ${selField('bk-origin', '本子性质 · 地区', OPT.origin, d.origin)}
+          ${selField('bk-format', '本子性质 · 形式', OPT.format, d.format)}
+        </div>
+        <div class="two">
+          ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
+          ${selField('bk-age', '限制年龄', OPT.age, d.age, {optional: true})}
+        </div>
+        <div class="two">
+          <label class="field"><span>发行日<i>选填</i></span><input class="input" type="date" id="bk-release" value="${esc(d.releaseDate)}"></label>
+          ${selField('bk-read', '阅读状态', OPT.read, d.read, {optional: true})}
+        </div>
+      </div>
+
+      <div class="fgroup"><h3>购买信息</h3>
+        <div class="two">
+          <label class="field"><span>购买时间</span><input class="input" type="date" id="bk-buy" value="${esc(d.buyDate)}"></label>
+          ${selField('bk-place', '购买地点', OPT.place, d.place, {optional: true, custom: true})}
+        </div>
+        <label class="field"><span>购入链接<i>选填</i></span><input class="input" type="url" id="bk-link" value="${esc(d.link)}" placeholder="https://" inputmode="url"></label>
+        <div class="field"><span>价格细则（每项可选币种）</span>
+          <div id="bk-costs"></div>
+          <div class="cost-foot"><button type="button" class="btn small" id="bk-addcost">＋ 添加一项</button><div><span>总价 <strong id="bk-total">¥0</strong></span><small id="bk-orig"></small></div></div>
+        </div>
+      </div>
+
+      <div class="fgroup"><h3>评分与备注</h3>
+        <div class="stars" id="bk-stars"></div>
+        <label class="field"><span>备注</span><textarea class="input" id="bk-note" placeholder="场次、特典、感想…">${esc(d.note)}</textarea></label>
+      </div>
+      <div class="sheet-actions"><button type="button" class="btn left" id="bk-discard">放弃编辑</button><span class="hint" id="bk-draftnote"></span><button class="btn primary" type="submit">保存</button></div>
+    </form>`, root => {
+    // —— 草稿：有改动就自动记住；点外面、按 ✕ 或 Esc 关掉都会保留 ——
+    let dirty = !!draft, done = false, timer = null;
+    const collect = () => {
+      const v = id => $('#' + id, root).value;
+      d.title = v('bk-title'); d.author = v('bk-author'); d.club = v('bk-club'); d.cp = v('bk-cp'); d.note = v('bk-note');
+      d.kind = readSel(root, 'bk-kind'); d.size = readSel(root, 'bk-size'); d.origin = readSel(root, 'bk-origin'); d.format = readSel(root, 'bk-format');
+      d.condition = readSel(root, 'bk-cond'); d.age = readSel(root, 'bk-age'); d.read = readSel(root, 'bk-read'); d.place = readSel(root, 'bk-place');
+      d.buyDate = v('bk-buy'); d.releaseDate = v('bk-release'); d.transit = $('#bk-transit', root).checked; d.link = v('bk-link');
+      d._ipSel = $('#bk-ip', root).value; d._newIp = $('#bk-newip', root).value;
+      if (d._ipSel !== '__new') d.ipId = d._ipSel;
+    };
+    const keep = () => { if (done || !dirty) return; collect(); Drafts.set(draftKey, clone(d)); };
+    const touch = () => { dirty = true; clearTimeout(timer); timer = setTimeout(() => { keep(); const n = $('#bk-draftnote', root); if (n) n.textContent = '草稿已自动保存'; }, 500); };
+    modalCloseHook = () => { clearTimeout(timer); if (!done && dirty) { keep(); toast('内容已保留，下次打开会接着填'); if (isNew && !location.hash.startsWith('#book-') && !location.hash.startsWith('#ip-') && !location.hash.slice(1)) renderHome(); } };
+    root.addEventListener('input', touch); root.addEventListener('change', touch);
+    $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    $('#bk-discard', root).onclick = async () => { done = true; clearTimeout(timer); await Drafts.del(draftKey); closeModal(); toast('已放弃编辑'); if (isNew) renderCurrent(); };
+    const fresh = $('#bk-fresh', root);
+    if (fresh) fresh.onclick = async () => { done = true; clearTimeout(timer); await Drafts.del(draftKey); closeModal(); openBookForm(book, presetIp); };
+    const imgBox = $('#bk-imgs', root), costBox = $('#bk-costs', root), starBox = $('#bk-stars', root), hint = $('#bk-imghint', root), hintText = hint.innerHTML;
+
+    // 图片
+    const drawImgs = () => {
+      imgBox.innerHTML = d.images.map((src, i) => `<div class="img-item" data-i="${i}" title="设为封面"><img src="${imgSrc(src)}" alt="">
+          ${i === 0 ? '<span class="badge">封面</span>' : ''}<button type="button" class="x" data-rm="${i}" aria-label="删除这张">×</button></div>`).join('') +
+        `<label class="img-add" for="bk-cam"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>拍照</label>
+         <label class="img-add" for="bk-pick"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M20 15l-5-5-9 9"/></svg>相册/截图</label>`;
+    };
+    imgBox.onclick = e => {
+      const rm = e.target.closest('[data-rm]');
+      if (rm) { d.images.splice(+rm.dataset.rm, 1); touch(); return drawImgs(); }
+      const it = e.target.closest('.img-item');
+      if (it && +it.dataset.i > 0) { const [x] = d.images.splice(+it.dataset.i, 1); d.images.unshift(x); touch(); drawImgs(); }
+    };
+    const addFiles = async files => {
+      files = files.filter(f => f && /^image\//.test(f.type));
+      if (!files.length) return;
+      for (const f of files) {
+        hint.textContent = '正在处理图片…';
+        try { d.images.push(await compressImage(f)); } catch (err) { toast(err.message); }
+      }
+      hint.innerHTML = hintText; drawImgs(); touch(); toast(`已添加 ${files.length} 张图片`);
+    };
+    ['#bk-cam', '#bk-pick'].forEach(s => $(s, root).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs); });
+    pasteHandler = e => {
+      const items = [...((e.clipboardData && e.clipboardData.items) || [])];
+      const files = items.filter(it => it.kind === 'file' && /^image\//.test(it.type)).map(it => it.getAsFile());
+      if (files.length) { e.preventDefault(); addFiles(files); }
+    };
+    root.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); root.classList.add('drag'); } });
+    root.addEventListener('dragleave', e => { if (e.target === root) root.classList.remove('drag'); });
+    root.addEventListener('drop', e => { root.classList.remove('drag'); if (e.dataTransfer.files.length) { e.preventDefault(); addFiles([...e.dataTransfer.files]); } });
+
+    // 下拉“自己填”
+    root.addEventListener('change', e => {
+      if (e.target.dataset && e.target.dataset.custom) { const c = $('#' + e.target.id + '-c', root); c.hidden = e.target.value !== '__custom'; if (!c.hidden) c.focus(); }
+    });
+
+    // 价格
+    const drawCosts = () => {
+      costBox.innerHTML = d.costs.map((c, i) => `<div class="cost-row" data-i="${i}">
+        <input class="input" data-k="label" value="${esc(c.label)}" placeholder="项目，如代购费" aria-label="项目名称">
+        <select class="input" data-k="cur" aria-label="币种">${curOpts(c.cur)}</select>
+        <input class="input num" data-k="amount" value="${esc(c.amount)}" type="number" inputmode="decimal" step="any" min="0" placeholder="0" aria-label="金额">
+        <button type="button" class="x" data-rmc="${i}" aria-label="删除这一项">×</button></div>`).join('');
+      calc();
+    };
+    const calc = () => {
+      const cs = costSummary(d.costs);
+      $('#bk-total', root).textContent = money(cs.cny);
+      $('#bk-orig', root).textContent = cs.foreign ? `原币 ${cs.orig}` : '';
+    };
+    const onCost = e => { const row = e.target.closest('.cost-row'); if (!row || !e.target.dataset.k) return; d.costs[+row.dataset.i][e.target.dataset.k] = e.target.value; calc(); };
+    costBox.addEventListener('input', onCost); costBox.addEventListener('change', onCost);
+    costBox.onclick = e => { const b = e.target.closest('[data-rmc]'); if (b) { d.costs.splice(+b.dataset.rmc, 1); drawCosts(); touch(); } };
+    $('#bk-addcost', root).onclick = () => {
+      const last = d.costs[d.costs.length - 1];
+      d.costs.push({label: '', amount: '', cur: last ? last.cur : 'CNY'}); drawCosts(); touch();
+      $$('.cost-row input[data-k=label]', costBox).slice(-1)[0].focus();
+    };
+
+    // 星星
+    const drawStars = () => { starBox.innerHTML = [1,2,3,4,5].map(n => `<button type="button" class="${n <= d.rating ? 'on' : ''}" data-n="${n}" aria-label="${n} 星">${STAR}</button>`).join(''); };
+    starBox.onclick = e => { const b = e.target.closest('[data-n]'); if (!b) return; const n = +b.dataset.n; d.rating = d.rating === n ? 0 : n; drawStars(); touch(); };
+
+    const ipSel = $('#bk-ip', root), newIp = $('#bk-newip', root);
+    ipSel.onchange = () => { newIp.hidden = ipSel.value !== '__new'; if (!newIp.hidden) newIp.focus(); };
+    drawImgs(); drawCosts(); drawStars();
+    if (isNew && !draft) setTimeout(() => $('#bk-title', root).focus(), 50);
+
+    $('#bk-form', root).onsubmit = async e => {
+      e.preventDefault();
+      collect(); keep();
+      ['title', 'author', 'club', 'cp', 'note', 'buyDate', 'releaseDate', 'link'].forEach(k => { d[k] = String(d[k] || '').trim(); });
+      let link = d.link; if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link; d.link = link;
+      if (!d.title) return toast('请填写本子名');
+      if (ipSel.value === '__new') {
+        const name = newIp.value.trim(); if (!name) return toast('请填写新IP的名称');
+        let ip = S.ips.find(x => x.name === name);
+        if (!ip) { ip = {id: uid(), name, color: COLORS[S.ips.length % COLORS.length], created: Date.now()}; if (!(await save('ips', ip))) return; S.ips.push(ip); }
+        d.ipId = ip.id;
+      } else d.ipId = ipSel.value;
+      d.costs = d.costs.filter(c => String(c.label).trim() || String(c.amount).trim())
+        .map(c => ({label: String(c.label).trim(), amount: Math.max(0, parseFloat(c.amount) || 0), cur: c.cur || 'CNY'}));
+      d.updated = Date.now();
+      const out = clone(d); delete out._ipSel; delete out._newIp;
+      const btn = $('#bk-form button[type=submit]', root); btn.disabled = true; btn.textContent = Store.cloud && out.images.some(x => /^data:/.test(x)) ? '上传图片中…' : '保存中…';
+      const ok = await save('books', out);
+      btn.disabled = false; btn.textContent = '保存';
+      if (!ok) return;
+      done = true; clearTimeout(timer); await Drafts.del(draftKey);
+      const i = S.books.findIndex(x => x.id === out.id); i >= 0 ? S.books[i] = out : S.books.push(out);
+      closeModal(); toast('已保存');
+      if (location.hash === '#book-' + out.id) route(); else location.hash = 'book-' + out.id;
+    };
+  });
+}
+
+/* ---------- 大图 ---------- */
+let lbIdx = 0, lbImgs = [];
+function openLightbox(imgs, i) { lbImgs = imgs; lbIdx = i; drawLightbox(); $('#lightbox').hidden = false; }
+function drawLightbox() {
+  const many = lbImgs.length > 1;
+  $('#lightbox').innerHTML = `<img src="${imgSrc(lbImgs[lbIdx])}" alt="">${many ? `<button class="nav prev" data-lb="-1" aria-label="上一张">‹</button><button class="nav next" data-lb="1" aria-label="下一张">›</button><div class="count">${lbIdx + 1} / ${lbImgs.length}</div>` : ''}`;
+}
+function closeLightbox() { const lb = $('#lightbox'); lb.hidden = true; lb.innerHTML = ''; }
+$('#lightbox').addEventListener('click', e => {
+  const n = e.target.closest('[data-lb]');
+  if (n) { lbIdx = (lbIdx + +n.dataset.lb + lbImgs.length) % lbImgs.length; drawLightbox(); } else closeLightbox();
+});
+let tx0 = null;
+$('#lightbox').addEventListener('touchstart', e => { tx0 = e.touches[0].clientX; }, {passive: true});
+$('#lightbox').addEventListener('touchend', e => {
+  if (tx0 === null || lbImgs.length < 2) return; const dx = e.changedTouches[0].clientX - tx0; tx0 = null;
+  if (Math.abs(dx) > 50) { e.preventDefault(); lbIdx = (lbIdx + (dx < 0 ? 1 : -1) + lbImgs.length) % lbImgs.length; drawLightbox(); }
+});
+
+/* ================= 示例数据 ================= */
+async function loadSample() {
+  const now = Date.now();
+  const ips = [
+    {id: 'sx-ip1', name: '星海旅团', color: '#3d6fd9', created: now - 3, sample: true},
+    {id: 'sx-ip2', name: '雾港侦探社', color: '#e4574c', created: now - 2, sample: true},
+    {id: 'sx-ip3', name: '山月记', color: '#3aa17e', created: now - 1, sample: true},
+  ];
+  const mk = (id, ipId, o) => Object.assign({id, ipId, images: [], rating: 0, note: '', club: '', format: '实体本', created: now - hashStr(id) % 99999, sample: true}, o);
+  const books = [
+    mk('sx-b1', 'sx-ip1', {title: '航线以外的晴天', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '中国大陆本子', condition: '全新', place: '场贩', read: '已读', age: '全年龄', buyDate: '2026-08-02', rating: 5,
+      costs: [{label: '本子本体', amount: 68, cur: 'CNY'}, {label: '邮费', amount: 12, cur: 'CNY'}], note: '这是示例本子，可以随时删掉。\n场贩购入，附赠明信片一张。'}),
+    mk('sx-b2', 'sx-ip1', {title: '第七号空港', author: '白鲸', cp: '舰长×领航员', kind: '漫画', size: 'B5', origin: '日本本子', condition: '95新', place: '代购', read: '在读', age: 'R18（18X）', buyDate: '2026-09-14', rating: 4,
+      costs: [{label: '本子本体', amount: 1100, cur: 'JPY'}, {label: '代购费', amount: 15, cur: 'CNY'}, {label: '国际运费', amount: 800, cur: 'JPY'}]}),
+    mk('sx-b3', 'sx-ip1', {title: '失重时刻', author: '小行星', cp: '机械师×医生', kind: '小说 / 文本', size: 'A5', origin: '中国大陆本子', place: '通贩', buyDate: '2026-10-25', transit: true,
+      costs: [{label: '本子本体', amount: 52, cur: 'CNY'}, {label: '邮费', amount: 10, cur: 'CNY'}]}),
+    mk('sx-b4', 'sx-ip2', {title: '雨夜的委托书', author: '雾灯', cp: '侦探×助手', kind: '原画集 / 插画集', size: 'A4', origin: '日本本子', condition: '全新', place: '通贩', read: '已读', buyDate: '2026-06-30', rating: 5,
+      costs: [{label: '本子本体', amount: 2500, cur: 'JPY'}, {label: '邮费', amount: 1200, cur: 'JPY'}], note: '特装版，含书签。'}),
+    mk('sx-b5', 'sx-ip3', {title: '一盏月光', author: '青苔', cp: '书生×狐仙', kind: '图文本', size: 'A5', origin: '中国大陆本子', format: '电子本', read: '未读', buyDate: '2026-10-20',
+      costs: [{label: '本子本体', amount: 18, cur: 'CNY'}]}),
+    mk('sx-b6', 'sx-ip2', {title: '港口夜话', author: '雾灯', cp: '侦探×助手', kind: '漫画', size: 'B5', origin: '日本本子', place: '通贩', buyDate: '2026-10-27', transit: true,
+      costs: [{label: '本子本体', amount: 900, cur: 'JPY'}, {label: '邮费', amount: 600, cur: 'JPY'}]}),
+    mk('sx-b7', 'sx-ip3', {title: '竹林小记', author: '青苔', cp: '书生×狐仙', kind: '小说 / 文本', size: 'A5', origin: '港台本子', place: '二手', condition: '9成新', read: '已读', buyDate: '2025-01-18', rating: 4,
+      costs: [{label: '本子本体', amount: 180, cur: 'TWD'}, {label: '邮费', amount: 20, cur: 'CNY'}]}),
+    mk('sx-b8', 'sx-ip1', {title: '星图拾遗', author: '北极', club: '北极星工坊', cp: '舰长×领航员', kind: '设定集', size: 'A4', origin: '中国大陆本子', place: '场贩', read: '已读', buyDate: '2025-05-01', rating: 3,
+      costs: [{label: '本子本体', amount: 88, cur: 'CNY'}]}),
+  ];
+  await Store.putMany('ips', ips); await Store.putMany('books', books);
+  S.ips.push(...ips); S.books.push(...books); route(); toast('已放上示例');
+}
+async function deleteSample() {
+  for (const b of S.books.filter(b => b.sample)) await Store.del('books', b.id);
+  for (const i of S.ips.filter(i => i.sample)) await Store.del('ips', i.id);
+  S.books = S.books.filter(b => !b.sample); S.ips = S.ips.filter(i => !i.sample);
+  route(); toast('示例已删除');
+}
+
+/* ================= 点击分发 ================= */
+document.addEventListener('click', async e => {
+  const go = e.target.closest('[data-go]');
+  if (go) { location.hash = go.dataset.go; return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  const curBook = () => bookById(decodeURIComponent(location.hash).slice(6));
+  switch (act) {
+    case 'lock': lockNow(); break;
+    case 'new-ip': openIpForm(); break;
+    case 'edit-ip': openIpForm(ipById(id)); break;
+    case 'new-book': openBookForm(null, el.dataset.ip); break;
+    case 'edit-book': openBookForm(bookById(id)); break;
+    case 'sample': loadSample(); break;
+    case 'del-sample': deleteSample(); break;
+    case 'export': exportBackup(); break;
+    case 'view': viewMode = el.dataset.v; Store.put('meta', viewMode, 'view').catch(() => {}); renderHome(); break;
+    case 'flow-ip': flowIp = el.dataset.v; renderHome(); break;
+    case 'stat-year': case 'stat-metric': {
+      if (act === 'stat-year') statYear = +el.dataset.v; else statMetric = el.dataset.v;
+      const y = window.scrollY; renderStats(); window.scrollTo(0, y); break;
+    }
+    case 'live-rates': fetchLiveRates(); break;
+    case 'sign-out': {
+      if (Store.kind !== 'sb') break;
+      if (!(await confirmBox('退出当前账号？书架数据仍保存在云端，重新登录即可看到。', '退出登录'))) break;
+      await Store.remote.signOut(); location.hash = ''; location.reload(); break;
+    }
+    case 'copy-url': {
+      try { await navigator.clipboard.writeText(($('#cloud-url') || {}).textContent || CLOUD_URL); toast('链接已复制'); }
+      catch { const c = $('#cloud-url'); if (c) { const r = document.createRange(); r.selectNodeContents(c); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('请长按或按 Ctrl+C 复制选中的链接'); }
+      break;
+    }
+    case 'use-rate': { const c = el.dataset.c; const inp = $('#rate-' + c); if (inp && LIVE && LIVE[c]) { inp.value = +LIVE[c].toPrecision(5); toast(`已填入${CUR[c].n}，记得点“保存汇率”`); } break; }
+    case 'use-all-rates': {
+      if (!LIVE) return;
+      RATES = {...RATES}; Object.entries(LIVE).forEach(([c, v]) => { RATES[c] = +v.toPrecision(5); const inp = $('#rate-' + c); if (inp) inp.value = RATES[c]; });
+      await Store.put('meta', RATES, 'rates'); toast('已按实时汇率保存'); break;
+    }
+    case 'reset-logo': BRAND.logo = ''; await Store.put('meta', BRAND, 'brand'); applyBrand(); renderSettings(); toast('已恢复默认 LOGO'); break;
+    case 'reset-rates': RATES = {...DEFAULT_RATES}; await Store.put('meta', RATES, 'rates'); renderSettings(); toast('已恢复默认汇率'); break;
+    case 'arrive': {
+      const b = bookById(id); if (!b) return; b.transit = false;
+      if (await save('books', b)) { toast(`《${b.title}》已到手`); const y = window.scrollY; route(); window.scrollTo(0, y); }
+      break;
+    }
+    case 'del-book': {
+      const b = bookById(id);
+      if (!(await confirmBox(`删除《${b.title || '无题'}》？删除后无法恢复。`))) return;
+      await Store.del('books', id); S.books = S.books.filter(x => x.id !== id);
+      toast('已删除'); location.hash = 'ip-' + b.ipId; break;
+    }
+    case 'thumb': galleryIdx = +el.dataset.i; renderBook(lastBookId); break;
+    case 'zoom': { const b = curBook(); if (b && b.images.length) openLightbox(b.images, galleryIdx); break; }
+    case 'rate': {
+      const b = curBook(); if (!b) return; const n = +el.dataset.n;
+      b.rating = b.rating === n ? 0 : n;
+      if (await save('books', b)) { const y = window.scrollY; renderBook(b.id); window.scrollTo(0, y); }
+      break;
+    }
+    case 'wipe': {
+      if (!(await confirmBox('清空全部 IP、本子、图片和密码？此操作无法恢复。建议先导出备份。', '清空'))) return;
+      await wipeAll(); afterWipe(); break;
+    }
+  }
+});
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+initLock();
+</script>
+</body>
+</html>
