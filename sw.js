@@ -1,6 +1,6 @@
-// 同人本棚离线缓存（通过 https 网址访问时生效）
+// Doumi离线缓存（通过 https 网址访问时生效）
 // 规则：每次都先去服务器取最新文件（不用浏览器旧缓存），只有断网时才用这里存的副本。
-const CACHE = 'doujin-shelf-v5';
+const CACHE = 'doujin-shelf-v6';
 const CORE = ['./', './index.html', './config.js', './supabase.js'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, {cache: 'reload'})))).catch(() => {}).then(() => self.skipWaiting()));
