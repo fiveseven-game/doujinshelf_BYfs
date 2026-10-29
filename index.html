@@ -151,9 +151,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
 
 /* 瀑布流 */
-.flow{columns:2 150px;column-gap:12px}
-@media (min-width:720px){.flow{columns:4 180px;column-gap:16px}}
-.wf{break-inside:avoid;display:block;width:100%;border:0;background:none;padding:0;margin:0 0 16px;text-align:left}
+.flow{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:12px;align-items:start}
+@media (min-width:720px){.flow{gap:16px}}
+.flow-col{display:grid;gap:16px;min-width:0}
+.wf{display:block;width:100%;border:0;background:none;padding:0;margin:0;text-align:left}
 .wf .pic{border-radius:6px;overflow:hidden;background:var(--soft);transition:opacity .16s}
 .wf:hover .pic{opacity:.9}
 .wf .pic img{width:100%;height:auto}
@@ -220,6 +221,13 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-add b{font-size:26px;line-height:1;font-weight:300}
 .cover-card:hover .cover-add{border-color:var(--ink);color:var(--ink)}
 
+.drag-hint{margin:-6px 0 14px;line-height:1.5;font-size:12px;color:var(--muted)}
+.covers{position:relative}
+.covers .cover-card[data-id]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y}
+.covers .cover-card img{-webkit-user-drag:none;pointer-events:none}
+.covers.dragging .cover-card:hover .cover{transform:none}
+.cover-card.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
+.drag-ghost{position:fixed;z-index:80;pointer-events:none;background:var(--bg);border-radius:8px;padding-bottom:6px;transform:scale(1.06) rotate(-1.5deg);filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
 /* 详情 */
 .detail{max-width:620px;margin:0 auto}
 .gallery{display:grid;gap:10px;margin-bottom:22px}
@@ -835,7 +843,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-5';
+const APP_VERSION = '2026.10.30-7';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1109,7 +1117,10 @@ let unlocked = false, hiddenAt = 0, viewMode = 'shelf', flowIp = '', startView =
 const ipById = id => S.ips.find(i => i.id === id);
 const bookById = id => S.books.find(b => b.id === id);
 const byRecent = (a, b) => (b.buyDate || '').localeCompare(a.buyDate || '') || (b.created || 0) - (a.created || 0);
-const booksOf = ipId => S.books.filter(b => b.ipId === ipId).sort(byRecent);
+/* 展示顺序：默认最新添加的在最前（左上），拖动后按 sortKey 排；合集和瀑布流用同一个顺序 */
+const keyOf = b => typeof b.sortKey === 'number' ? b.sortKey : -(b.created || 0);
+const byOrder = (a, b) => keyOf(a) - keyOf(b) || (b.created || 0) - (a.created || 0);
+const booksOf = ipId => S.books.filter(b => b.ipId === ipId).sort(byOrder);
 /* 支付明细按本记录：costs = 第 1 本，more = 第 2 本起（每本一组）。实际支付 = 所有明细相加 */
 const allCosts = b => [...(b.costs || []), ...((b.more || []).flat())];
 const bookTotal = b => sum(allCosts(b).map(toCny));
@@ -1253,17 +1264,17 @@ function renderHome() {
       <div class="row"><button class="btn primary" data-act="new-ip">新建IP合集</button><button class="btn" data-act="sample">放几本示例看看</button></div></div>`;
   } else if (viewMode === 'flow') {
     if (flowIp && !ipById(flowIp)) flowIp = '';
-    const list = S.books.filter(b => !flowIp || b.ipId === flowIp).sort(byRecent);
+    const list = S.books.filter(b => !flowIp || b.ipId === flowIp).sort(byOrder);
     body = `<div class="chips"><button class="${flowIp ? '' : 'on'}" data-act="flow-ip" data-v="">全部 ${S.books.length}</button>
       ${ips.map(ip => `<button class="${flowIp === ip.id ? 'on' : ''}" data-act="flow-ip" data-v="${esc(ip.id)}">${esc(ip.name)} ${S.books.filter(b => b.ipId === ip.id).length}</button>`).join('')}</div>
-      ${list.length ? `<div class="flow">${list.map(b => {
+      ${list.length ? flowColumns(list.map(b => {
         const ip = ipById(b.ipId);
         const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
         return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
           <div class="wf-title">${esc(b.title || '无题')}</div>
           ${by ? `<div class="wf-by">${by}</div>` : ''}
           <div class="wf-meta"><i style="--c:${ipColor(ip)}"></i><span>${esc(ip ? ip.name : '')}</span>${b.cp ? `<span class="wf-cp">${esc(b.cp)}</span>` : ''}</div></button>`;
-      }).join('')}</div>` : `<div class="empty-box">这里还没有本子</div>`}`;
+      })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
     body = `<div class="shelf">${ips.map(ip => {
       const n = sum(S.books.filter(b => b.ipId === ip.id).map(qtyOf));
@@ -1296,6 +1307,113 @@ function renderHome() {
 }
 
 /* ================= IP 合集 ================= */
+/* 瀑布流：按“从左到右、再换行”的顺序分配到各列 */
+function flowCols() { const w = Math.min(window.innerWidth, 1040) - 32; return w >= 1000 ? 5 : w >= 760 ? 4 : w >= 520 ? 3 : 2; }
+function flowColumns(items) {
+  const n = flowCols(), cols = Array.from({length: n}, () => []);
+  items.forEach((html, i) => cols[i % n].push(html));
+  return `<div class="flow" style="--cols:${n}">${cols.map(c => `<div class="flow-col">${c.join('')}</div>`).join('')}</div>`;
+}
+let lastFlowCols = 0;
+window.addEventListener('resize', () => {
+  const n = flowCols();
+  if (n !== lastFlowCols && unlocked && viewMode === 'flow' && !location.hash.slice(1) && document.querySelector('.flow')) { const y = window.scrollY; renderHome(); window.scrollTo(0, y); }
+  lastFlowCols = n;
+});
+
+/* 合集页：长按 / 按住拖动封面调整顺序（像手机桌面整理 App） */
+let suppressClick = false, coverCtx = null;
+window.addEventListener('pointermove', e => { if (coverCtx) coverCtx.move(e); }, {passive: false});
+window.addEventListener('pointerup', () => { if (coverCtx) coverCtx.end(); });
+window.addEventListener('pointercancel', () => { if (coverCtx) coverCtx.end(); });
+function setupCoverDrag() {
+  const grid = $('#covers'); if (!grid) return;
+  const cards = () => $$('.cover-card[data-id]', grid);
+  let pending = null, drag = null;
+  const begin = (card, x, y) => {
+    const r = card.getBoundingClientRect();
+    const ghost = card.cloneNode(true); ghost.classList.add('drag-ghost');
+    ghost.style.width = r.width + 'px'; ghost.style.left = r.left + 'px'; ghost.style.top = r.top + 'px';
+    document.body.appendChild(ghost);
+    if (ghost.animate) ghost.animate([{transform: 'scale(1) rotate(0)'}, {transform: 'scale(1.06) rotate(-1.5deg)'}], {duration: 220, easing: 'cubic-bezier(.34,1.56,.64,1)'});
+    card.classList.add('drag-src'); grid.classList.add('dragging');
+    drag = {card, ghost, dx: x - r.left, dy: y - r.top, moved: false};
+    try { navigator.vibrate && navigator.vibrate(12); } catch {}
+  };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPRING = 'cubic-bezier(.34,1.56,.64,1)';   // 带一点回弹的缓动 = Q 弹
+  const flip = mutate => {   // 记下每本现在“看起来”的位置 → 调整顺序 → 从旧位置弹到新位置
+    const list = cards(), before = new Map(list.map(c => [c, c.getBoundingClientRect()]));
+    mutate();
+    list.forEach(c => {
+      if (c === drag.card) return;
+      (c.getAnimations ? c.getAnimations() : []).forEach(a => a.cancel());
+      const a = before.get(c), b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+      if ((!dx && !dy) || reduce || !c.animate) return;
+      c.animate([
+        {transform: `translate(${dx}px,${dy}px) scale(1)`},
+        {transform: `translate(${dx * 0.15}px,${dy * 0.15}px) scale(.94)`, offset: 0.35},
+        {transform: 'translate(0,0) scale(1)'}
+      ], {duration: 420, easing: SPRING});
+    });
+  };
+  // 用排版位置（不受动画影响）判断手指落在第几个位置，避免动画过程中来回跳
+  const slotAt = (x, y) => {
+    const g = grid.getBoundingClientRect(), px = x - g.left, py = y - g.top;
+    const list = cards();
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i], l = c.offsetLeft, t = c.offsetTop, w = c.offsetWidth, h = c.offsetHeight;
+      if (px >= l && px <= l + w && py >= t && py <= t + h) return i;
+    }
+    return -1;
+  };
+  const moveTo = (x, y) => {
+    drag.ghost.style.left = (x - drag.dx) + 'px'; drag.ghost.style.top = (y - drag.dy) + 'px';
+    const list = cards(), from = list.indexOf(drag.card), to = slotAt(x, y);
+    if (to >= 0 && to !== from) {
+      const target = list[to];
+      flip(() => grid.insertBefore(drag.card, to > from ? target.nextSibling : target));
+      drag.moved = true;
+    }
+    if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 90) window.scrollBy(0, 12);
+  };
+  const finish = async () => {
+    if (!drag) return;
+    const {card, ghost, moved} = drag; drag = null;
+    const r = card.getBoundingClientRect();
+    const land = () => { ghost.remove(); card.classList.remove('drag-src'); grid.classList.remove('dragging');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && card.animate) card.animate([{transform: 'scale(1.06)'}, {transform: 'scale(.97)', offset: 0.5}, {transform: 'scale(1)'}], {duration: 320, easing: 'ease-out'}); };
+    if (ghost.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const anim = ghost.animate([{left: ghost.style.left, top: ghost.style.top, transform: 'scale(1.06) rotate(-1.5deg)'}, {left: r.left + 'px', top: r.top + 'px', transform: 'scale(1) rotate(0)'}], {duration: 260, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'forwards'});
+      anim.onfinish = land;
+    } else land();
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 60);
+    if (!moved) return;
+    const ids = cards().map(c => c.dataset.id), books = ids.map(bookById).filter(Boolean);
+    const keys = books.map(keyOf).sort((a, b) => a - b);   // 只在这些本子原有的位置之间重新分配，不影响其他 IP 在瀑布流里的位置
+    const changed = [];
+    books.forEach((b, i) => { if (keyOf(b) !== keys[i] || typeof b.sortKey !== 'number') { b.sortKey = keys[i]; changed.push(b); } });
+    if (new Set(keys).size !== keys.length) { const base = keys[0]; books.forEach((b, i) => { b.sortKey = base + i * 0.001; if (!changed.includes(b)) changed.push(b); }); }
+    try { for (const b of changed) await Store.put('books', b); toast('顺序已保存'); } catch (e) { toast(errMsg(e)); }
+  };
+  grid.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.cover-card[data-id]'); if (!card || e.button > 0) return;
+    const x = e.clientX, y = e.clientY, touch = e.pointerType !== 'mouse';
+    pending = {card, x, y, touch, timer: touch ? setTimeout(() => { if (pending) { begin(card, pending.x, pending.y); pending = null; } }, 380) : null};
+  });
+  const onMove = e => {
+    if (drag) { e.preventDefault(); moveTo(e.clientX, e.clientY); return; }
+    if (!pending) return;
+    const dist = Math.hypot(e.clientX - pending.x, e.clientY - pending.y);
+    if (pending.touch) { if (dist > 10) { clearTimeout(pending.timer); pending = null; } }   // 手指先滑动 = 滚动页面
+    else if (dist > 6) { const p = pending; pending = null; begin(p.card, p.x, p.y); moveTo(e.clientX, e.clientY); }
+  };
+  const end = () => { if (pending) { clearTimeout(pending.timer); pending = null; } finish(); };
+  coverCtx = {move: onMove, end};
+  grid.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});   // 拖动时不要滚动页面
+  grid.addEventListener('contextmenu', e => { if (drag || pending) e.preventDefault(); });
+}
+
 function renderIp(id) {
   const ip = ipById(id), books = booksOf(id), c = ipColor(ip);
   $('#view').innerHTML = `
@@ -1304,9 +1422,10 @@ function renderIp(id) {
       <div style="min-width:0"><h1>${esc(ip.name)} ${ip.sample ? '<span class="tag">示例</span>' : ''}</h1>
       <p class="num">${sum(books.map(qtyOf))} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
       <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
-    <div class="covers">
+    ${books.length > 1 ? '<p class="drag-hint">长按封面（电脑上按住拖动）可以调整顺序，瀑布流会按同样的顺序显示</p>' : ''}
+    <div class="covers" id="covers" data-ip="${esc(id)}">
       ${books.map(b => { const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
-        return `<button class="cover-card" data-go="book-${esc(b.id)}">
+        return `<button class="cover-card" data-go="book-${esc(b.id)}" data-id="${esc(b.id)}">
         <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
         <div class="cover-text">
           <div class="cover-title">${esc(b.title || '无题')}</div>
@@ -1315,6 +1434,7 @@ function renderIp(id) {
         </div></button>`; }).join('')}
       <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
+  setupCoverDrag();
 }
 
 /* ================= 详情 ================= */
@@ -1572,7 +1692,7 @@ function renderStats() {
         <div class="sb">${blockHead('钱花在哪儿', 6, money(total))}
           ${labs.length ? stackBar(labs, total, r => money(r.v), 5) : '<p class="sb-empty">还没有支付明细</p>'}</div>
         <div class="sb">${blockHead('花费最多的本子', 8, '按实际支付')}
-          <ol class="sb-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="sb-rank">${i + 1}</span><span class="sb-top-name">${esc(b.title || '无题')}<em>${esc((ipById(b.ipId) || {}).name || '')}${qtyOf(b) > 1 ? ` · ${qtyOf(b)} 本` : ''}</em></span><b class="num">${money(bookTotal(b))}</b></a></li>`).join('')}</ol></div>
+          <ol class="sb-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="sb-rank">${i + 1}</span><span class="sb-top-name">${esc(b.title || '无题')}<em>${esc((ipById(b.ipId) || {}).name || '')}</em></span><b class="num">${money(bookTotal(b))}</b></a></li>`).join('')}</ol></div>
       </div>
     </section>
 
@@ -2028,7 +2148,7 @@ async function openBookForm(book, presetIp) {
   const d = draft ? clone(draft) : book ? clone(book) : {
     id: uid(), ipId: presetIp || (S.ips[0] && S.ips[0].id) || '', title: '', author: '', club: '', cp: '', images: [],
     buyDate: today(), size: '', kind: '', origin: '', format: '实体本', condition: '', place: '', read: '', age: '', link: '', releaseDate: '',
-    transit: false, costs: [{label: '本体', amount: '', cur: 'CNY'}, {label: '邮费', amount: '', cur: 'CNY'}], more: [], rating: 0, note: '', created: Date.now()
+    sortKey: -Date.now(), transit: false, costs: [{label: '本体', amount: '', cur: 'CNY'}, {label: '邮费', amount: '', cur: 'CNY'}], more: [], rating: 0, note: '', created: Date.now()
   };
   if (!d.costs || !d.costs.length) d.costs = [{label: '本体', amount: '', cur: 'CNY'}];
   const sets = [d.costs, ...(Array.isArray(d.more) ? d.more : [])].map(st => (st || []).map(c => ({...c, cur: c.cur || 'CNY', label: normLabel(c.label)})));
@@ -2361,6 +2481,7 @@ async function deleteSample() {
 
 /* ================= 点击分发 ================= */
 document.addEventListener('click', async e => {
+  if (suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
   const go = e.target.closest('[data-go]');
   if (go) { location.hash = go.dataset.go; return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
