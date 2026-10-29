@@ -629,6 +629,18 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .install-logo{width:44px;height:44px;border-radius:11px;object-fit:cover;flex:none;background:var(--bg);box-shadow:0 0 0 1px var(--line)}
 .install-done{font-size:13px;color:#2f9e6e;font-weight:500;white-space:nowrap}
 .install-steps{margin:14px 0 0;padding-left:20px;display:grid;gap:8px;font-size:14px;line-height:1.6}
+/* 设置：二级分组（同步与设备 / 个性化 / 记账与数据 / 安全与隐私），组内是三级的功能卡片 */
+.settings{gap:28px}
+.set-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:-12px;position:sticky;top:calc(54px + env(safe-area-inset-top,0px));z-index:5;background:var(--bg);padding:8px 0}
+.set-nav button{flex:none;border:0;background:var(--soft);color:var(--muted);padding:5px 12px;border-radius:99px;font-size:13px}
+.set-nav button:hover{color:var(--ink)}
+.set-group{display:grid;gap:10px;scroll-margin-top:110px}
+.set-group-head h2{font-size:17px;font-weight:600}
+.set-group-head p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.set-group-body{display:grid;gap:1px;background:var(--line);border-radius:12px;overflow:hidden}
+.set-group-body>.set-card{border-radius:0}
+.set-group-body>.set-card h2{font-size:15px}
+.danger-card h2{color:var(--danger)}
 /* 设置：品牌与实时汇率 */
 .brand-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .logo-preview{width:56px;height:56px;border-radius:12px;background:var(--bg);display:grid;place-items:center;overflow:hidden;flex:none}
@@ -925,7 +937,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-18';
+const APP_VERSION = '2026.10.30-19';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -2087,10 +2099,19 @@ function renderSettings() {
   $('#view').innerHTML = `
     <div class="page-head"><div><h1>设置</h1><p>${Store.kind === 'claude' ? '云端版：数据保存在你 Claude 账号下的私有空间，多台设备自动同步' : Sync.user ? '内容自动保存在这台设备，并同步到你的 Supabase 账号' : '内容自动保存在这台设备；连上云端同步后可在多台设备之间同步'}</p></div></div>
     <div class="settings">
+      <nav class="set-nav" aria-label="设置分类">${[['sync', '同步与设备'], ['look', '个性化'], ['money', '记账与数据'], ['safe', '安全与隐私']].map(([k, t]) => `<button type="button" data-act="set-jump" data-v="${k}">${t}</button>`).join('')}</nav>
+      <section class="set-group" id="sg-sync">
+        <div class="set-group-head"><h2>同步与设备</h2><p>多台设备之间同步、放到桌面、分享给朋友</p></div>
+        <div class="set-group-body">
       ${syncCard()}
       ${installCard()}
       ${shareCard()}
-      <div class="set-card"><h2>名称与 LOGO</h2>
+        </div>
+      </section>
+      <section class="set-group" id="sg-look">
+        <div class="set-group-head"><h2>个性化</h2><p>网站的名字、图标和统计页的颜色</p></div>
+        <div class="set-group-body">
+<div class="set-card"><h2>名称与 LOGO</h2>
         <p>改的是左上角的主按钮、锁屏页和浏览器标签上显示的名称和图标。</p>
         <form id="brand-form" class="form">
           <label class="field"><span>名称（1–12 个字）</span><input class="input" id="brand-input" maxlength="12" value="${esc(BRAND.name || DEFAULT_NAME)}" placeholder="${DEFAULT_NAME}"></label>
@@ -2107,7 +2128,7 @@ function renderSettings() {
           <div class="row"><button class="btn primary" type="submit">保存名称</button></div>
         </form>
       </div>
-      <div class="set-card"><h2>配色主题</h2>
+<div class="set-card"><h2>统计配色</h2>
         <p>更换统计页的配色。可以用默认配色，也可以上传一张喜欢的图片（本子封面、插画、截图都行），自动提取其中的颜色。颜色太浅或太深时会自动调整，保证图表看得清。</p>
         <div class="themes">
           ${[DEFAULT_THEME, ...USER_THEMES].map(t => `<div class="theme-opt ${t.id === THEME ? 'on' : ''}">
@@ -2121,12 +2142,12 @@ function renderSettings() {
         <input type="file" id="theme-file" accept="image/*" hidden>
         <p class="hint" style="margin:0">建议选颜色丰富、对比明显的图片；最多保存 8 套图片配色。</p>
       </div>
-      <div class="set-card"><h2>备份与迁移</h2>
-        <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
-        <div class="row"><button class="btn primary" data-act="export">导出备份</button>
-          <label class="btn" for="import-file">导入备份</label><input type="file" id="import-file" accept=".json,application/json" hidden></div>
-      </div>
-      <div class="set-card"><h2>汇率</h2>
+        </div>
+      </section>
+      <section class="set-group" id="sg-money">
+        <div class="set-group-head"><h2>记账与数据</h2><p>外币折算和数据的导出导入</p></div>
+        <div class="set-group-body">
+<div class="set-card"><h2>汇率</h2>
         <p>1 单位外币折合多少人民币，用于总价和统计。按需要改成你实际的汇率。</p>
         <form id="rate-form" class="form">
           <div class="rates">${Object.keys(DEFAULT_RATES).map(c => `<label class="rate"><span>${CUR[c].n}</span><input class="input num" id="rate-${c}" type="number" step="any" min="0" inputmode="decimal" value="${esc(RATES[c])}"></label>`).join('')}</div>
@@ -2138,7 +2159,17 @@ function renderSettings() {
           <div id="live-box"><p>${Store.kind === 'claude' ? '云端版不能直接访问汇率网站，可以点下面每一行的“谷歌 / 必应”查实时汇率，再手动填写。' : '联网后点“联网获取”自动读取实时汇率；也可以点每一行的“谷歌 / 必应”直接搜索核对。'}</p>${rateTable(null)}</div>
         </div>
       </div>
-      <div class="set-card"><h2>修改密码</h2>
+<div class="set-card"><h2>备份与迁移</h2>
+        <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
+        <div class="row"><button class="btn primary" data-act="export">导出备份</button>
+          <label class="btn" for="import-file">导入备份</label><input type="file" id="import-file" accept=".json,application/json" hidden></div>
+      </div>
+        </div>
+      </section>
+      <section class="set-group" id="sg-safe">
+        <div class="set-group-head"><h2>安全与隐私</h2><p>解锁密码、上锁和清空数据</p></div>
+        <div class="set-group-body">
+<div class="set-card"><h2>修改解锁密码</h2>
         <form id="pw-form" class="form" autocomplete="off">
           <input class="input" type="password" id="pw-old" placeholder="当前密码">
           <input class="input" type="password" id="pw-new" placeholder="新密码（至少 4 位）">
@@ -2146,10 +2177,12 @@ function renderSettings() {
           <div class="row"><button class="btn" type="submit">保存新密码</button></div>
         </form>
       </div>
-      <div class="set-card"><h2>上锁</h2><p>离开页面超过 3 分钟会自动上锁，也可以现在手动上锁。</p>
+<div class="set-card"><h2>立即上锁</h2><p>离开页面超过 3 分钟会自动上锁，也可以现在手动上锁。</p>
         <div class="row"><button class="btn" data-act="lock">立即上锁</button></div></div>
-      <div class="set-card"><h2>清空所有数据</h2><p>删除全部 IP、本子、图片和密码，无法恢复。</p>
+<div class="set-card danger-card"><h2>清空这台设备的数据</h2><p>删除这台设备上的全部 IP、本子、图片和解锁密码，无法恢复；如果开着云端同步，会先断开，云端数据保留不动。</p>
         <div class="row"><button class="btn danger" data-act="wipe">清空所有数据</button></div></div>
+        </div>
+      </section>
       <p class="hint" id="storage-hint"></p>
     </div>`;
   $('#pw-form').onsubmit = async e => {
@@ -3019,6 +3052,7 @@ document.addEventListener('click', async e => {
     }
     case 'live-rates': fetchLiveRates(); break;
     case 'install': doInstall(); break;
+    case 'set-jump': { const g = document.getElementById('sg-' + el.dataset.v); if (g) g.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'}); break; }
     case 'share-copy': {
       const link = shareLink();
       try { await navigator.clipboard.writeText(link); toast('分享链接已复制'); }
