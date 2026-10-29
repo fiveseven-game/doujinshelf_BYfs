@@ -185,8 +185,13 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-card:hover .cover{transform:translateY(-3px)}
 .cover img{width:100%;height:100%;object-fit:cover}
 .cover .tag{position:absolute;left:6px;top:6px}
-.cover-title{font-weight:500;font-size:14px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.cover-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
+.cover-text{display:grid;gap:2px;min-width:0;margin-top:2px}
+.cover-title{font-weight:600;font-size:14px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cover-by{font-size:12.5px;color:var(--ink);opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover-meta{display:flex;gap:6px;align-items:center;margin-top:4px;min-width:0}
+.cover-cp{font-size:11.5px;color:var(--muted);background:var(--soft);border-radius:4px;padding:0 6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cover-rate{font-size:11.5px;color:var(--star);flex:none;font-variant-numeric:tabular-nums}
+.cover .tag.qty{left:auto;right:6px;background:rgba(0,0,0,.55);color:#fff}
 .ph{width:100%;height:100%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;padding:12%}
 .ph span{writing-mode:vertical-rl;font-weight:600;font-size:16px;letter-spacing:.12em;max-height:100%;overflow:hidden}
 .ph.big span{font-size:26px}
@@ -299,7 +304,13 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .img-add:hover{border-color:var(--ink);color:var(--ink)}
 .paste-hint{font-size:12px;color:var(--muted)}
 .paste-hint kbd{font:inherit;font-size:11px;padding:0 5px;border-radius:4px;background:var(--soft);border:1px solid var(--line-2)}
-.cost-row{display:grid;grid-template-columns:minmax(0,1fr) 5.6em minmax(0,6.2em) 30px;gap:6px;align-items:center;margin-bottom:6px}
+.cost-row{display:grid;grid-template-columns:20px minmax(0,1fr) 5.4em minmax(0,5.8em) 28px;gap:6px;align-items:start;margin-bottom:6px;background:var(--bg);border-radius:8px}
+.cost-row.dragging{box-shadow:0 0 0 2px var(--accent);opacity:.92}
+.cost-row .drag{height:42px;display:grid;place-items:center;color:var(--muted);cursor:grab;touch-action:none;user-select:none;font-size:14px;letter-spacing:-3px}
+.cost-row.dragging .drag{cursor:grabbing}
+.cost-label{display:grid;gap:6px;min-width:0}
+.date3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px}
+.date3 select.input{padding-left:10px;padding-right:22px;background-position:calc(100% - 12px) 50%,calc(100% - 7px) 50%}
 .cost-row .x{width:30px;height:40px;border:0;background:none;color:var(--muted);font-size:20px;border-radius:6px;padding:0}
 .cost-row .x:hover{color:var(--danger)}
 .cost-row select.input{padding-left:8px;padding-right:22px;background-position:calc(100% - 12px) 50%,calc(100% - 7px) 50%;font-size:14px}
@@ -391,14 +402,14 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .st-theme{display:inline-flex;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font-size:12px;padding:6px 10px;border-radius:99px;background:var(--soft)}
 .st-theme i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .st-theme span{margin-left:5px}
-.st-hero{display:grid;gap:18px;padding:22px 20px;border-radius:14px;background:color-mix(in srgb,var(--p1) 13%,var(--bg));margin-bottom:34px}
+.st-hero{display:grid;gap:18px;padding:22px 20px;border-radius:14px;background:var(--soft);border-top:4px solid var(--p1);margin-bottom:34px}
 @media (min-width:760px){.st-hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);align-items:center;padding:26px 28px}}
 .st-k{display:block;font-size:12px;color:var(--muted);letter-spacing:.08em}
 .st-hero-main strong{display:block;font:600 40px/1.1 var(--num);letter-spacing:-.01em;margin:6px 0 8px;overflow-wrap:anywhere}
 .st-hero-sub{font-size:13px;color:var(--muted)}
 .st-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
 @media (min-width:560px){.st-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.st-kpis>div{min-width:0;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--p1) 45%,transparent)}
+.st-kpis>div{min-width:0;padding-left:12px;border-left:3px solid var(--c)}
 .st-kpis b{display:block;font:600 24px/1.25 var(--num);margin-top:3px}
 .st-kpis em{display:block;font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.18em;margin:0 0 12px;display:flex;align-items:center;gap:10px}
@@ -407,7 +418,9 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 @media (min-width:860px){.st-grid{grid-template-columns:1fr 1fr}.st-grid.three{grid-template-columns:1.25fr 1fr 1fr}.st-grid .wide{grid-column:1/-1}}
 .st-panel{border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
 .st-panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
-.st-panel-head h3{font-size:15px;font-weight:600}
+.st-panel-head h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.st-dot{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.st-panel[style*="--acc"]{border-top:3px solid var(--acc)}
 .st-panel-head small{font-size:12px;color:var(--muted)}
 .st-years{margin-bottom:10px}
 .st-note{margin:0 0 10px;font-size:12px;color:var(--muted)}
@@ -417,10 +430,12 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .st .mbar.peak i{background:var(--p1)}
 .st .mbar small{color:var(--muted)}
 .st .mbar.peak small{color:var(--ink);font-weight:600}
-.st .cell.l1{background:color-mix(in srgb,var(--p1) 24%,var(--soft))}
-.st .cell.l2{background:color-mix(in srgb,var(--p1) 48%,var(--soft))}
-.st .cell.l3{background:color-mix(in srgb,var(--p1) 74%,var(--soft));color:var(--p1-ink)}
-.st .cell.l4{background:var(--p1);color:var(--p1-ink)}
+.st .cell{color:var(--muted)}
+.st .cell.l1{background:color-mix(in srgb,var(--p2) 22%,var(--soft));color:var(--ink)}
+.st .cell.l2{background:color-mix(in srgb,var(--p2) 45%,var(--soft));color:var(--ink)}
+.st .cell.l3{background:color-mix(in srgb,var(--p2) 72%,var(--soft));color:var(--p2-ink)}
+.st .cell.l4{background:var(--p2);color:var(--p2-ink);font-weight:600}
+.st .heat-legend .cell{color:transparent}
 .st-foot{margin:10px 0 0;font-size:12px;color:var(--muted)}
 .st-donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .st-donut{width:132px;height:132px;flex:none}
@@ -446,13 +461,19 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .st-top{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 .st-top a{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
 .st-top li:last-child a{border-bottom:0}
-.st-rank{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--p1) 18%,var(--bg));color:var(--ink);flex:none}
+.st-rank{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--p8);color:var(--p8-ink);flex:none}
 .st-top-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
 .st-top-name em{font-style:normal;color:var(--muted);font-size:12px;margin-left:6px}
 .st-top b{font-weight:600}
 /* 设置：主题 */
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.theme-opt{border:2px solid transparent;border-radius:10px;background:var(--bg);padding:10px;text-align:left;display:grid;gap:8px}
+.theme-opt{border:2px solid transparent;border-radius:10px;background:var(--bg);position:relative}
+.theme-pick{border:0;background:none;padding:10px;text-align:left;display:grid;gap:8px;width:100%}
+.theme-del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:var(--soft);color:var(--muted);font-size:15px;line-height:24px;padding:0}
+.theme-del:hover{color:var(--danger)}
+.theme-add{border:1.5px dashed var(--line-2);border-radius:10px;display:grid;place-items:center;align-content:center;gap:2px;min-height:86px;color:var(--muted);font-size:13px;cursor:pointer}
+.theme-add b{font-size:22px;font-weight:300;line-height:1}
+.theme-add:hover{border-color:var(--ink);color:var(--ink)}
 .theme-opt.on{border-color:var(--ink)}
 .theme-opt .strip{display:flex;height:22px;border-radius:5px;overflow:hidden}
 .theme-opt .strip i{flex:1;background:var(--c)}
@@ -723,7 +744,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-1';
+const APP_VERSION = '2026.10.30-2';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1063,12 +1084,13 @@ function afterWipe() {
 }
 /* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
 let lastSig = '';
-const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME]);
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME, USER_THEMES]);
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
+  USER_THEMES = (await Store.get('meta', 'themes')) || USER_THEMES;
   THEME = (await Store.get('meta', 'theme')) || THEME;
   const sig = sigOf(); if (sig === lastSig) return; lastSig = sig;
   const a = document.activeElement;
@@ -1080,7 +1102,8 @@ async function enter() {
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
   viewMode = (await Store.get('meta', 'view')) || 'shelf';
-  THEME = (await Store.get('meta', 'theme')) || 'morandi';
+  USER_THEMES = (await Store.get('meta', 'themes')) || [];
+  THEME = (await Store.get('meta', 'theme')) || 'default';
   await Drafts.get('new');
   unlocked = true; lastSig = sigOf();
   $('#lock').hidden = true; $('#app').hidden = false;
@@ -1166,7 +1189,7 @@ function renderHome() {
         return `<div class="t-card"><button class="mini" data-go="book-${esc(b.id)}">${coverHtml(b, ipColor(ip))}</button>
           <button class="t-info" data-go="book-${esc(b.id)}"><b>${esc(b.title || '无题')}</b>
           <span>${esc(ip ? ip.name : '')}${b.place ? ' · ' + esc(b.place) : ''}</span>
-          <span class="num">${b.buyDate ? esc(b.buyDate) + ' 购入' : '未填购买时间'}</span></button>
+          <span class="num">${b.buyDate ? esc(ymd(b.buyDate)) + ' 购入' : '未填购买时间'}</span></button>
           <button class="btn small" data-act="arrive" data-id="${esc(b.id)}">到手</button></div>`;
       }).join('')}</div>` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
     </section>
@@ -1187,10 +1210,14 @@ function renderIp(id) {
       <p class="num">${sum(books.map(qtyOf))} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
       <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
     <div class="covers">
-      ${books.map(b => `<button class="cover-card" data-go="book-${esc(b.id)}">
-        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}</div>
-        <div class="cover-title">${esc(b.title || '无题')}</div>
-        <div class="cover-sub">${esc(b.cp || b.author || '')}</div></button>`).join('')}
+      ${books.map(b => { const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
+        return `<button class="cover-card" data-go="book-${esc(b.id)}">
+        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
+        <div class="cover-text">
+          <div class="cover-title">${esc(b.title || '无题')}</div>
+          <div class="cover-by">${by || '<span class="muted">作者未填写</span>'}</div>
+          ${b.cp || b.rating ? `<div class="cover-meta">${b.cp ? `<span class="cover-cp">${esc(b.cp)}</span>` : ''}${b.rating ? `<span class="cover-rate">★${b.rating}</span>` : ''}</div>` : ''}
+        </div></button>`; }).join('')}
       <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
 }
@@ -1209,7 +1236,7 @@ function renderBook(id) {
   const costs = (b.costs || []).filter(x => x.label || Number(x.amount));
   const cs = costSummary(costs);
   const spec = (k, v, sub) => `<div class="spec${v ? '' : ' empty'}"><span>${k}</span><b>${v ? esc(v) : '—'}</b>${v && sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
-  const cnDate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${m[1]}年${+m[2]}月${+m[3]}日` : (s || ''); };
+  const cnDate = ymd;
   const buyLine = b.buyDate || b.place ? [cnDate(b.buyDate), b.place ? b.place + '购入' : (b.buyDate ? '购入' : '')].filter(Boolean).join(' · ') : '';
   $('#view').innerHTML = `
     <div class="detail">
@@ -1259,20 +1286,44 @@ function renderBook(id) {
 }
 
 /* ================= 统计 ================= */
-/* ================= 统计配色主题（设置里可换） =================
-   参考：中国传统色（zhongguose.com）、日本の伝統色（nipponcolors.com）等配色网站 */
-const THEMES = [
-  {id: 'morandi', name: '莫兰迪', group: '低饱和 · 默认', colors: [['雾蓝', '#7d8fa0'], ['灰绿', '#a3b09a'], ['灰粉', '#c9a99a'], ['驼色', '#b8a07e'], ['灰紫', '#9c8fa8'], ['青灰', '#7f9c97'], ['米色', '#c2b49c'], ['灰褐', '#a08f8a']]},
-  {id: 'zhongguo', name: '中国传统色', group: '古典', colors: [['黛蓝', '#425066'], ['胭脂', '#9d2933'], ['竹青', '#789262'], ['檀色', '#b36d61'], ['石青', '#1685a9'], ['秋香', '#d9b611'], ['藕荷', '#e4c6d0'], ['苍色', '#75878a']]},
-  {id: 'nippon', name: '日本传统色', group: '和风', colors: [['藍', '#0d5661'], ['浅葱', '#33a6b8'], ['若竹', '#5dac81'], ['山吹', '#ffb11b'], ['紅梅', '#e16b8c'], ['藤', '#8b81c3'], ['鶯', '#6c6a2d'], ['鈍', '#656765']]},
-  {id: 'acg', name: '二次元粉彩', group: '二次元', colors: [['樱粉', '#f4a6b7'], ['天空', '#8ec5e8'], ['薄荷', '#9ed9c0'], ['奶油', '#f6d88a'], ['薰衣草', '#b9a7e0'], ['蜜桃', '#f7b89a'], ['珊瑚', '#ee8e8e'], ['雾霾蓝', '#8fa7c9']]},
-  {id: 'seasalt', name: '海盐北欧', group: '清爽', colors: [['海雾', '#6b8fa3'], ['盐绿', '#a7c4c2'], ['沙丘', '#d9c5a0'], ['陶土', '#c48b7a'], ['苔藓', '#8a9a5b'], ['石板', '#5c6b7a'], ['亚麻', '#d6ccbc'], ['暮紫', '#9e8b9e']]},
-  {id: 'ink', name: '水墨', group: '单色', colors: [['焦墨', '#3f4a5a'], ['浓墨', '#56617a'], ['重墨', '#6e7891'], ['淡墨', '#8b94a8'], ['清墨', '#a8b0c0'], ['烟灰', '#c2c8d3'], ['宣白', '#d8dce3'], ['砚色', '#5f6670']]},
-];
-let THEME = 'morandi';
-const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
-const pal = i => themeOf(THEME).colors[i % 8][1];
-const themeVars = () => themeOf(THEME).colors.map(([, c], i) => `--p${i + 1}:${c}`).join(';') + `;--p1-ink:${textOn(pal(0))}`;
+/* ================= 统计配色主题 =================
+   默认配色 + 用户上传图片提取的配色。所有颜色在显示前都会按当前背景自动加深/提亮，保证看得清。 */
+const DEFAULT_THEME = {id: 'default', name: '默认', colors: ['#4e79a7', '#e08e45', '#59a14f', '#d1605e', '#8c6bb1', '#c9a227', '#3fa3b0', '#a0785a']};
+let USER_THEMES = [];   // [{id, name, colors: [hex × 8]}]
+let THEME = 'default';
+const themeOf = id => USER_THEMES.find(t => t.id === id) || DEFAULT_THEME;
+const rgbOf = hex => { const n = parseInt(String(hex).replace('#', ''), 16) || 0; return [n >> 16, (n >> 8) & 255, n & 255]; };
+const hexOf = c => '#' + c.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+function luminance([r, g, b]) { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }
+function contrastOf(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function pageBg() { const m = (getComputedStyle(document.body).backgroundColor || '').match(/\d+/g); return m ? m.slice(0, 3).map(Number) : [255, 255, 255]; }
+/* 图形颜色和背景的对比度至少 3:1；不够就往黑（浅色背景）或往白（深色背景）推 */
+function rgbToHsl([r, g, b]) {
+  r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l];
+  const d = mx - mn, s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+function hslToRgb([h, s, l]) {
+  if (!s) return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+/* 保持色相，只调亮度（必要时略提饱和度），直到和背景的对比度够看清 */
+function fitColor(hex, bg, min = 3) {
+  let [h, sat, l] = rgbToHsl(rgbOf(hex)); const dark = luminance(bg) < 0.4;
+  for (let i = 0; i < 30 && contrastOf(hslToRgb([h, sat, l]), bg) < min; i++) {
+    l = dark ? Math.min(0.95, l + 0.025) : Math.max(0.08, l - 0.025);
+    if (sat > 0.08) sat = Math.min(0.85, sat * 1.04);
+  }
+  return hexOf(hslToRgb([h, sat, l]));
+}
+const textOnHex = hex => contrastOf(rgbOf(hex), [255, 255, 255]) >= contrastOf(rgbOf(hex), [28, 30, 36]) ? '#fff' : '#1c1e24';
+const themeColors = () => { const t = themeOf(THEME).colors.slice(0, 8); while (t.length < 8) t.push(DEFAULT_THEME.colors[t.length]); return t; };
+const pal = i => fitColor(themeColors()[((i % 8) + 8) % 8], pageBg());
+const themeVars = () => themeColors().map((c, i) => { const f = fitColor(c, pageBg()); return `--p${i + 1}:${f};--p${i + 1}-ink:${textOnHex(f)}`; }).join(';');
 
 let statYear = null, statMetric = 'count', statAll = {ip: false, cp: false};
 function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
@@ -1288,11 +1339,12 @@ function barRows(rows, {valFn, colorFn, max, limit, moreKey}) {
       <div class="st-track"><i style="--c:${colorFn ? colorFn(r, i) : 'var(--p1)'};width:${Math.max(2, r.v / m * 100)}%"></i></div></li>`).join('')}</ol>
     ${limit && rows.length > limit ? `<button class="st-more" data-act="stat-more" data-v="${moreKey}">${statAll[moreKey] ? '收起' : `查看全部 ${rows.length} 个`}</button>` : ''}`;
 }
-function stackBar(rows, total, unitFn) {   // 一条横向分段条 + 图例
+function stackBar(rows, total, unitFn, off = 0) {   // 一条横向分段条 + 图例
   if (!total) return '<div class="empty-box">暂无数据</div>';
-  return `<div class="st-stack">${rows.map((r, i) => `<i style="--c:${pal(i)};flex:${r.v}" title="${esc(r.name)} ${unitFn(r)}"></i>`).join('')}</div>
-    <ul class="st-legend">${rows.map((r, i) => `<li><i style="--c:${pal(i)}"></i><span>${esc(r.name)}</span><b>${unitFn(r)}</b><em>${Math.round(r.v / total * 100)}%</em></li>`).join('')}</ul>`;
+  return `<div class="st-stack">${rows.map((r, i) => `<i style="--c:${pal(i + off)};flex:${r.v}" title="${esc(r.name)} ${unitFn(r)}"></i>`).join('')}</div>
+    <ul class="st-legend">${rows.map((r, i) => `<li><i style="--c:${pal(i + off)}"></i><span>${esc(r.name)}</span><b>${unitFn(r)}</b><em>${Math.round(r.v / total * 100)}%</em></li>`).join('')}</ul>`;
 }
+const head = (title, n, small, extra) => `<div class="st-panel-head"><h3><i class="st-dot" style="--c:var(--p${n})"></i>${title}</h3>${extra || (small ? `<small>${small}</small>` : '')}</div>`;
 function donutSvg(rows, total) {
   const r = 56, C = 2 * Math.PI * r; let off = 0;
   const segs = rows.map((x, i) => {
@@ -1322,17 +1374,16 @@ function timeHtml(books) {
   const maxC = Math.max(1, ...[...ym.values()].map(e => e.count));
   const lvl = n => n ? Math.min(4, Math.ceil(n / maxC * 4)) : 0;
   return `<div class="st-grid">
-    <div class="st-panel">
-      <div class="st-panel-head"><h3>月份统计</h3>
-        <div class="seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></div></div>
+    <div class="st-panel" style="--acc:var(--p1)">
+      ${head('月份统计', 1, '', `<div class="seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></div>`)}
       <div class="chips st-years">${years.map(y => `<button class="${y === statYear ? 'on' : ''}" data-act="stat-year" data-v="${y}">${y}</button>`).join('')}</div>
       <p class="st-note"><b class="num">${statMetric === 'cost' ? money(yearTotal) : yearTotal + ' 本'}</b>${statYear} 年合计${yearTotal ? ` · 最多在 ${peak + 1} 月` : ''}</p>
       <div class="mbars">${months.map((e, i) => { const v = val(e); return `<div class="mbar${i === peak && v ? ' peak' : ''}" title="${i + 1}月：${e ? e.count + ' 本 · ' + money(e.cost) : '0 本'}">
         ${v ? `<small>${fmtV(v)}</small>` : ''}<i class="${v ? '' : 'zero'}" style="height:calc((100% - 18px) * ${v / maxM})"></i></div>`; }).join('')}</div>
       <div class="mlabels">${months.map((_, i) => `<span>${i + 1}</span>`).join('')}</div>
     </div>
-    <div class="st-panel">
-      <div class="st-panel-head"><h3>时间方块</h3><small>每格一个月 · 颜色越深买得越多</small></div>
+    <div class="st-panel" style="--acc:var(--p2)">
+      ${head('时间方块', 2, '每格一个月 · 颜色越深买得越多')}
       <div class="heat-scroll"><div class="heat">
         <span></span>${Array.from({length: 12}, (_, i) => `<span class="h">${i + 1}</span>`).join('')}
         ${full.reverse().map(y => `<span class="y">${y}</span>${Array.from({length: 12}, (_, i) => {
@@ -1371,7 +1422,7 @@ function renderStats() {
   }
   $('#view').innerHTML = `<div class="st" style="${themeVars()}">
     <div class="page-head"><div><h1>统计</h1><p>${books.length} 种 · ${copies} 本${anyForeign ? ' · 外币已按设置里的汇率折合人民币' : ''}</p></div>
-      <a class="st-theme" href="#prefs" title="在设置里更换配色">${th.colors.slice(0, 5).map(([, c]) => `<i style="--c:${c}"></i>`).join('')}<span>${esc(th.name)}</span></a></div>
+      <a class="st-theme" href="#prefs" title="在设置里更换配色">${[0, 1, 2, 3, 4].map(i => `<i style="--c:${pal(i)}"></i>`).join('')}<span>${esc(th.name)}</span></a></div>
 
     <section class="st-hero">
       <div class="st-hero-main">
@@ -1380,10 +1431,10 @@ function renderStats() {
         <span class="st-hero-sub">平均每本 ${money(copies ? total / copies : 0)} · ${thisYear} 年花了 ${money(yearCost)}</span>
       </div>
       <div class="st-kpis">
-        <div><span class="st-k">本子</span><b class="num">${copies}</b><em>${books.length} 种${transit ? ` · 在途 ${transit}` : ''}</em></div>
-        <div><span class="st-k">IP</span><b class="num">${S.ips.length}</b><em>${byIp[0] ? '最多 ' + esc(byIp[0].name) : '—'}</em></div>
-        <div><span class="st-k">CP</span><b class="num">${cps.length}</b><em>${cps[0] ? '最多 ' + esc(cps[0].name) : '—'}</em></div>
-        <div><span class="st-k">评分</span><b class="num">${rated.length ? avgRate.toFixed(1) : '—'}</b><em>${rated.length ? `${rated.length} 本已打分` : '还没有打分'}</em></div>
+        <div style="--c:var(--p1)"><span class="st-k">本子</span><b class="num">${copies}</b><em>${books.length} 种${transit ? ` · 在途 ${transit}` : ''}</em></div>
+        <div style="--c:var(--p4)"><span class="st-k">IP</span><b class="num">${S.ips.length}</b><em>${byIp[0] ? '最多 ' + esc(byIp[0].name) : '—'}</em></div>
+        <div style="--c:var(--p5)"><span class="st-k">CP</span><b class="num">${cps.length}</b><em>${cps[0] ? '最多 ' + esc(cps[0].name) : '—'}</em></div>
+        <div style="--c:var(--p6)"><span class="st-k">评分</span><b class="num">${rated.length ? avgRate.toFixed(1) : '—'}</b><em>${rated.length ? `${rated.length} 本已打分` : '还没有打分'}</em></div>
       </div>
     </section>
 
@@ -1392,29 +1443,29 @@ function renderStats() {
 
     <h2 class="st-label">分布</h2>
     <div class="st-grid three">
-      <div class="st-panel"><div class="st-panel-head"><h3>地区</h3><small>本子性质</small></div>
+      <div class="st-panel" style="--acc:var(--p1)">${head('地区', 1, '本子性质')}
         <div class="st-donut-wrap">${donutSvg(regions, copies)}
           <ul class="st-legend">${regions.map((r, i) => `<li><i style="--c:${pal(i)}"></i><span>${esc(r.name)}</span><b>${r.v}</b><em>${Math.round(r.v / copies * 100)}%</em></li>`).join('')}</ul></div></div>
-      <div class="st-panel"><div class="st-panel-head"><h3>本子类型</h3></div>
-        ${barRows(kinds, {valFn: r => `<b>${r.v}</b> 本`, colorFn: (r, i) => pal(i)})}</div>
-      <div class="st-panel"><div class="st-panel-head"><h3>阅读状态</h3></div>
-        ${stackBar(reads, copies, r => r.v + ' 本')}</div>
+      <div class="st-panel" style="--acc:var(--p3)">${head('本子类型', 3)}
+        ${barRows(kinds, {valFn: r => `<b>${r.v}</b> 本`, colorFn: () => 'var(--p3)'})}</div>
+      <div class="st-panel" style="--acc:var(--p7)">${head('阅读状态', 7)}
+        ${stackBar(reads, copies, r => r.v + ' 本', 6)}</div>
     </div>
 
     <h2 class="st-label">IP 与 CP</h2>
     <div class="st-grid">
-      <div class="st-panel"><div class="st-panel-head"><h3>每个IP多少本</h3><small>本数 · 花费</small></div>
-        ${byIp.length ? barRows(byIp, {valFn: r => `<b>${r.v}</b> 本<span class="st-dim"> · ${money(r.cost)}</span>`, colorFn: () => 'var(--p1)', limit: 8, moreKey: 'ip'}) : '<div class="empty-box">还没有IP</div>'}</div>
-      <div class="st-panel"><div class="st-panel-head"><h3>每个CP多少本</h3><small>本数 · 花费</small></div>
+      <div class="st-panel" style="--acc:var(--p4)">${head('每个IP多少本', 4, '本数 · 花费')}
+        ${byIp.length ? barRows(byIp, {valFn: r => `<b>${r.v}</b> 本<span class="st-dim"> · ${money(r.cost)}</span>`, colorFn: () => 'var(--p4)', limit: 8, moreKey: 'ip'}) : '<div class="empty-box">还没有IP</div>'}</div>
+      <div class="st-panel" style="--acc:var(--p5)">${head('每个CP多少本', 5, '本数 · 花费')}
         ${cps.length ? barRows(cps, {valFn: r => `<b>${r.v}</b> 本<span class="st-dim"> · ${money(r.cost)}</span>`, colorFn: () => 'var(--p2)', limit: 8, moreKey: 'cp'}) : '<div class="empty-box">还没有填写CP的本子</div>'}
         ${noCp ? `<p class="st-foot">另有 ${noCp} 本没填CP</p>` : ''}</div>
     </div>
 
     <h2 class="st-label">花费</h2>
     <div class="st-grid">
-      <div class="st-panel"><div class="st-panel-head"><h3>钱花在哪儿</h3><small>按价格细则</small></div>
-        ${labs.length ? stackBar(labs, total, r => money(r.v)) : '<div class="empty-box">还没有价格记录</div>'}</div>
-      <div class="st-panel"><div class="st-panel-head"><h3>单本最贵</h3><small>总价 ÷ 购买数量</small></div>
+      <div class="st-panel" style="--acc:var(--p6)">${head('钱花在哪儿', 6, '按价格细则')}
+        ${labs.length ? stackBar(labs, total, r => money(r.v), 5) : '<div class="empty-box">还没有价格记录</div>'}</div>
+      <div class="st-panel st-top-panel" style="--acc:var(--p8)">${head('单本最贵', 8, '总价 ÷ 购买数量')}
         <ol class="st-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="st-rank">${i + 1}</span><span class="st-top-name">${esc(b.title || '无题')}<em>${esc((ipById(b.ipId) || {}).name || '')}</em></span><b class="num">${money(bookTotal(b) / qtyOf(b))}</b></a></li>`).join('')}</ol></div>
     </div>
   </div>`;
@@ -1444,10 +1495,18 @@ function renderSettings() {
         </form>
       </div>
       <div class="set-card"><h2>配色主题</h2>
-        <p>更换统计页的配色。配色参考中国传统色、日本の伝統色等配色网站。</p>
-        <div class="themes">${THEMES.map(t => `<button type="button" class="theme-opt ${t.id === THEME ? 'on' : ''}" data-act="set-theme" data-v="${t.id}">
-          <span class="strip">${t.colors.map(([, c]) => `<i style="--c:${c}"></i>`).join('')}</span><span><b>${esc(t.name)}</b><small>${esc(t.group)}</small></span></button>`).join('')}</div>
-        <div class="theme-names">${themeOf(THEME).colors.map(([n, c]) => `<span><i style="--c:${c}"></i>${esc(n)} ${c}</span>`).join('')}</div>
+        <p>更换统计页的配色。可以用默认配色，也可以上传一张喜欢的图片（本子封面、插画、截图都行），自动提取其中的颜色。颜色太浅或太深时会自动调整，保证图表看得清。</p>
+        <div class="themes">
+          ${[DEFAULT_THEME, ...USER_THEMES].map(t => `<div class="theme-opt ${t.id === THEME ? 'on' : ''}">
+            <button type="button" class="theme-pick" data-act="set-theme" data-v="${esc(t.id)}">
+              <span class="strip">${t.colors.slice(0, 8).map(c => `<i style="--c:${c}"></i>`).join('')}</span>
+              <span><b>${esc(t.name)}</b><small>${t.id === 'default' ? '清晰均衡' : '来自图片'}${t.id === THEME ? ' · 使用中' : ''}</small></span></button>
+            ${t.id === 'default' ? '' : `<button type="button" class="theme-del" data-act="del-theme" data-v="${esc(t.id)}" aria-label="删除这个配色">×</button>`}
+          </div>`).join('')}
+          ${USER_THEMES.length < 8 ? `<label class="theme-add" for="theme-file"><b>＋</b><span>上传图片取色</span></label>` : ''}
+        </div>
+        <input type="file" id="theme-file" accept="image/*" hidden>
+        <p class="hint" style="margin:0">建议选颜色丰富、对比明显的图片；最多保存 8 套图片配色。</p>
       </div>
       <div class="set-card"><h2>备份与迁移</h2>
         <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
@@ -1494,6 +1553,19 @@ function renderSettings() {
     e.preventDefault();
     const r = {}; Object.keys(DEFAULT_RATES).forEach(c => { const v = parseFloat($('#rate-' + c).value); r[c] = v >= 0 ? v : DEFAULT_RATES[c]; });
     RATES = r; await Store.put('meta', r, 'rates'); toast('汇率已保存');
+  };
+  $('#theme-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    let src; try { src = await compressImage(f, 400, 0.85); } catch (err) { return toast(err.message); }
+    let cols = await extractPalette(src, 8, 40);
+    if (cols.length < 5) cols = await extractPalette(src, 8, 18);   // 颜色相近的图（如粉彩）放宽一点
+    if (cols.length < 3) return toast('这张图颜色太少了，换一张颜色更丰富的试试');
+    const colors = cols.slice(0, 8); while (colors.length < 8) colors.push(DEFAULT_THEME.colors[colors.length]);
+    let k = USER_THEMES.length + 1; while (USER_THEMES.some(t => t.name === '图片配色 ' + k)) k++;
+    const t = {id: 'img-' + uid(), name: '图片配色 ' + k, colors};
+    USER_THEMES = [...USER_THEMES, t]; THEME = t.id;
+    try { await Store.put('meta', USER_THEMES, 'themes'); await Store.put('meta', THEME, 'theme'); } catch (err) { toast(errMsg(err)); }
+    const y = window.scrollY; renderSettings(); window.scrollTo(0, y); toast(`提取到 ${cols.length} 个颜色，已应用到统计页`);
   };
   $('#brand-form').onsubmit = async e => {
     e.preventDefault();
@@ -1577,7 +1649,7 @@ async function exportBackup() {
     for (const b of books) for (let i = 0; i < (b.images || []).length; i++) { try { if (!/^data:/.test(b.images[i])) b.images[i] = await blobToDataUrl(imgSrc(b.images[i])); } catch {} }
     try { if (brand.logo && !/^data:/.test(brand.logo)) brand.logo = await blobToDataUrl(imgSrc(brand.logo)); } catch {}
   }
-  const data = {app: 'doujin-shelf', version: 3, exportedAt: new Date().toISOString(), rates: RATES, theme: THEME, brand, ips, books};
+  const data = {app: 'doujin-shelf', version: 3, exportedAt: new Date().toISOString(), rates: RATES, theme: THEME, themes: USER_THEMES, brand, ips, books};
   const filename = `同人本棚备份-${today().replace(/-/g, '')}.json`;
   if (Store.kind === 'claude') {
     if (!Store.cloud.downloads) return toast('这个窗口不支持保存文件');
@@ -1605,7 +1677,8 @@ function importBackup(file) {
       if (mode === 'replace') { await Store.clear('ips'); await Store.clear('books'); }
       await Store.putMany('ips', data.ips); await Store.putMany('books', data.books, (i, n) => toast(`正在导入 ${i} / ${n}`));
       if (data.brand) { BRAND = {...BRAND, ...data.brand}; await Store.put('meta', BRAND, 'brand'); applyBrand(); }
-      if (data.theme) { THEME = data.theme; await Store.put('meta', THEME, 'theme'); }
+      if (Array.isArray(data.themes)) { USER_THEMES = data.themes; await Store.put('meta', USER_THEMES, 'themes'); }
+      if (data.theme) { THEME = themeOf(data.theme).id; await Store.put('meta', THEME, 'theme'); }
       if (data.rates) { RATES = {...DEFAULT_RATES, ...data.rates}; await Store.put('meta', RATES, 'rates'); }
       S.ips = await Store.all('ips'); S.books = await Store.all('books');
       toast('导入完成'); location.hash = ''; route();
@@ -1642,7 +1715,7 @@ const confirmBox = (text, okText = '删除') => choose(text, [{v: 'ok', t: okTex
 
 /* ---------- IP 编辑 ---------- */
 /* 从图片提取主要颜色（最多 n 个，去掉接近纯白/纯黑和相近的颜色） */
-function extractPalette(src, n = 10) {
+function extractPalette(src, n = 10, minDist = 46) {
   return new Promise(res => {
     if (!src) return res([]);
     const img = new Image(); img.crossOrigin = 'anonymous';
@@ -1661,8 +1734,8 @@ function extractPalette(src, n = 10) {
         const out = [];
         for (const c of cols) {
           const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b), l = (mx + mn) / 510;
-          if (l > 0.94 || l < 0.05) continue;
-          if (out.every(o => Math.hypot(o.r - c.r, o.g - c.g, o.b - c.b) > 46)) out.push(c);
+          if (l > 0.975 || l < 0.03) continue;
+          if (out.every(o => Math.hypot(o.r - c.r, o.g - c.g, o.b - c.b) > minDist)) out.push(c);
           if (out.length >= n) break;
         }
         res(out.map(c => '#' + [c.r, c.g, c.b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('')));
@@ -1789,6 +1862,29 @@ function compressImage(file, max = 1600, q = 0.85) {
     img.src = url;
   });
 }
+/* 价格细则项目（下拉可选，也可以自己填） */
+const COST_LABELS = ['本子本体', '邮费', '岛内邮费', '国际邮费', '国内邮费', '代购费', '手续费', '关税 / 税费', '特典 / 周边', '包装 / 保价', '优惠抵扣'];
+/* 日期：一律按 年/月/日 显示与选择，不受浏览器语言影响 */
+const ymd = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${m[1]}/${m[2]}/${m[3]}` : (s || ''); };
+function dateField(id, label, val, optional) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(val || ''), y0 = new Date().getFullYear();
+  const [Y, M, D] = m ? [+m[1], +m[2], +m[3]] : [0, 0, 0];
+  const years = []; for (let y = y0 + 1; y >= 1980; y--) years.push(y);
+  const opt = (v, t, on) => `<option value="${v}" ${on ? 'selected' : ''}>${t}</option>`;
+  return `<div class="field"><span>${label}${optional ? '<i>选填</i>' : ''}</span>
+    <div class="date3" id="${id}">
+      <select class="input" data-part="y" aria-label="${label} 年">${opt('', '年', !Y)}${years.map(y => opt(y, y + ' 年', y === Y)).join('')}</select>
+      <select class="input" data-part="m" aria-label="${label} 月">${opt('', '月', !M)}${Array.from({length: 12}, (_, i) => opt(i + 1, (i + 1) + ' 月', i + 1 === M)).join('')}</select>
+      <select class="input" data-part="d" aria-label="${label} 日">${opt('', '日', !D)}${Array.from({length: 31}, (_, i) => opt(i + 1, (i + 1) + ' 日', i + 1 === D)).join('')}</select>
+    </div></div>`;
+}
+function readDate(root, id) {
+  const box = $('#' + id, root), g = k => +$(`[data-part=${k}]`, box).value;
+  const y = g('y'), m = g('m'); let d = g('d');
+  if (!y || !m) return '';
+  d = Math.min(d || 1, new Date(y, m, 0).getDate());
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
 /* 下拉框：可选“不填”，部分可“自己填…” */
 function selField(id, label, opts, val, {optional = false, custom = false, labels = null} = {}) {
   val = val || '';
@@ -1859,18 +1955,15 @@ async function openBookForm(book, presetIp) {
           ${selField('bk-cond', '品相', OPT.condition, d.condition, {optional: true})}
           ${selField('bk-age', '限制年龄', OPT.age, d.age, {optional: true})}
         </div>
-        <div class="two">
-          <label class="field"><span>发行日<i>选填</i></span><input class="input" type="date" id="bk-release" value="${esc(d.releaseDate)}"></label>
-          ${selField('bk-read', '阅读状态', OPT.read, d.read, {optional: true})}
-        </div>
+        ${dateField('bk-release', '发行日', d.releaseDate, true)}
       </div>
 
       <div class="fgroup"><h3>购买信息</h3>
+        ${dateField('bk-buy', '购买时间', d.buyDate, false)}
         <div class="two">
-          <label class="field"><span>购买时间</span><input class="input" type="date" id="bk-buy" value="${esc(d.buyDate)}"></label>
           <label class="field"><span>购买数量（本）</span><input class="input num" type="number" id="bk-qty" min="1" max="999" step="1" inputmode="numeric" value="${esc(qtyOf(d))}"></label>
+          ${selField('bk-place', '购买地点', OPT.place, d.place, {optional: true, custom: true})}
         </div>
-        ${selField('bk-place', '购买地点', OPT.place, d.place, {optional: true, custom: true})}
         <label class="field"><span>购入链接<i>选填</i></span><input class="input" type="url" id="bk-link" value="${esc(d.link)}" placeholder="https://" inputmode="url"></label>
         <div class="field"><span>价格细则（每项可选币种）</span>
           <div id="bk-costs"></div>
@@ -1878,7 +1971,8 @@ async function openBookForm(book, presetIp) {
         </div>
       </div>
 
-      <div class="fgroup"><h3>评分与备注</h3>
+      <div class="fgroup"><h3>阅读、评分与备注</h3>
+        ${selField('bk-read', '阅读状态', OPT.read, d.read, {optional: true})}
         <div class="stars" id="bk-stars"></div>
         <label class="field"><span>备注</span><textarea class="input" id="bk-note" placeholder="场次、特典、感想…">${esc(d.note)}</textarea></label>
       </div>
@@ -1892,7 +1986,7 @@ async function openBookForm(book, presetIp) {
       d.kind = readSel(root, 'bk-kind'); d.size = readSel(root, 'bk-size'); d.origin = readSel(root, 'bk-origin'); d.format = readSel(root, 'bk-format');
       d.condition = readSel(root, 'bk-cond'); d.age = readSel(root, 'bk-age'); d.read = readSel(root, 'bk-read'); d.place = readSel(root, 'bk-place');
       d.qty = Math.min(999, Math.max(1, parseInt(v('bk-qty'), 10) || 1));
-      d.buyDate = v('bk-buy'); d.releaseDate = v('bk-release'); d.transit = $('#bk-transit', root).checked; d.link = v('bk-link');
+      d.buyDate = readDate(root, 'bk-buy'); d.releaseDate = readDate(root, 'bk-release'); d.transit = $('#bk-transit', root).checked; d.link = v('bk-link');
       d._ipSel = $('#bk-ip', root).value; d._newIp = $('#bk-newip', root).value;
       if (d._ipSel !== '__new') d.ipId = d._ipSel;
     };
@@ -1945,25 +2039,66 @@ async function openBookForm(book, presetIp) {
 
     // 价格
     const drawCosts = () => {
-      costBox.innerHTML = d.costs.map((c, i) => `<div class="cost-row" data-i="${i}">
-        <input class="input" data-k="label" value="${esc(c.label)}" placeholder="项目，如代购费" aria-label="项目名称">
+      costBox.innerHTML = d.costs.map((c, i) => {
+        const known = !c.label || COST_LABELS.includes(c.label), custom = c._custom || !known;
+        return `<div class="cost-row" data-i="${i}">
+        <span class="drag" title="按住拖动调整顺序" aria-label="拖动调整顺序">⋮⋮</span>
+        <div class="cost-label">
+          <select class="input" data-k="labelSel" aria-label="项目">
+            <option value="" ${!c.label && !custom ? 'selected' : ''}>选择项目</option>
+            ${COST_LABELS.map(o => `<option value="${esc(o)}" ${o === c.label && !custom ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            <option value="__custom" ${custom ? 'selected' : ''}>自己填…</option>
+          </select>
+          ${custom ? `<input class="input" data-k="label" value="${esc(c.label)}" placeholder="项目名称" maxlength="20" aria-label="自填项目名称">` : ''}
+        </div>
         <select class="input" data-k="cur" aria-label="币种">${curOpts(c.cur)}</select>
         <input class="input num" data-k="amount" value="${esc(c.amount)}" type="number" inputmode="decimal" step="any" min="0" placeholder="0" aria-label="金额">
-        <button type="button" class="x" data-rmc="${i}" aria-label="删除这一项">×</button></div>`).join('');
+        <button type="button" class="x" data-rmc="${i}" aria-label="删除这一项">×</button></div>`;
+      }).join('');
       calc();
     };
+    // 拖动 ⋮⋮ 调整顺序（鼠标、手指都可以）
+    costBox.addEventListener('pointerdown', e => {
+      const h = e.target.closest('.drag'); if (!h) return;
+      e.preventDefault();
+      const row = h.closest('.cost-row'); row.classList.add('dragging');
+      const move = ev => {
+        const rows = $$('.cost-row', costBox).filter(r => r !== row);
+        const after = rows.find(r => { const b = r.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; });
+        if (after) { if (after !== row.nextSibling) costBox.insertBefore(row, after); }
+        else if (row !== costBox.lastElementChild) costBox.appendChild(row);
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+        row.classList.remove('dragging');
+        const order = $$('.cost-row', costBox).map(r => +r.dataset.i);
+        if (order.some((v, i) => v !== i)) { d.costs = order.map(i => d.costs[i]); touch(); }
+        drawCosts();
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    });
     const calc = () => {
       const cs = costSummary(d.costs);
       $('#bk-total', root).textContent = money(cs.cny);
       $('#bk-orig', root).textContent = cs.foreign ? `原币 ${cs.orig}` : '';
     };
-    const onCost = e => { const row = e.target.closest('.cost-row'); if (!row || !e.target.dataset.k) return; d.costs[+row.dataset.i][e.target.dataset.k] = e.target.value; calc(); };
+    const onCost = e => {
+      const row = e.target.closest('.cost-row'), k = e.target.dataset.k; if (!row || !k) return;
+      const c = d.costs[+row.dataset.i];
+      if (k === 'labelSel') {
+        if (e.type !== 'change') return;
+        if (e.target.value === '__custom') { c._custom = true; c.label = COST_LABELS.includes(c.label) ? '' : c.label; drawCosts(); const inp = $(`.cost-row[data-i="${row.dataset.i}"] input[data-k=label]`, costBox); if (inp) inp.focus(); }
+        else { c._custom = false; c.label = e.target.value; if (row.querySelector('input[data-k=label]')) drawCosts(); }
+        return calc();
+      }
+      c[k] = e.target.value; calc();
+    };
     costBox.addEventListener('input', onCost); costBox.addEventListener('change', onCost);
     costBox.onclick = e => { const b = e.target.closest('[data-rmc]'); if (b) { d.costs.splice(+b.dataset.rmc, 1); drawCosts(); touch(); } };
     $('#bk-addcost', root).onclick = () => {
       const last = d.costs[d.costs.length - 1];
       d.costs.push({label: '', amount: '', cur: last ? last.cur : 'CNY'}); drawCosts(); touch();
-      $$('.cost-row input[data-k=label]', costBox).slice(-1)[0].focus();
+      const sel = $$('.cost-row select[data-k=labelSel]', costBox).slice(-1)[0]; if (sel) sel.focus();
     };
 
     // 星星
@@ -1988,7 +2123,7 @@ async function openBookForm(book, presetIp) {
         d.ipId = ip.id;
       } else d.ipId = ipSel.value;
       d.costs = d.costs.filter(c => String(c.label).trim() || String(c.amount).trim())
-        .map(c => ({label: String(c.label).trim(), amount: Math.max(0, parseFloat(c.amount) || 0), cur: c.cur || 'CNY'}));
+        .map(c => ({label: String(c.label || '').trim(), amount: Math.max(0, parseFloat(c.amount) || 0), cur: c.cur || 'CNY'}));
       d.updated = Date.now();
       const out = clone(d); delete out._ipSel; delete out._newIp;
       const btn = $('#bk-form button[type=submit]', root); btn.disabled = true; btn.textContent = Store.cloud && out.images.some(x => /^data:/.test(x)) ? '上传图片中…' : '保存中…';
@@ -2083,9 +2218,15 @@ document.addEventListener('click', async e => {
     }
     case 'live-rates': fetchLiveRates(); break;
     case 'stat-more': { statAll[el.dataset.v] = !statAll[el.dataset.v]; const y = window.scrollY; renderStats(); window.scrollTo(0, y); break; }
+    case 'del-theme': {
+      const id = el.dataset.v; USER_THEMES = USER_THEMES.filter(t => t.id !== id);
+      if (THEME === id) THEME = 'default';
+      try { await Store.put('meta', USER_THEMES, 'themes'); await Store.put('meta', THEME, 'theme'); } catch (e) { toast(errMsg(e)); }
+      const y = window.scrollY; renderSettings(); window.scrollTo(0, y); toast('已删除这个配色'); break;
+    }
     case 'set-theme': {
       THEME = el.dataset.v; const y = window.scrollY; renderSettings(); window.scrollTo(0, y);
-      try { await Store.put('meta', THEME, 'theme'); toast(`已换成“${themeOf(THEME).name}”，去统计页看看`); } catch (e) { toast(errMsg(e)); }
+      try { await Store.put('meta', THEME, 'theme'); toast(`已换成“${themeOf(THEME).name}”配色，去统计页看看`); } catch (e) { toast(errMsg(e)); }
       break;
     }
     case 'sign-out': {
