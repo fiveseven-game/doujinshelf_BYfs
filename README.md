@@ -9,6 +9,8 @@
 | sw.js | 离线缓存：断网也能打开网页 |
 | config.js | 可选：预先填好 Supabase 地址和 key（也可以直接在网页“设置 → 云端同步”里填） |
 | check.html | 自检页 |
+| manifest.webmanifest | 添加到桌面用的应用信息（名称、图标） |
+| icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png | 桌面图标（Doumi 小猫） |
 | setup.sql | 建表 SQL（网页里也能一键复制），在 Supabase 的 SQL Editor 里运行一次 |
 
 ## 开启云端同步
