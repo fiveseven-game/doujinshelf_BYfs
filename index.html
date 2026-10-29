@@ -925,7 +925,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-17';
+const APP_VERSION = '2026.10.30-18';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1018,7 +1018,7 @@ const Sync = {
     if (!(window.supabase && window.supabase.createClient)) await loadScript(SB_CDN);
   },
   async boot() {
-    try { this.cfg = (await DB.get('meta', 'sync')) || normConfig(window.SHELF_CONFIG); } catch { this.cfg = null; }
+    try { this.cfg = (await DB.get('meta', 'sync')) || (await presetAllowed() ? normConfig(window.SHELF_CONFIG) : null); } catch { this.cfg = null; }
     this.lastAt = (await DB.get('meta', 'syncLast').catch(() => 0)) || 0;
     if (!this.configured()) return this.set('off');
     window.addEventListener('online', () => this.soon(300));
@@ -2012,6 +2012,36 @@ function renderStats() {
   </div>`;
 }
 
+/* ================= 分享给朋友 =================
+   分享链接带 ?share=1：对方打开时会忽略网站里 config.js 预填的 Supabase 信息，
+   以“不连云端、空书架、还没设密码”的初始状态开始使用。你的书架、密码、同步设置都只在你自己的浏览器里，不会跟着链接过去。 */
+let PRESET_OK = true;
+async function presetAllowed() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('share') === '1') {
+      await DB.put('meta', true, 'noPreset');   // 记住：这台设备以后也不用 config.js 里的预设
+      q.delete('share'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+    }
+    PRESET_OK = !(await DB.get('meta', 'noPreset'));
+  } catch { PRESET_OK = true; }
+  return PRESET_OK;
+}
+const siteUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const shareLink = () => siteUrl() + '?share=1';
+function shareCard() {
+  if (Store.kind === 'claude') return '';
+  const local = location.protocol === 'file:';
+  const preset = normConfig(window.SHELF_CONFIG);
+  return `<div class="set-card"><h2>分享给朋友</h2>
+    <p>朋友用这个链接打开时，会是第一次使用的初始状态：空书架、自己设解锁密码、不连接任何云端。你的本子、密码和 Supabase 信息都不会给到对方，你自己的数据也不受任何影响。</p>
+    ${local ? '<p class="notice" style="margin:0">现在是直接打开的本地文件，没有网址可以分享。请先用 GitHub Pages 的网址打开，再来这里复制分享链接。</p>' : `
+    <div class="link-box"><code id="share-url">${esc(shareLink())}</code></div>
+    <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
+    ${preset ? '<p class="hint" style="margin:0;color:var(--danger)">提醒：网站的 config.js 里填了 Supabase 信息。分享链接已经会自动忽略它，但别人看网站源码时仍能看到。建议把 config.js 改回空白，只在自己的设备里填写。</p>' : ''}
+  </div>`;
+}
+
 /* ================= 添加到桌面 ================= */
 let installEvt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; refreshInstall(); });
@@ -2059,6 +2089,7 @@ function renderSettings() {
     <div class="settings">
       ${syncCard()}
       ${installCard()}
+      ${shareCard()}
       <div class="set-card"><h2>名称与 LOGO</h2>
         <p>改的是左上角的主按钮、锁屏页和浏览器标签上显示的名称和图标。</p>
         <form id="brand-form" class="form">
@@ -2181,7 +2212,7 @@ function syncCard() {
 }
 /* 同步设置面板 */
 function openSyncPanel() {
-  const cfg = Sync.cfg || normConfig(window.SHELF_CONFIG) || {};
+  const cfg = Sync.cfg || (PRESET_OK ? normConfig(window.SHELF_CONFIG) : null) || {};
   openModal(`
     <div class="sheet-head"><h2>云端同步</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
     <div class="sync-status" id="sync-status">${Sync.statusHtml()}</div>
@@ -2988,6 +3019,16 @@ document.addEventListener('click', async e => {
     }
     case 'live-rates': fetchLiveRates(); break;
     case 'install': doInstall(); break;
+    case 'share-copy': {
+      const link = shareLink();
+      try { await navigator.clipboard.writeText(link); toast('分享链接已复制'); }
+      catch { const c = $('#share-url'); if (c) { const r = document.createRange(); r.selectNodeContents(c); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('请长按或按 Ctrl+C 复制选中的链接'); }
+      break;
+    }
+    case 'share-native': {
+      try { await navigator.share({title: BRAND.name || DEFAULT_NAME, text: '你的同人本管理书架', url: shareLink()}); } catch {}
+      break;
+    }
     case 'stat-more': { statAll[el.dataset.v] = !statAll[el.dataset.v]; const y = window.scrollY; renderStats(); window.scrollTo(0, y); break; }
     case 'del-theme': {
       const id = el.dataset.v; USER_THEMES = USER_THEMES.filter(t => t.id !== id);
