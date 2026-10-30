@@ -1012,7 +1012,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-38';
+const APP_VERSION = '2026.10.30-39';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1664,7 +1664,7 @@ function renderHome() {
           ${cardText(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
-    body = `${ips.length > 1 ? '<p class="drag-hint">长按书脊（电脑上按住拖动）可以调整合集顺序</p>' : ''}<div class="shelf" id="shelf"><button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">${spineText('＋ 新建IP')}</span></button>${ips.map(ip => {
+    body = `${ips.length > 1 ? '<p class="drag-hint">长按书脊（电脑上按住拖动）可以调整合集顺序</p>' : ''}<div class="shelf" id="shelf"><button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">${spineText('＋ 新建IP', true)}</span></button>${ips.map(ip => {
       const n = sum(S.books.filter(b => b.ipId === ip.id).map(qtyOf));
       const c = ipColor(ip), img = ip.spineImg ? imgSrc(ip.spineImg) : '';
       return `<button class="spine${img ? ' has-img' : ''}" style="--c:${c};color:${img ? '#fff' : textOn(c)};height:${156 + (hashStr(ip.id) % 6) * 8}px${img ? `;background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}')` : ''}" data-go="ip-${esc(ip.id)}" data-id="${esc(ip.id)}" title="${esc(ip.name)}">
@@ -2003,8 +2003,8 @@ function fitSpines(root) {
     if (avail > 20 && t.scrollHeight > avail + 1) { t.style.maxHeight = avail + 'px'; t.classList.add('clip'); }
   });
 }
-const spineText = name => String(name || '').split(SW_RE)
-  .map((t, i) => ({t: t.trim(), rot: i % 2 === 1 && t.trim().length > 1}))
+const spineText = (name, upright) => String(name || '').split(SW_RE)
+  .map((t, i) => ({t: t.trim(), rot: !upright && i % 2 === 1 && t.trim().length > 1}))
   .filter(g => g.t)
   .map(g => g.rot ? `<span class="sg rot"><i>${esc(g.t)}</i></span>` : `<span class="sg">${esc(g.t)}</span>`).join('');
 /* 名字超出书脊高度时加 .clip（底部淡出），代替省略号 */
