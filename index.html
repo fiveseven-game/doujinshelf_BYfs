@@ -110,6 +110,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stro
 .chips button.on{background:var(--btn);color:var(--btn-ink)}
 .tag{display:inline-block;font-size:11px;line-height:18px;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted);font-weight:500;vertical-align:middle;white-space:nowrap}
 .tag.transit{background:var(--transit-soft);color:var(--transit)}
+.cover .tag.done,.wf .pic .tag.done{top:auto;bottom:6px;left:6px;display:inline-flex;align-items:center;gap:2px;background:rgba(36,128,88,.9);color:#fff;padding:0 6px 0 4px}
+.tag.done svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tag.age{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
 
 /* 顶栏/标签 */
@@ -356,6 +358,25 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .rate{display:flex;align-items:center;gap:8px;font-size:13px}
 .rate span{flex:none;width:4.2em;color:var(--muted)}
 
+/* 图片裁剪 */
+.crop{position:fixed;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,12,18,.55)}
+.crop-panel{width:100%;background:var(--bg);border-radius:16px 16px 0 0;display:grid;gap:12px;animation:up .2s ease;
+  padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (min-width:720px){.crop{align-items:center}.crop-panel{width:min(560px,calc(100% - 32px));border-radius:14px;padding:22px 26px}}
+.crop-panel .sheet-head{margin:0}
+.crop-panel .sheet-head small{font-size:13px;font-weight:400;color:var(--muted);margin-left:8px}
+.crop-ratios{justify-self:start}
+.crop-wrap{height:min(52vh,440px);display:grid;place-items:center;background:var(--soft);border-radius:10px;overflow:hidden}
+.crop-stage{position:relative;overflow:hidden;touch-action:none;cursor:grab;background:#000}
+.crop-stage:active{cursor:grabbing}
+.crop-stage img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-select:none;pointer-events:none}
+.crop-grid{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9);
+  background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.45) calc(33.33% - .5px),rgba(255,255,255,.45) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.45) calc(66.66% - .5px),rgba(255,255,255,.45) calc(66.66% + .5px),transparent calc(66.66% + .5px)),
+  linear-gradient(transparent calc(33.33% - .5px),rgba(255,255,255,.45) calc(33.33% - .5px),rgba(255,255,255,.45) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.45) calc(66.66% - .5px),rgba(255,255,255,.45) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.crop-zoom{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.crop-zoom input{flex:1;accent-color:var(--btn)}
+.crop-tip{margin:-4px 0 0}
+.crop-panel .crop-actions{justify-content:flex-end}
 /* 弹层 */
 #modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,12,18,.4)}
 .sheet{width:100%;max-height:92vh;overflow:auto;background:var(--bg);border-radius:16px 16px 0 0;
@@ -957,7 +978,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-21';
+const APP_VERSION = '2026.10.30-23';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1478,9 +1499,9 @@ async function initLock() {
       if (v1.length < 4) return fail('密码至少 4 位');
       if (v1 !== $('#pw2').value) return fail('两次输入的密码不一样');
       const salt = uid(); await Store.put('meta', {salt, hash: sha256(salt + v1)}, 'pw');
-      return enter();
+      return enter(true);
     }
-    if (sha256(cur.salt + v1) === cur.hash) return enter();
+    if (sha256(cur.salt + v1) === cur.hash) return enter(true);
     fail('密码不对，再试一次');
     function fail(t) { $('#lock-msg').textContent = t; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); $('#pw1').select(); }
   };
@@ -1523,7 +1544,8 @@ async function onRemoteChange() {
   const y = window.scrollY; renderCurrent(); window.scrollTo(0, y);
 }
 Store.onRemote = onRemoteChange;
-async function enter() {
+async function enter(fromLock) {
+  if (fromLock && location.hash) history.replaceState(null, '', location.pathname + location.search);   // 输密码解锁后一律回到书架
   Sess.mark();
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
@@ -1577,6 +1599,8 @@ function miniStars(r) {
   r = halfRound(r);
   return `<span class="ms" title="${r} 星"><span class="ms-row"><span class="ms-bg">★★★★★</span><span class="ms-fg" style="width:${r / 5 * 100}%">★★★★★</span></span><b>${r}</b></span>`;
 }
+/* 封面左下角“读完”角标（阅读状态 = 已读） */
+const doneMark = b => b.read === '已读' ? '<span class="tag done"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.3 2.2 4.7-5"/></svg>读完</span>' : '';
 function cardText(b) {
   const ip = ipById(b.ipId), by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
   const cps = splitCp(b.cp);
@@ -1610,7 +1634,7 @@ function renderHome() {
       ${list.length ? flowColumns(list.map(b => {
         const ip = ipById(b.ipId);
         const by = [b.author, b.club].filter(Boolean).map(esc).join(' / ');
-        return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
+        return `<button class="wf" data-go="book-${esc(b.id)}"><div class="pic">${coverHtml(b, ipColor(ip))}${b.transit ? '<span class="tag transit">在途</span>' : ''}${doneMark(b)}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
           ${cardText(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
@@ -1762,11 +1786,11 @@ function renderIp(id) {
       <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
     ${books.length > 1 ? '<p class="drag-hint">长按封面（电脑上按住拖动）可以调整顺序，瀑布流会按同样的顺序显示</p>' : ''}
     <div class="covers" id="covers" data-ip="${esc(id)}">
+      <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
       ${books.map(b => {
         return `<button class="cover-card" data-go="book-${esc(b.id)}" data-id="${esc(b.id)}">
-        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
+        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${doneMark(b)}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
         ${cardText(b)}</button>`; }).join('')}
-      <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
     </div>`;
   setupCoverDrag();
 }
@@ -2087,18 +2111,6 @@ async function drawShareCard(w = 1200, h = 630) {
   g.fillText('made by fs', w / 2, y);
   return c;
 }
-const canvasBlob = c => new Promise(r => c.toBlob(r, 'image/png'));
-async function shareCardImage() {
-  const blob = await canvasBlob(await drawShareCard(1080, 1080));   // 正方形，适合小红书、TikTok、朋友圈
-  const file = new File([blob], 'Doumi.png', {type: 'image/png'});
-  if (navigator.canShare && navigator.canShare({files: [file]})) {
-    try { await navigator.share({files: [file], title: 'Doumi', text: 'Doumi · 你的同人本管理书架 ' + shareLink()}); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }
-  }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Doumi.png';
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast('分享卡片已保存');
-}
 async function fillSharePreview() {
   const box = document.getElementById('share-preview'); if (!box) return;
   try { const c = await drawShareCard(1200, 630); box.innerHTML = `<img src="${c.toDataURL('image/png')}" alt="分享卡片预览：Doumi · made by fs">`; } catch {}
@@ -2112,9 +2124,9 @@ function shareCard() {
     <p>朋友打开是全新的空书架，看不到你的任何数据。</p>
     ${local ? '<p class="notice" style="margin:0">现在是直接打开的本地文件，没有网址可以分享。请先用 GitHub Pages 的网址打开，再来这里复制分享链接。</p>' : `
     <div class="share-preview" id="share-preview" aria-label="分享卡片预览"></div>
-    <p class="hint" style="margin:0">链接发到微信、QQ 等会显示成这张卡片；小红书、TikTok 可以保存卡片图来发。</p>
+    <p class="hint" style="margin:0">链接发到微信、QQ 等会显示成这张卡片。</p>
     <div class="link-box"><code id="share-url">${esc(shareLink())}</code></div>
-    <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button><button class="btn small" type="button" data-act="share-card">保存分享卡片</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
+    <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
     ${preset ? '<p class="hint" style="margin:0;color:var(--danger)">提醒：网站的 config.js 里填了 Supabase 信息。分享链接已经会自动忽略它，但别人看网站源码时仍能看到。建议把 config.js 改回空白，只在自己的设备里填写。</p>' : ''}
   </div>`;
 }
@@ -2583,7 +2595,7 @@ function closeModal() {
   const m = $('#modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; pasteHandler = null;
 }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#lightbox').hidden) closeLightbox(); else closeModal(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !cropOpen) { if (!$('#lightbox').hidden) closeLightbox(); else closeModal(); } });
 document.addEventListener('paste', e => { if (pasteHandler) pasteHandler(e); });
 
 function choose(text, options) {
@@ -2744,6 +2756,84 @@ function compressImage(file, max = 1600, q = 0.85) {
     img.src = url;
   });
 }
+/* 图片裁剪：比例（原图 / 3:4 / 4:3 / 1:1）、拖动移动、双指 / 滚轮 / 滑杆缩放 */
+let cropOpen = false;
+function readImg(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => res({img, url});
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error(/heic|heif/i.test(file.type + file.name) ? '这个浏览器读不了 HEIC 格式的照片，请在相机设置里改成“兼容性最佳”，或先截图再上传' : '读不了这张图片，换一张试试')); };
+    img.src = url;
+  });
+}
+async function cropImage(file, step = '', max = 1600, q = 0.85) {
+  const {img, url} = await readImg(file);
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const RATIOS = [['3:4', 3 / 4], ['4:3', 4 / 3], ['1:1', 1], ['原图', W / H]];
+  let ratio = 3 / 4, fw = 0, fh = 0, scale = 1, minS = 1, tx = 0, ty = 0;
+  const box = document.createElement('div'); box.className = 'crop'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', '裁剪图片');
+  box.innerHTML = `<div class="crop-panel">
+    <div class="sheet-head"><h2>裁剪图片${step ? `<small>${step}</small>` : ''}</h2><button class="icon-btn" data-c="cancel" aria-label="不添加这张">✕</button></div>
+    <div class="seg crop-ratios" role="tablist">${RATIOS.map(([t], i) => `<button type="button" data-r="${i}" class="${i === 0 ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <div class="crop-wrap"><div class="crop-stage"><img src="${url}" alt="" draggable="false"><i class="crop-grid"></i></div></div>
+    <div class="crop-zoom"><span aria-hidden="true">－</span><input type="range" min="1" max="4" step="0.01" value="1" aria-label="缩放"><span aria-hidden="true">＋</span></div>
+    <p class="hint crop-tip">拖动图片调整位置，双指或滚轮放大缩小</p>
+    <div class="row crop-actions"><button type="button" class="btn text" data-c="orig">不裁剪</button><button type="button" class="btn primary" data-c="ok">确定</button></div>
+  </div>`;
+  document.body.appendChild(box); cropOpen = true;
+  const wrap = $('.crop-wrap', box), stage = $('.crop-stage', box), im = $('img', stage), range = $('input[type=range]', box);
+  const clamp = () => { tx = Math.min(0, Math.max(fw - W * scale, tx)); ty = Math.min(0, Math.max(fh - H * scale, ty)); };
+  const paint = () => { clamp(); im.style.width = W * scale + 'px'; im.style.height = H * scale + 'px'; im.style.transform = `translate(${tx}px,${ty}px)`; range.value = scale / minS; };
+  const layout = () => {   // 按比例算出裁剪框大小；保持画面中心不变
+    const cx = fw ? (fw / 2 - tx) / scale : W / 2, cy = fh ? (fh / 2 - ty) / scale : H / 2, z = minS ? scale / minS : 1;
+    const aw = wrap.clientWidth, ah = wrap.clientHeight;
+    if (aw / ah > ratio) { fh = ah; fw = ah * ratio; } else { fw = aw; fh = aw / ratio; }
+    stage.style.width = fw + 'px'; stage.style.height = fh + 'px';
+    minS = Math.max(fw / W, fh / H); scale = minS * Math.min(4, Math.max(1, z));
+    tx = fw / 2 - cx * scale; ty = fh / 2 - cy * scale; paint();
+  };
+  const zoomAt = (ns, px = fw / 2, py = fh / 2) => {   // 以 (px,py) 为中心缩放
+    ns = Math.min(minS * 4, Math.max(minS, ns));
+    tx = px - (px - tx) * ns / scale; ty = py - (py - ty) * ns / scale; scale = ns; paint();
+  };
+  requestAnimationFrame(layout);
+  const onResize = () => layout(); window.addEventListener('resize', onResize);
+  $$('[data-r]', box).forEach(b => b.onclick = () => { $$('[data-r]', box).forEach(x => x.classList.toggle('on', x === b)); ratio = RATIOS[+b.dataset.r][1]; layout(); });
+  range.oninput = () => zoomAt(minS * +range.value);
+  stage.addEventListener('wheel', e => { e.preventDefault(); const r = stage.getBoundingClientRect(); zoomAt(scale * Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, {passive: false});
+  const pts = new Map(); let last = null;
+  stage.addEventListener('pointerdown', e => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, {x: e.clientX, y: e.clientY}); last = null; });
+  stage.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    if (pts.size === 1) { tx += e.clientX - prev.x; ty += e.clientY - prev.y; paint(); return; }
+    const [a, b] = [...pts.values()], r = stage.getBoundingClientRect();
+    const dist = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+    if (last) { tx += mx - last.mx; ty += my - last.my; zoomAt(scale * dist / last.dist, mx, my); }
+    last = {dist, mx, my};
+  });
+  const up = e => { pts.delete(e.pointerId); last = null; };
+  stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+  stage.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+  const render = (sx, sy, sw, sh) => {
+    const k = Math.min(1, max / Math.max(sw, sh)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.imageSmoothingQuality = 'high'; g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', q);
+  };
+  return new Promise(resolve => {
+    const done = v => { cropOpen = false; window.removeEventListener('resize', onResize); document.removeEventListener('keydown', onKey, true); box.remove(); URL.revokeObjectURL(url); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); box.querySelector('[data-c=ok]').click(); } };
+    document.addEventListener('keydown', onKey, true);
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-c]'); if (!b) { if (e.target === box) done(null); return; }
+      if (b.dataset.c === 'cancel') done(null);
+      else if (b.dataset.c === 'orig') done(render(0, 0, W, H));
+      else done(render(-tx / scale, -ty / scale, fw / scale, fh / scale));
+    });
+  });
+}
 /* 价格细则项目（下拉可选，也可以自己填） */
 const COST_LABELS = ['本体', '邮费', '岛内邮费', '国际邮费', '代购费', '税费', '特典周边'];
 /* 旧版本的项目名自动归并到新名称 */
@@ -2781,6 +2871,26 @@ function selField(id, label, opts, val, {optional = false, custom = false, label
       ${custom ? `<option value="__custom" ${isCustom ? 'selected' : ''}>自己填…</option>` : ''}
     </select>
     ${custom ? `<input class="input" id="${id}-c" placeholder="自己填写" maxlength="30" value="${isCustom ? esc(val) : ''}" ${isCustom ? '' : 'hidden'}>` : ''}</label>`;
+}
+/* 输入历史：关掉浏览器自己记的一长串历史，每个文字框只提示上一次保存时填的内容（只存在这台设备） */
+const LAST_KEY = 'doumi-last-input';
+const lastInputs = () => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '{}') || {}; } catch { return {}; } };
+const lastFields = form => $$('input', form).filter(el => el.id && /^(text|url|search)$/.test(el.type || 'text'));
+function setupLastInput(form) {
+  form.setAttribute('autocomplete', 'off');
+  $$('input, textarea', form).forEach(el => { if (el.type !== 'file') el.setAttribute('autocomplete', 'off'); });
+  const last = lastInputs();
+  lastFields(form).forEach(el => {
+    const v = last[el.id]; if (!v) return;
+    const dl = document.createElement('datalist'); dl.id = el.id + '-last';
+    const o = document.createElement('option'); o.value = v; dl.appendChild(o);
+    el.after(dl); el.setAttribute('list', dl.id);
+  });
+}
+function rememberLastInput(form) {
+  const last = lastInputs();
+  lastFields(form).forEach(el => { const v = el.value.trim(); if (v) last[el.id] = v.slice(0, 200); });
+  try { localStorage.setItem(LAST_KEY, JSON.stringify(last)); } catch {}
 }
 const readSel = (root, id) => { const s = $('#' + id, root); return s.value === '__custom' ? $('#' + id + '-c', root).value.trim() : s.value; };
 
@@ -2914,16 +3024,22 @@ async function openBookForm(book, presetIp) {
       const it = e.target.closest('.img-item');
       if (it && +it.dataset.i > 0) { const [x] = d.images.splice(+it.dataset.i, 1); d.images.unshift(x); touch(); drawImgs(); }
     };
-    const addFiles = async files => {
+    const addFiles = async (files, crop) => {   // crop = 相册 / 拍照选的图，先裁剪
       files = files.filter(f => f && /^image\//.test(f.type));
       if (!files.length) return;
-      for (const f of files) {
+      let n = 0;
+      for (let k = 0; k < files.length; k++) {
+        const f = files[k];
         hint.textContent = '正在处理图片…';
-        try { d.images.push(await compressImage(f)); } catch (err) { toast(err.message); }
+        try {
+          const du = crop ? await cropImage(f, files.length > 1 ? `第 ${k + 1} / ${files.length} 张` : '') : await compressImage(f);
+          if (du) { d.images.push(du); n++; }
+        } catch (err) { toast(err.message); }
       }
-      hint.innerHTML = hintText; drawImgs(); touch(); toast(`已添加 ${files.length} 张图片`);
+      hint.innerHTML = hintText; drawImgs();
+      if (n) { touch(); toast(`已添加 ${n} 张图片`); }
     };
-    ['#bk-cam', '#bk-pick'].forEach(s => $(s, root).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs); });
+    ['#bk-cam', '#bk-pick'].forEach(s => $(s, root).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs, true); });
     pasteHandler = e => {
       const items = [...((e.clipboardData && e.clipboardData.items) || [])];
       const files = items.filter(it => it.kind === 'file' && /^image\//.test(it.type)).map(it => it.getAsFile());
@@ -3035,7 +3151,7 @@ async function openBookForm(book, presetIp) {
 
     const ipSel = $('#bk-ip', root), newIp = $('#bk-newip', root);
     ipSel.onchange = () => { newIp.hidden = ipSel.value !== '__new'; if (!newIp.hidden) newIp.focus(); };
-    drawImgs(); drawCosts(); drawStars();
+    drawImgs(); drawCosts(); drawStars(); setupLastInput($('#bk-form', root));
     if (isNew && !draft) setTimeout(() => $('#bk-title', root).focus(), 50);
 
     $('#bk-form', root).onsubmit = async e => {
@@ -3059,7 +3175,7 @@ async function openBookForm(book, presetIp) {
       const ok = await save('books', out);
       btn.disabled = false; btn.textContent = '保存';
       if (!ok) return;
-      done = true; clearTimeout(timer); await Drafts.del(draftKey);
+      done = true; clearTimeout(timer); await Drafts.del(draftKey); rememberLastInput($('#bk-form', root));
       const i = S.books.findIndex(x => x.id === out.id); i >= 0 ? S.books[i] = out : S.books.push(out);
       closeModal(); toast('已保存');
       if (location.hash === '#book-' + out.id) route(); else location.hash = 'book-' + out.id;
@@ -3157,7 +3273,6 @@ document.addEventListener('click', async e => {
       catch { const c = $('#share-url'); if (c) { const r = document.createRange(); r.selectNodeContents(c); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('请长按或按 Ctrl+C 复制选中的链接'); }
       break;
     }
-    case 'share-card': { try { await shareCardImage(); } catch { toast('生成卡片失败，请稍后再试'); } break; }
     case 'share-native': {
       try { await navigator.share({title: 'Doumi', text: 'Doumi · 你的同人本管理书架 · made by fs', url: shareLink()}); } catch {}
       break;
