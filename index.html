@@ -180,8 +180,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
    每段是一个 inline-block：汉字段正立；连续 2 个以上的英文 / 数字 / 符号横排后顺时针转 90 度；段与段之间用 margin 留间距。
    间距参照 W3C《中文排版需求》(clreq) / 《日文排版需求》(JLREQ)：汉字与西文之间约 1/4 em；
    书脊文字粗、列窄，手机取 0.34em（至少 5px）；有鼠标的设备（电脑）上雅黑 / 苹方字框更满，放宽到 0.55em（至少 8px）。 */
-:root{--sw-gap:max(2px,.16em)}
-@media (any-pointer:fine){:root{--sw-gap:max(3px,.24em)}}
+:root{--sw-gap:max(5px,.34em)}
+@media (any-pointer:fine){:root{--sw-gap:max(8px,.55em)}}
 .spine-title .sg{display:inline-block;line-height:1.2;letter-spacing:.06em}
 .spine-title .sg+.sg{margin-top:var(--sw-gap)}
 /* 字母/数字：不依赖浏览器的“侧躺”排版，直接把横排文字顺时针转 90°，盒子大小由脚本量出来，各浏览器位置一致 */
@@ -1014,7 +1014,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-41';
+const APP_VERSION = '2026.10.30-40';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
