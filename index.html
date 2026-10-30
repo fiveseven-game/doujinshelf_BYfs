@@ -399,9 +399,13 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 @media (max-width:420px){.two.wrap-sm{grid-template-columns:1fr}}
 .check{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--transit-soft);color:var(--transit);font-size:14px;font-weight:500;cursor:pointer}
 .check input{width:18px;height:18px;accent-color:var(--transit);margin:0}
-.img-row{display:flex;gap:8px;flex-wrap:wrap}
+.img-row{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+.img-item.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
+.img-item.drag-ghost{height:94px;padding:0;border-radius:6px}
+.img-item.drag-ghost .x{display:none}
 .img-item{position:relative;width:70px;height:94px;border-radius:6px;overflow:hidden;background:var(--soft);cursor:pointer}
-.img-item img{width:100%;height:100%;object-fit:cover}
+.img-item img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
+.img-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y}
 .img-wait{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px}
 .img-item .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:22px;padding:0}
 .img-item .badge{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:11px;text-align:center}
@@ -992,7 +996,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-27';
+const APP_VERSION = '2026.10.30-28';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1699,10 +1703,12 @@ window.addEventListener('resize', () => {
 });
 
 /* 合集页：长按 / 按住拖动封面调整顺序（像手机桌面整理 App） */
-let suppressClick = false, coverCtx = null;
-window.addEventListener('pointermove', e => { if (coverCtx) coverCtx.move(e); }, {passive: false});
-window.addEventListener('pointerup', () => { if (coverCtx) coverCtx.end(); });
-window.addEventListener('pointercancel', () => { if (coverCtx) coverCtx.end(); });
+let suppressClick = false;
+const sortCtxs = new Set();   // 每个可拖动排序的区域一份（页面上的封面 / 书脊，编辑框里的图片）
+const eachSort = fn => sortCtxs.forEach(c => { if (!document.body.contains(c.grid)) sortCtxs.delete(c); else fn(c); });
+window.addEventListener('pointermove', e => eachSort(c => c.move(e)), {passive: false});
+window.addEventListener('pointerup', () => eachSort(c => c.end()));
+window.addEventListener('pointercancel', () => eachSort(c => c.end()));
 /* 通用：长按 / 按住拖动排序。grid = 容器，sel = 可拖动的项，save(ids) = 松手后保存新顺序 */
 function makeSortable(grid, sel, save, {padTop = 0} = {}) {
   const cards = () => $$(sel, grid);
@@ -1781,7 +1787,8 @@ function makeSortable(grid, sel, save, {padTop = 0} = {}) {
     else if (dist > 6) { const p = pending; pending = null; begin(p.card, p.x, p.y); moveTo(e.clientX, e.clientY); }
   };
   const end = () => { if (pending) { clearTimeout(pending.timer); pending = null; } finish(); };
-  coverCtx = {move: onMove, end};
+  [...sortCtxs].forEach(c => { if (c.grid === grid || !document.body.contains(c.grid)) sortCtxs.delete(c); });
+  sortCtxs.add({grid, move: onMove, end});
   grid.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});   // 拖动时不要滚动页面
   grid.addEventListener('contextmenu', e => { if (drag || pending) e.preventDefault(); });
 }
@@ -2799,15 +2806,17 @@ function readImg(file) {
     img.src = url;
   });
 }
+const cropMem = {};   // 同一处上传连续裁剪时，沿用上一次选的比例
 async function cropImage(file, step = '', max = 1600, q = 0.85, opts = {}) {
   const {img, url} = await readImg(file);
   const W = img.naturalWidth, H = img.naturalHeight;
   const RATIOS = (opts.ratios || [['3:4', 3 / 4], ['4:3', 4 / 3], ['1:1', 1], ['原图', 0]]).map(([t, r]) => [t, r || W / H]);   // 0 = 原图比例
-  let ratio = RATIOS[0][1], fw = 0, fh = 0, scale = 1, minS = 1, tx = 0, ty = 0;
+  const r0 = opts.key && cropMem[opts.key] < RATIOS.length ? cropMem[opts.key] : 0;
+  let ratio = RATIOS[r0][1], fw = 0, fh = 0, scale = 1, minS = 1, tx = 0, ty = 0;
   const box = document.createElement('div'); box.className = 'crop'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', '裁剪图片');
   box.innerHTML = `<div class="crop-panel">
     <div class="sheet-head"><h2>${esc(opts.title || '裁剪图片')}${step ? `<small>${step}</small>` : ''}</h2><button class="icon-btn" data-c="cancel" aria-label="不添加这张">✕</button></div>
-    <div class="seg crop-ratios" role="tablist">${RATIOS.map(([t], i) => `<button type="button" data-r="${i}" class="${i === 0 ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <div class="seg crop-ratios" role="tablist">${RATIOS.map(([t], i) => `<button type="button" data-r="${i}" class="${i === r0 ? 'on' : ''}">${t}</button>`).join('')}</div>
     <div class="crop-wrap"><div class="crop-stage"><img src="${url}" alt="" draggable="false"><i class="crop-grid"></i></div></div>
     <div class="crop-zoom"><span aria-hidden="true">－</span><input type="range" min="1" max="4" step="0.01" value="1" aria-label="缩放"><span aria-hidden="true">＋</span></div>
     <p class="hint crop-tip">拖动图片调整位置，双指或滚轮放大缩小</p>
@@ -2831,7 +2840,7 @@ async function cropImage(file, step = '', max = 1600, q = 0.85, opts = {}) {
   };
   requestAnimationFrame(layout);
   const onResize = () => layout(); window.addEventListener('resize', onResize);
-  $$('[data-r]', box).forEach(b => b.onclick = () => { $$('[data-r]', box).forEach(x => x.classList.toggle('on', x === b)); ratio = RATIOS[+b.dataset.r][1]; layout(); });
+  $$('[data-r]', box).forEach(b => b.onclick = () => { $$('[data-r]', box).forEach(x => x.classList.toggle('on', x === b)); ratio = RATIOS[+b.dataset.r][1]; if (opts.key) cropMem[opts.key] = +b.dataset.r; layout(); });
   range.oninput = () => zoomAt(minS * +range.value);
   stage.addEventListener('wheel', e => { e.preventDefault(); const r = stage.getBoundingClientRect(); zoomAt(scale * Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, {passive: false});
   const pts = new Map(); let last = null;
@@ -2948,11 +2957,11 @@ async function openBookForm(book, presetIp) {
     ${draft ? `<div class="notice"><span>已恢复上次没保存的内容</span><button type="button" class="btn small" id="bk-fresh">${isNew ? '清空重填' : '放弃这些改动'}</button></div>` : ''}
     <form class="form" id="bk-form">
       <div class="fgroup">
-        <div class="field"><span>图片（第一张是封面，点缩略图设为封面）</span>
+        <div class="field"><span>图片（第一张是封面，按住图片拖动可调整顺序）</span>
           <div class="img-row" id="bk-imgs"></div>
           <input type="file" id="bk-cam" accept="image/*" capture="environment" hidden>
           <input type="file" id="bk-pick" accept="image/*" multiple hidden>
-          <span class="paste-hint" id="bk-imghint">电脑上截图后按 <kbd>Ctrl</kbd>+<kbd>V</kbd>（Mac 为 <kbd>⌘</kbd>+<kbd>V</kbd>）直接粘贴，也可以把图片拖进来</span>
+          <span class="paste-hint" id="bk-imghint">电脑上截图后按 <kbd>Ctrl</kbd>+<kbd>V</kbd>（Mac 为 <kbd>⌘</kbd>+<kbd>V</kbd>）粘贴，也可以把图片拖进来；加图时都能先放大缩小、裁剪</span>
         </div>
         <label class="check"><input type="checkbox" id="bk-transit" ${d.transit ? 'checked' : ''}>还在路上（在途本子）</label>
       </div>
@@ -3044,39 +3053,49 @@ async function openBookForm(book, presetIp) {
 
     // 图片
     const drawImgs = () => {
-      imgBox.innerHTML = d.images.map((src, i) => `<div class="img-item" data-i="${i}" title="设为封面">${imgSrc(src) ? `<img src="${imgSrc(src)}" alt="">` : `<span class="img-wait">${Store.missing.has(src) ? '云端找不到' : '加载中…'}</span>`}
+      imgBox.innerHTML = d.images.map((src, i) => `<div class="img-item" data-i="${i}" data-id="${i}" title="${i ? '按住拖动调整顺序，点一下设为封面' : '封面 · 按住拖动调整顺序'}">${imgSrc(src) ? `<img src="${imgSrc(src)}" alt="" draggable="false">` : `<span class="img-wait">${Store.missing.has(src) ? '云端找不到' : '加载中…'}</span>`}
           ${i === 0 ? '<span class="badge">封面</span>' : ''}<button type="button" class="x" data-rm="${i}" aria-label="删除这张">×</button></div>`).join('') +
         `<label class="img-add" for="bk-cam"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>拍照</label>
          <label class="img-add" for="bk-pick"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M20 15l-5-5-9 9"/></svg>相册/截图</label>`;
     };
     const onUrls = () => { if (!document.body.contains(imgBox)) return window.removeEventListener('doumi-urls', onUrls); drawImgs(); };
     window.addEventListener('doumi-urls', onUrls);
+    // 图片：× 删除；点一下设为封面；按住拖动调整顺序（第一张就是书架、瀑布流里显示的封面）
     imgBox.onclick = e => {
+      if (suppressClick) return;
       const rm = e.target.closest('[data-rm]');
       if (rm) { d.images.splice(+rm.dataset.rm, 1); touch(); return drawImgs(); }
       const it = e.target.closest('.img-item');
-      if (it && +it.dataset.i > 0) { const [x] = d.images.splice(+it.dataset.i, 1); d.images.unshift(x); touch(); drawImgs(); }
+      if (it && +it.dataset.i > 0) { const [x] = d.images.splice(+it.dataset.i, 1); d.images.unshift(x); touch(); drawImgs(); toast('已设为封面'); }
     };
-    const addFiles = async (files, crop) => {   // crop = 相册 / 拍照选的图，先裁剪
+    makeSortable(imgBox, '.img-item', ids => {
+      const old = d.images.slice(), next = ids.map(i => old[+i]).filter(Boolean);
+      if (next.length !== old.length) return drawImgs();
+      const coverChanged = next[0] !== old[0];
+      d.images = next; touch(); drawImgs(); if (coverChanged) toast('封面已更换');
+    });
+    // 加图片：拍照、相册 / 本地文件、Ctrl+V 粘贴截图、拖进来，都先进裁剪（可缩放，比例 3:4 / 4:3 / 1:1 / 原图）
+    let adding = false;
+    const addFiles = async files => {
       files = files.filter(f => f && /^image\//.test(f.type));
-      if (!files.length) return;
-      let n = 0;
-      for (let k = 0; k < files.length; k++) {
-        const f = files[k];
-        hint.textContent = '正在处理图片…';
-        try {
-          const du = crop ? await cropImage(f, files.length > 1 ? `第 ${k + 1} / ${files.length} 张` : '') : await compressImage(f);
-          if (du) { d.images.push(du); n++; }
-        } catch (err) { toast(err.message); }
-      }
-      hint.innerHTML = hintText; drawImgs();
+      if (!files.length || adding) return;
+      adding = true; let n = 0;
+      try {
+        for (let k = 0; k < files.length; k++) {
+          hint.textContent = files.length > 1 ? `正在处理第 ${k + 1} / ${files.length} 张…` : '正在处理图片…';
+          try {
+            const du = await cropImage(files[k], files.length > 1 ? `第 ${k + 1} / ${files.length} 张` : '', 1600, 0.85, {key: 'book'});
+            if (du) { d.images.push(du); n++; drawImgs(); }
+          } catch (err) { toast(err.message); }
+        }
+      } finally { adding = false; hint.innerHTML = hintText; }
       if (n) { touch(); toast(`已添加 ${n} 张图片`); }
     };
-    ['#bk-cam', '#bk-pick'].forEach(s => $(s, root).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs, true); });
+    ['#bk-cam', '#bk-pick'].forEach(s => $(s, root).onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs); });
     pasteHandler = e => {
       const items = [...((e.clipboardData && e.clipboardData.items) || [])];
       const files = items.filter(it => it.kind === 'file' && /^image\//.test(it.type)).map(it => it.getAsFile());
-      if (files.length) { e.preventDefault(); addFiles(files); }
+      if (files.length && !cropOpen) { e.preventDefault(); addFiles(files); }
     };
     root.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); root.classList.add('drag'); } });
     root.addEventListener('dragleave', e => { if (e.target === root) root.classList.remove('drag'); });
