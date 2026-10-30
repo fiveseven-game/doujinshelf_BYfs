@@ -169,7 +169,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;transition:transform .16s ease;min-height:0;overflow:hidden}
 .spine:hover,.spine:focus-visible{transform:translateY(-6px)}
 .spine-title{writing-mode:vertical-rl;-webkit-text-orientation:upright;text-orientation:upright;white-space:nowrap;align-self:center;justify-self:center;font-weight:600;font-size:15px;line-height:1.2;min-height:0}
-.spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap;background:none;border:0;border-radius:0;box-shadow:none;padding:0;min-width:0;width:auto;height:auto}
+.spine .spine-count{font:500 12px/1 var(--num);text-shadow:none;opacity:.85;white-space:nowrap;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0;padding:0;min-width:0;width:auto;height:auto}
+.spine.has-img .spine-count{text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
 .shelf.dragging .spine:hover{transform:none}
 .spine.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
@@ -182,9 +183,11 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 :root{--sw-gap:max(5px,.34em)}
 @media (any-pointer:fine){:root{--sw-gap:max(8px,.55em)}}
 .spine-title .sg{display:inline-block;line-height:1.2;letter-spacing:.06em}
-.spine-title .sg+.sg{margin-inline-start:var(--sw-gap)}
+.spine-title .sg+.sg{margin-top:var(--sw-gap)}
+/* 字母/数字：不依赖浏览器的“侧躺”排版，直接把横排文字顺时针转 90°，盒子大小由脚本量出来，各浏览器位置一致 */
 .spine-title.clip{align-self:start;overflow:hidden;-webkit-mask-image:linear-gradient(#000 85%,transparent);mask-image:linear-gradient(#000 85%,transparent)}
-.spine-title .sw{transform:translateX(-.2em);-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.spine-title .rot{position:relative;width:1.2em;height:2em;vertical-align:top}
+.spine-title .rot i{position:absolute;left:50%;top:0;font-style:normal;writing-mode:horizontal-tb;white-space:nowrap;line-height:1.2;letter-spacing:.03em;font-variant-numeric:tabular-nums;transform-origin:0 0;transform:rotate(90deg) translateY(-50%)}
    /* 名字太长：从顶部开始显示，底部淡出 */
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
@@ -1009,7 +1012,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-37';
+const APP_VERSION = '2026.10.30-38';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1994,6 +1997,7 @@ function fitSpines(root) {
   $$('.spine-title', root).forEach(t => {
     const sp = t.parentElement, cnt = $('.spine-count', sp), cs = getComputedStyle(sp);
     t.classList.remove('clip'); t.style.maxHeight = '';
+    $$('.rot', t).forEach(r => { const i = r.firstElementChild; r.style.height = Math.ceil(i.offsetWidth) + 'px'; });
     if (!sp.clientHeight) return;
     const avail = sp.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0) - (cnt ? cnt.offsetHeight + (parseFloat(cs.rowGap) || 0) : 0);
     if (avail > 20 && t.scrollHeight > avail + 1) { t.style.maxHeight = avail + 'px'; t.classList.add('clip'); }
@@ -2002,7 +2006,7 @@ function fitSpines(root) {
 const spineText = name => String(name || '').split(SW_RE)
   .map((t, i) => ({t: t.trim(), rot: i % 2 === 1 && t.trim().length > 1}))
   .filter(g => g.t)
-  .map(g => `<span class="sg${g.rot ? ' sw' : ''}">${esc(g.t)}</span>`).join('');
+  .map(g => g.rot ? `<span class="sg rot"><i>${esc(g.t)}</i></span>` : `<span class="sg">${esc(g.t)}</span>`).join('');
 /* 名字超出书脊高度时加 .clip（底部淡出），代替省略号 */
 /* 小标题：色点 + 名称 + 右侧补充说明 */
 const blockHead = (title, n, aside) => `<div class="sb-head"><h3><i style="--c:var(--p${n})"></i>${title}</h3>${aside ? `<span>${aside}</span>` : ''}</div>`;
