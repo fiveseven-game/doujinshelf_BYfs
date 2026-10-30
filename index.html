@@ -176,6 +176,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .spine.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
 .spine.drag-ghost{background-color:var(--c);padding:12px 0 10px;margin:0;border-radius:2px 2px 0 0;filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
 .spine.add .spine-title{font-weight:500;font-size:13px}
+/* 书脊上连续 2 个及以上的英文 / 数字 / 符号：横排后顺时针转 90 度，和上下的竖排汉字居中对齐；单个字符保持正立 */
+.spine-title .sw{text-orientation:mixed;text-orientation:sideways;letter-spacing:.02em}
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -1017,7 +1019,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-29';
+const APP_VERSION = '2026.10.30-30';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1699,11 +1701,11 @@ function renderHome() {
           ${cardText(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
-    body = `${ips.length > 1 ? '<p class="drag-hint">长按书脊（电脑上按住拖动）可以调整合集顺序</p>' : ''}<div class="shelf" id="shelf"><button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">＋ 新建IP</span></button>${ips.map(ip => {
+    body = `${ips.length > 1 ? '<p class="drag-hint">长按书脊（电脑上按住拖动）可以调整合集顺序</p>' : ''}<div class="shelf" id="shelf"><button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">${spineText('＋ 新建IP')}</span></button>${ips.map(ip => {
       const n = sum(S.books.filter(b => b.ipId === ip.id).map(qtyOf));
       const c = ipColor(ip), img = ip.spineImg ? imgSrc(ip.spineImg) : '';
       return `<button class="spine${img ? ' has-img' : ''}" style="--c:${c};color:${img ? '#fff' : textOn(c)};height:${156 + (hashStr(ip.id) % 6) * 8}px${img ? `;background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}')` : ''}" data-go="ip-${esc(ip.id)}" data-id="${esc(ip.id)}" title="${esc(ip.name)}">
-        <span class="spine-title">${esc(ip.name)}</span><span class="spine-count">${n}</span></button>`;
+        <span class="spine-title">${spineText(ip.name)}</span><span class="spine-count">${n}</span></button>`;
     }).join('')}</div>`;
   }
   $('#view').innerHTML = `
@@ -2022,6 +2024,9 @@ function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
   return [...m.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
 }
 /* 小标题：色点 + 名称 + 右侧补充说明 */
+/* 书脊文字：汉字竖排正立；连续 2 个以上的英文、数字、符号包成一段横排旋转显示（例：新建IP → 新建 + 「IP」转 90 度） */
+const SW_RE = /([A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+(?: +[A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+)*)/;
+const spineText = name => String(name || '').split(SW_RE).map((part, i) => i % 2 && part.length > 1 ? `<span class="sw">${esc(part)}</span>` : esc(part)).join('');
 const blockHead = (title, n, aside) => `<div class="sb-head"><h3><i style="--c:var(--p${n})"></i>${title}</h3>${aside ? `<span>${aside}</span>` : ''}</div>`;
 function barRows(rows, {valFn, color, limit, moreKey}) {
   const shown = limit && !statAll[moreKey] ? rows.slice(0, limit) : rows;
@@ -2774,7 +2779,7 @@ function openIpForm(ip) {
       const img = d.spineImg ? imgSrc(d.spineImg) : '';
       prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
       prev.style.color = img ? '#fff' : textOn(d.color);
-      $('.spine-title', prev).textContent = $('#ip-name', root).value.trim() || 'IP 名称';
+      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称');
     };
     const sets = () => (d.palette && d.palette.length ? [{name: '图片取色', colors: d.palette}] : []).concat(SPINE_SETS);
     const drawSets = () => {
