@@ -715,8 +715,6 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#3aa17e}
 .sync[data-state=busy]::before{background:var(--transit)}
 .sync[data-state=error]::before{background:var(--danger)}
-.share-preview{aspect-ratio:1200/630;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;max-width:360px}
-.share-preview img{display:block;width:100%;height:100%}
 .link-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .link-box code{flex:1;min-width:0;font-size:12px;background:var(--bg);padding:8px 10px;border-radius:6px;overflow-wrap:anywhere;user-select:all}
 .steps{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:grid;gap:3px}
@@ -994,7 +992,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-26';
+const APP_VERSION = '2026.10.30-27';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -2146,26 +2144,8 @@ async function drawShareCard(w = 1200, h = 630) {
   g.fillText('made by fs', w / 2, y);
   return c;
 }
-async function fillSharePreview() {
-  const box = document.getElementById('share-preview'); if (!box) return;
-  try {
-    const c = await drawShareCard(1200, 630); box.innerHTML = `<img src="${c.toDataURL('image/png')}" alt="分享卡片预览：Doumi · made by fs">`;
-    // 提前准备好卡片图片文件：系统分享必须在点按的当下发起，来不及临时生成
-    c.toBlob(b => { if (b) shareFile = new File([b], 'Doumi.png', {type: 'image/png'}); }, 'image/png');
-  } catch {}
-}
-let shareFile = null;
-async function nativeShare() {
-  const link = shareLink(), text = 'Doumi · 你的同人本管理书架 · made by fs';
-  if (shareFile && navigator.canShare && navigator.canShare({files: [shareFile]})) {
-    // 只发卡片图：同时带文字时，微信、小红书等会只收文字、把图片丢掉。
-    // 链接先放进剪贴板，发完卡片后在对话框里粘贴即可。
-    let copied = false;
-    try { await navigator.clipboard.writeText(`${text}\n${link}`); copied = true; } catch {}
-    try { await navigator.share({files: [shareFile]}); if (copied) toast('卡片已发出，链接已复制，粘贴到消息里即可'); return; }
-    catch (e) { if (e && e.name === 'AbortError') { if (copied) toast('链接已复制'); return; } }
-  }
-  try { await navigator.share({title: 'Doumi', text, url: link}); } catch {}
+async function nativeShare() {   // 系统分享：发链接（网站的分享信息会让微信、QQ 等显示成卡片）
+  try { await navigator.share({title: 'Doumi', text: 'Doumi · 你的同人本管理书架 · made by fs', url: shareLink()}); } catch {}
 }
 
 function shareCard() {
@@ -2175,9 +2155,6 @@ function shareCard() {
   return `<div class="set-card"><h2>分享给朋友</h2>
     <p>朋友打开是全新的空书架，看不到你的任何数据。</p>
     ${local ? '<p class="notice" style="margin:0">现在是直接打开的本地文件，没有网址可以分享。请先用 GitHub Pages 的网址打开，再来这里复制分享链接。</p>' : `
-    <div class="share-preview" id="share-preview" aria-label="分享卡片预览"></div>
-    <p class="hint" style="margin:0">链接发到微信、QQ 等会显示成这张卡片。</p>
-    <div class="link-box"><code id="share-url">${esc(shareLink())}</code></div>
     <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
     ${preset ? '<p class="hint" style="margin:0;color:var(--danger)">提醒：网站的 config.js 里填了 Supabase 信息。分享链接已经会自动忽略它，但别人看网站源码时仍能看到。建议把 config.js 改回空白，只在自己的设备里填写。</p>' : ''}
   </div>`;
@@ -2390,7 +2367,6 @@ function renderSettings() {
     } catch (err) { toast(err.message); }
   };
   $('#import-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
-  fillSharePreview();
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(r => { if (r && r.usage) $('#storage-hint').textContent = `已用存储约 ${(r.usage / 1048576).toFixed(1)} MB`; }).catch(() => {});
 }
 /* 云端同步说明卡片 */
@@ -3327,7 +3303,11 @@ document.addEventListener('click', async e => {
     case 'share-copy': {
       const link = shareLink();
       try { await navigator.clipboard.writeText(link); toast('分享链接已复制'); }
-      catch { const c = $('#share-url'); if (c) { const r = document.createRange(); r.selectNodeContents(c); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('请长按或按 Ctrl+C 复制选中的链接'); }
+      catch {   // 不支持剪贴板接口时的备用复制方法
+        const t = document.createElement('textarea'); t.value = link; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0;top:0';
+        document.body.appendChild(t); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {} t.remove();
+        toast(ok ? '分享链接已复制' : link);
+      }
       break;
     }
     case 'share-native': {
