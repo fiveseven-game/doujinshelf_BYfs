@@ -183,7 +183,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 @media (any-pointer:fine){:root{--sw-gap:max(8px,.55em)}}
 .spine-title .sg{display:inline-block;line-height:1.2;letter-spacing:.06em}
 .spine-title .sg+.sg{margin-inline-start:var(--sw-gap)}
-.spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.spine-title.clip{align-self:start;overflow:hidden;-webkit-mask-image:linear-gradient(#000 85%,transparent);mask-image:linear-gradient(#000 85%,transparent)}
+.spine-title .sw{transform:translateX(-.2em);-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
    /* 名字太长：从顶部开始显示，底部淡出 */
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
@@ -1008,7 +1009,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-36';
+const APP_VERSION = '2026.10.30-37';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1688,7 +1689,8 @@ function renderHome() {
           <div class="seg" role="tablist"><button class="${viewMode === 'shelf' ? 'on' : ''}" data-act="view" data-v="shelf">书架</button><button class="${viewMode === 'flow' ? 'on' : ''}" data-act="view" data-v="flow">瀑布流</button></div></div>` : ''}</div>
       ${body}
     </section>`;
-  setupShelfDrag();
+  setupShelfDrag(); fitSpines($('#shelf'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitSpines($('#shelf')));
 }
 
 /* ================= IP 合集 ================= */
@@ -1986,6 +1988,17 @@ function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
    汉字一段竖排；英文、数字、符号单独成段 —— 1 个字符保持正立，2 个以上横排转 90 度
    例：新建IP → [新建][IP↻]；最终幻想7 → [最终幻想][7] */
 const SW_RE = /([A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+(?: +[A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+)*)/;
+/* 文字太长时：只占书脊上半部分（数字上方），多出来的渐隐裁掉，绝不盖住下面的数字 */
+function fitSpines(root) {
+  if (!root) return;
+  $$('.spine-title', root).forEach(t => {
+    const sp = t.parentElement, cnt = $('.spine-count', sp), cs = getComputedStyle(sp);
+    t.classList.remove('clip'); t.style.maxHeight = '';
+    if (!sp.clientHeight) return;
+    const avail = sp.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0) - (cnt ? cnt.offsetHeight + (parseFloat(cs.rowGap) || 0) : 0);
+    if (avail > 20 && t.scrollHeight > avail + 1) { t.style.maxHeight = avail + 'px'; t.classList.add('clip'); }
+  });
+}
 const spineText = name => String(name || '').split(SW_RE)
   .map((t, i) => ({t: t.trim(), rot: i % 2 === 1 && t.trim().length > 1}))
   .filter(g => g.t)
@@ -2744,7 +2757,7 @@ function openIpForm(ip) {
       const img = d.spineImg ? imgSrc(d.spineImg) : '';
       prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
       prev.style.color = img ? '#fff' : textOn(d.color);
-      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称');
+      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称'); fitSpines(prev.parentElement);
     };
     const sets = () => (d.palette && d.palette.length ? [{name: '图片取色', colors: d.palette}] : []).concat(SPINE_SETS);
     const drawSets = () => {
