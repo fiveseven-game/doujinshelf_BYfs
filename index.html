@@ -108,6 +108,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stro
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none}
 .chips button{flex:none;border:0;background:var(--soft);color:var(--muted);padding:5px 12px;border-radius:99px;font-size:13px}
 .chips button.on{background:var(--btn);color:var(--btn-ink)}
+.chips.wrap{flex-wrap:wrap;overflow:visible;row-gap:8px}
 .tag{display:inline-block;font-size:11px;line-height:18px;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted);font-weight:500;vertical-align:middle;white-space:nowrap}
 .tag.transit{background:var(--transit-soft);color:var(--transit)}
 .cover .tag.done,.wf .pic .tag.done{top:auto;bottom:6px;left:6px;display:inline-flex;align-items:center;gap:2px;background:rgba(36,128,88,.9);color:#fff;padding:0 6px 0 4px}
@@ -165,10 +166,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
   background-image:linear-gradient(to bottom,transparent 0 208px,var(--line-2) 208px 210px,transparent 210px);
   background-size:100% var(--row);
 }
-.spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .16s ease;min-height:0}
+.spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;transition:transform .16s ease;min-height:0;overflow:hidden}
 .spine:hover,.spine:focus-visible{transform:translateY(-6px)}
-.spine-title{writing-mode:vertical-rl;text-orientation:mixed;font-weight:600;font-size:15px;letter-spacing:.1em;flex:1;min-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.spine-count{font:500 12px/1 var(--num);opacity:.85}
+.spine-title{writing-mode:vertical-rl;text-orientation:upright;font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.15;min-height:0;max-height:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:normal}
+.spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
 .shelf{position:relative}
 .shelf.dragging .spine:hover{transform:none}
@@ -466,7 +467,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .buy-link{display:inline-flex;margin-top:12px;font-size:14px;text-decoration:none;font-weight:500;overflow-wrap:anywhere}
 
 .ip-top{display:flex;gap:14px;align-items:flex-end}
-.ip-preview{width:44px;height:120px;flex:none;border-radius:2px 2px 0 0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 8px;border-bottom:2px solid var(--line-2)}
+.ip-preview{width:44px;height:120px;flex:none;border-radius:2px 2px 0 0;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:6px;padding:10px 0 8px;border-bottom:2px solid var(--line-2);overflow:hidden}
 .ip-preview .spine-title{font-size:13px}
 .ip-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 .ip-custom{position:relative;overflow:hidden}
@@ -505,6 +506,26 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .mlabels{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:6px}
 .mlabels span{text-align:center;font-size:11px;color:var(--muted)}
 .heat-scroll{overflow-x:auto}
+/* 购买 & 时间：上排 每月购买 | 时间方块（1:1），下排整行 时间线（2） */
+@media (min-width:860px){.sb-cols.st-time{grid-template-columns:1fr 1fr;grid-template-areas:"m h" "t t"}.st-m{grid-area:m}.st-h{grid-area:h}.st-t{grid-area:t}}
+.tl-scroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.tl-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.tl{display:flex;gap:0;width:max-content;min-width:100%}
+.tl-year{display:grid;grid-template-rows:auto 1fr;padding-right:26px}
+.tl-year+.tl-year{border-left:1px dashed var(--line-2);padding-left:18px}
+.tl-y{position:sticky;left:0;justify-self:start;font-size:15px;font-weight:600;padding:0 8px 8px 0;background:var(--bg);z-index:1}
+.tl-months{display:flex;gap:18px;border-top:1px solid var(--line-2)}
+.tl-month{display:grid;align-content:start;gap:8px;padding-top:12px;position:relative}
+.tl-month::before{content:"";position:absolute;top:-4px;left:0;width:7px;height:7px;border-radius:50%;background:var(--p3)}
+.tl-m{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.tl-m b{font-size:13px;font-weight:600}
+.tl-m span{font-size:11px;color:var(--muted)}
+.tl-covers{display:flex;gap:6px}
+.tl-cover{position:relative;flex:none;width:66px;aspect-ratio:3/4;border-radius:4px;overflow:hidden;background:var(--soft);display:block}
+.tl-cover img,.tl-cover .ph{width:100%;height:100%;object-fit:cover;display:block}
+.tl-cover .ph{padding:10%}.tl-cover .ph span{font-size:11px}
+.tl-cover .tag.qty{position:absolute;right:3px;top:3px;font-size:10px;line-height:16px;padding:0 4px;background:rgba(0,0,0,.55);color:#fff}
+@media (min-width:720px){.tl-cover{width:78px}}
 .heat{display:grid;grid-template-columns:3.4em repeat(12,minmax(22px,1fr));gap:4px;min-width:360px}
 .heat .h{font-size:11px;color:var(--muted);text-align:center}
 .heat .y{font-size:12px;color:var(--muted);display:flex;align-items:center;font-variant-numeric:tabular-nums}
@@ -996,7 +1017,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-28';
+const APP_VERSION = '2026.10.30-29';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1440,6 +1461,27 @@ function setSync(state) {   // Claude 云端版用；Supabase 同步的状态由
   el.dataset.state = state;
   el.textContent = {ok: '已同步', busy: '同步中…', error: '同步中断'}[state] || '';
 }
+/* ================= 存储容量 =================
+   本子和图片存在浏览器的 IndexedDB 里（不是 localStorage，没有 5 MB 上限）。
+   每张图裁剪后压到长边 1280 像素左右（约 150–250 KB），800 本、每本 2–3 张图约 300–500 MB，
+   现代浏览器按磁盘剩余空间分配，够用；同时申请“持久存储”，避免空间紧张时被浏览器自动清理。 */
+const BOOK_CAPACITY = 800, IMG_MAX = 1280, IMG_Q = 0.82;
+async function askPersist() {
+  try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch {}
+}
+async function storageHint() {
+  const el = $('#storage-hint'); if (!el) return;
+  const n = sum(S.books.map(qtyOf)), parts = [`已记录 ${n} 本（可放心存到 ${BOOK_CAPACITY} 本以上）`];
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const r = await navigator.storage.estimate(), mb = v => v >= 1024 ** 3 ? (v / 1024 ** 3).toFixed(1) + ' GB' : (v / 1048576).toFixed(1) + ' MB';
+      if (r && r.usage) parts.push(`已用存储约 ${mb(r.usage)}${r.quota ? ` / 可用约 ${mb(r.quota)}` : ''}`);
+      if (r && r.quota && r.usage / r.quota > 0.8) parts.push('空间快满了，建议导出备份，或开启云端同步');
+    }
+    if (navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()) parts.push('已开启持久存储');
+  } catch {}
+  if (document.body.contains(el)) el.textContent = parts.join(' · ');
+}
 const errMsg = e => (e && e.userMsg) || (e && e.code ? `云端操作失败（${e.code}），请检查网络后再试` : '操作失败：' + ((e && e.message) || e));
 async function save(store, v) {
   try { await Store.put(store, v); return true; }
@@ -1552,6 +1594,7 @@ const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.she
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
+  if (sortBusy) { renderLater = true; return; }   // 正在拖动排序：松手后再刷新（否则拖着的卡片会被重绘冲掉、浮在页面上）
   S.ips = await Store.all('ips'); S.books = await Store.all('books');
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
   USER_THEMES = (await Store.get('meta', 'themes')) || USER_THEMES;
@@ -1572,7 +1615,7 @@ async function enter(fromLock) {
   USER_THEMES = (await Store.get('meta', 'themes')) || [];
   THEME = (await Store.get('meta', 'theme')) || 'default';
   await Drafts.get('new');
-  unlocked = true; lastSig = sigOf();
+  unlocked = true; lastSig = sigOf(); if (!Store.remote) askPersist();
   $('#lock').hidden = true; $('#app').hidden = false;
   $('#pw1').value = ''; $('#pw2').value = ''; $('#lock-msg').textContent = '';
   route();
@@ -1647,7 +1690,7 @@ function renderHome() {
   } else if (viewMode === 'flow') {
     if (flowIp && !ipById(flowIp)) flowIp = '';
     const list = S.books.filter(b => !flowIp || b.ipId === flowIp).sort(byOrder);
-    body = `<div class="chips"><button class="${flowIp ? '' : 'on'}" data-act="flow-ip" data-v="">全部 ${S.books.length}</button>
+    body = `<div class="chips wrap"><button class="${flowIp ? '' : 'on'}" data-act="flow-ip" data-v="">全部 ${S.books.length}</button>
       ${ips.map(ip => `<button class="${flowIp === ip.id ? 'on' : ''}" data-act="flow-ip" data-v="${esc(ip.id)}">${esc(ip.name)} ${S.books.filter(b => b.ipId === ip.id).length}</button>`).join('')}</div>
       ${list.length ? flowColumns(list.map(b => {
         const ip = ipById(b.ipId);
@@ -1705,34 +1748,43 @@ window.addEventListener('resize', () => {
 /* 合集页：长按 / 按住拖动封面调整顺序（像手机桌面整理 App） */
 let suppressClick = false;
 const sortCtxs = new Set();   // 每个可拖动排序的区域一份（页面上的封面 / 书脊，编辑框里的图片）
-const eachSort = fn => sortCtxs.forEach(c => { if (!document.body.contains(c.grid)) sortCtxs.delete(c); else fn(c); });
+let sortBusy = 0, renderLater = false;   // 正在拖动时，同步 / 图片到达引起的重绘先缓一缓，松手后再刷新
+const eachSort = fn => sortCtxs.forEach(c => { if (!document.body.contains(c.grid)) { c.end(true); sortCtxs.delete(c); } else fn(c); });
+const sweepGhosts = () => { if (!sortBusy) $$('body > .drag-ghost').forEach(g => g.remove()); };   // 兜底：清掉没收回的浮层
 window.addEventListener('pointermove', e => eachSort(c => c.move(e)), {passive: false});
 window.addEventListener('pointerup', () => eachSort(c => c.end()));
 window.addEventListener('pointercancel', () => eachSort(c => c.end()));
+window.addEventListener('blur', () => eachSort(c => c.end()));
+document.addEventListener('visibilitychange', () => { if (document.hidden) eachSort(c => c.end()); });
 /* 通用：长按 / 按住拖动排序。grid = 容器，sel = 可拖动的项，save(ids) = 松手后保存新顺序 */
 function makeSortable(grid, sel, save, {padTop = 0} = {}) {
   const cards = () => $$(sel, grid);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPRING = 'cubic-bezier(.34,1.56,.64,1)';   // 带一点回弹的缓动 = Q 弹
   let pending = null, drag = null;
   const begin = (card, x, y) => {
     const r = card.getBoundingClientRect();
     const ghost = card.cloneNode(true); ghost.classList.add('drag-ghost');
     ghost.style.width = r.width + 'px'; ghost.style.left = r.left + 'px'; ghost.style.top = r.top + 'px';
     document.body.appendChild(ghost);
-    if (ghost.animate) ghost.animate([{transform: 'scale(1) rotate(0)'}, {transform: 'scale(1.06) rotate(-1.5deg)'}], {duration: 220, easing: 'cubic-bezier(.34,1.56,.64,1)'});
+    if (ghost.animate && !reduce) ghost.animate([{transform: 'scale(1) rotate(0)'}, {transform: 'scale(1.06) rotate(-1.5deg)'}], {duration: 220, easing: SPRING});
     card.classList.add('drag-src'); grid.classList.add('dragging');
-    drag = {card, ghost, dx: x - r.left, dy: y - r.top, moved: false};
+    drag = {card, ghost, dx: x - r.left, dy: y - r.top, moved: false, raf: 0, x, y};
+    sortBusy++;
     try { navigator.vibrate && navigator.vibrate(12); } catch {}
   };
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SPRING = 'cubic-bezier(.34,1.56,.64,1)';   // 带一点回弹的缓动 = Q 弹
-  const flip = mutate => {   // 记下每本现在“看起来”的位置 → 调整顺序 → 从旧位置弹到新位置
-    const list = cards(), before = new Map(list.map(c => [c, c.getBoundingClientRect()]));
+  // 只给看得见的卡片做位移动画：几百本时也不卡
+  const flip = mutate => {
+    const vh = window.innerHeight, list = cards().filter(c => c !== drag.card);
+    const shown = list.filter(c => { const b = c.getBoundingClientRect(); return b.bottom > -40 && b.top < vh + 40; });
+    const before = new Map(shown.map(c => [c, c.getBoundingClientRect()]));
     mutate();
-    list.forEach(c => {
-      if (c === drag.card) return;
+    if (reduce) return;
+    shown.forEach(c => {
+      if (!c.animate) return;
       (c.getAnimations ? c.getAnimations() : []).forEach(a => a.cancel());
       const a = before.get(c), b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
-      if ((!dx && !dy) || reduce || !c.animate) return;
+      if (!dx && !dy) return;
       c.animate([
         {transform: `translate(${dx}px,${dy}px) scale(1)`},
         {transform: `translate(${dx * 0.15}px,${dy * 0.15}px) scale(.94)`, offset: 0.35},
@@ -1741,43 +1793,55 @@ function makeSortable(grid, sel, save, {padTop = 0} = {}) {
     });
   };
   // 用排版位置（不受动画影响）判断手指落在第几个位置，避免动画过程中来回跳
-  const slotAt = (x, y) => {
+  const slotAt = (x, y, list) => {
     const g = grid.getBoundingClientRect(), px = x - g.left, py = y - g.top;
-    const list = cards();
     for (let i = 0; i < list.length; i++) {
       const c = list[i], l = c.offsetLeft, t = c.offsetTop, w = c.offsetWidth, h = c.offsetHeight;
       if (px >= l && px <= l + w && py >= t - padTop && py <= t + h) return i;
     }
     return -1;
   };
-  const moveTo = (x, y) => {
+  const step = () => {   // 每帧最多算一次位置
+    if (!drag) return;
+    drag.raf = 0;
+    const {x, y} = drag;
     drag.ghost.style.left = (x - drag.dx) + 'px'; drag.ghost.style.top = (y - drag.dy) + 'px';
-    const list = cards(), from = list.indexOf(drag.card), to = slotAt(x, y);
-    if (to >= 0 && to !== from) {
+    const list = cards(), from = list.indexOf(drag.card), to = slotAt(x, y, list);
+    if (from >= 0 && to >= 0 && to !== from) {
       const target = list[to];
       flip(() => grid.insertBefore(drag.card, to > from ? target.nextSibling : target));
       drag.moved = true;
     }
     if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 90) window.scrollBy(0, 12);
   };
-  const finish = async () => {
+  const moveTo = (x, y) => { drag.x = x; drag.y = y; if (!drag.raf) drag.raf = requestAnimationFrame(step); };
+  const finish = async gone => {   // gone = 这块区域已经被重绘替换掉了
     if (!drag) return;
-    const {card, ghost, moved} = drag; drag = null;
-    const r = card.getBoundingClientRect();
-    const land = () => { ghost.remove(); card.classList.remove('drag-src'); grid.classList.remove('dragging');
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && card.animate) card.animate([{transform: 'scale(1.06)'}, {transform: 'scale(.97)', offset: 0.5}, {transform: 'scale(1)'}], {duration: 320, easing: 'ease-out'}); };
-    if (ghost.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const anim = ghost.animate([{left: ghost.style.left, top: ghost.style.top, transform: 'scale(1.06) rotate(-1.5deg)'}, {left: r.left + 'px', top: r.top + 'px', transform: 'scale(1) rotate(0)'}], {duration: 260, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'forwards'});
-      anim.onfinish = land;
-    } else land();
+    const {card, ghost, moved, raf} = drag; drag = null;
+    if (raf) cancelAnimationFrame(raf);
+    sortBusy = Math.max(0, sortBusy - 1);
+    let landed = false;
+    const land = () => {
+      if (landed) return; landed = true;
+      ghost.remove(); card.classList.remove('drag-src'); grid.classList.remove('dragging');
+      if (!gone && !reduce && card.animate) card.animate([{transform: 'scale(1.06)'}, {transform: 'scale(.97)', offset: 0.5}, {transform: 'scale(1)'}], {duration: 320, easing: 'ease-out'});
+      sweepGhosts();
+      if (!sortBusy && renderLater) { renderLater = false; onRemoteChange(); }
+    };
+    if (gone || reduce || !ghost.animate || !document.body.contains(card)) land();
+    else {
+      const r = card.getBoundingClientRect();
+      const anim = ghost.animate([{left: ghost.style.left, top: ghost.style.top, transform: 'scale(1.06) rotate(-1.5deg)'}, {left: r.left + 'px', top: r.top + 'px', transform: 'scale(1) rotate(0)'}], {duration: 260, easing: 'cubic-bezier(.3,1.3,.5,1)'});
+      anim.onfinish = land; anim.oncancel = land;
+      setTimeout(land, 400);   // 动画没回调时也一定收回
+    }
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 60);
-    if (!moved) return;
-    await save(cards().map(c => c.dataset.id));
+    if (moved && !gone) await save(cards().map(c => c.dataset.id));
   };
   grid.addEventListener('pointerdown', e => {
-    const card = e.target.closest(sel); if (!card || !grid.contains(card) || e.button > 0) return;
+    const card = e.target.closest(sel); if (!card || !grid.contains(card) || e.button > 0 || drag) return;
     const x = e.clientX, y = e.clientY, touch = e.pointerType !== 'mouse';
-    pending = {card, x, y, touch, timer: touch ? setTimeout(() => { if (pending) { begin(card, pending.x, pending.y); pending = null; } }, 380) : null};
+    pending = {card, x, y, touch, timer: touch ? setTimeout(() => { if (pending) { const p = pending; pending = null; begin(p.card, p.x, p.y); } }, 380) : null};
   });
   const onMove = e => {
     if (drag) { e.preventDefault(); moveTo(e.clientX, e.clientY); return; }
@@ -1786,8 +1850,8 @@ function makeSortable(grid, sel, save, {padTop = 0} = {}) {
     if (pending.touch) { if (dist > 10) { clearTimeout(pending.timer); pending = null; } }   // 手指先滑动 = 滚动页面
     else if (dist > 6) { const p = pending; pending = null; begin(p.card, p.x, p.y); moveTo(e.clientX, e.clientY); }
   };
-  const end = () => { if (pending) { clearTimeout(pending.timer); pending = null; } finish(); };
-  [...sortCtxs].forEach(c => { if (c.grid === grid || !document.body.contains(c.grid)) sortCtxs.delete(c); });
+  const end = gone => { if (pending) { clearTimeout(pending.timer); pending = null; } finish(gone === true); };
+  [...sortCtxs].forEach(c => { if (c.grid === grid || !document.body.contains(c.grid)) { c.end(true); sortCtxs.delete(c); } });   // 旧区域被替换：先收回它拖着的卡片
   sortCtxs.add({grid, move: onMove, end});
   grid.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});   // 拖动时不要滚动页面
   grid.addEventListener('contextmenu', e => { if (drag || pending) e.preventDefault(); });
@@ -2000,8 +2064,8 @@ function timeBlocks(books) {
   const all = [...years].sort((a, b) => a - b), full = []; for (let y = all[0]; y <= all[all.length - 1]; y++) full.push(y);
   const maxC = Math.max(1, ...[...ym.values()].map(e => e.count));
   const lvl = n => n ? Math.min(4, Math.ceil(n / maxC * 4)) : 0;
-  return `<div class="sb-cols">
-    <div class="sb">
+  return `<div class="sb-cols st-time">
+    <div class="sb st-m">
       ${blockHead('每月购买', 1, `<span class="sb-seg"><button class="${statMetric === 'count' ? 'on' : ''}" data-act="stat-metric" data-v="count">本数</button><button class="${statMetric === 'cost' ? 'on' : ''}" data-act="stat-metric" data-v="cost">花费</button></span>`)}
       <div class="sb-years">${years.map(y => `<button class="${y === statYear ? 'on' : ''}" data-act="stat-year" data-v="${y}">${y}</button>`).join('')}</div>
       <p class="sb-figure"><b class="num">${statMetric === 'cost' ? money(yearTotal) : yearTotal}</b><span>${statMetric === 'cost' ? '' : '本 · '}${statYear} 年${yearTotal ? ` · ${peak + 1} 月最多` : ''}</span></p>
@@ -2009,7 +2073,7 @@ function timeBlocks(books) {
         ${v ? `<small>${fmtV(v)}</small>` : ''}<i class="${v ? '' : 'zero'}" style="height:calc((100% - 18px) * ${v / maxM})"></i></div>`; }).join('')}</div>
       <div class="mlabels">${months.map((_, i) => `<span>${i + 1}</span>`).join('')}</div>
     </div>
-    <div class="sb">
+    <div class="sb st-h">
       ${blockHead('时间方块', 2, '每格一个月，越深买得越多')}
       <div class="heat-scroll"><div class="heat">
         <span></span>${Array.from({length: 12}, (_, i) => `<span class="h">${i + 1}</span>`).join('')}
@@ -2021,7 +2085,27 @@ function timeBlocks(books) {
       <div class="heat-legend">少<span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span>多</div>
       ${undated ? `<p class="sb-foot">另有 ${undated} 本没填购买时间，未计入</p>` : ''}
     </div>
+    ${timeline(dated)}
   </div>`;
+}
+/* 购买时间线：年 → 月 → 这个月买的本子封面（3:4），左右滑动，打开时停在最近的月份 */
+function timeline(dated) {
+  const byMonth = new Map();
+  [...dated].sort((a, b) => a.buyDate.localeCompare(b.buyDate) || (a.created || 0) - (b.created || 0))
+    .forEach(b => { const k = b.buyDate.slice(0, 7); (byMonth.get(k) || byMonth.set(k, []).get(k)).push(b); });
+  const years = new Map();
+  [...byMonth.keys()].forEach(k => { const y = k.slice(0, 4); (years.get(y) || years.set(y, []).get(y)).push(k); });
+  const cover = b => { const ip = ipById(b.ipId);
+    return `<a class="tl-cover" href="#book-${esc(b.id)}" title="${esc((b.title || '无题') + (ip ? ' · ' + ip.name : '') + ' · ' + ymd(b.buyDate))}">${coverHtml(b, ipColor(ip))}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</a>`; };
+  return `<div class="sb st-t">
+      ${blockHead('购买时间线', 3, `${sum(dated.map(qtyOf))} 本 · 左右滑动查看`)}
+      <div class="tl-scroll" tabindex="0" aria-label="购买时间线，左右滑动查看"><div class="tl">
+        ${[...years].map(([y, ks]) => `<div class="tl-year"><div class="tl-y num">${y}</div><div class="tl-months">
+          ${ks.map(k => `<div class="tl-month"><div class="tl-m"><b class="num">${+k.slice(5)}月</b><span>${sum(byMonth.get(k).map(qtyOf))} 本</span></div>
+            <div class="tl-covers">${byMonth.get(k).map(cover).join('')}</div></div>`).join('')}
+        </div></div>`).join('')}
+      </div></div>
+    </div>`;
 }
 function renderStats() {
   const books = S.books;
@@ -2047,6 +2131,7 @@ function renderStats() {
   const top = [...books].filter(b => bookTotal(b) > 0).sort((a, b) => bookTotal(b) - bookTotal(a)).slice(0, 5);
   const anyForeign = books.some(b => (b.costs || []).some(x => (x.cur || 'CNY') !== 'CNY' && Number(x.amount)));
   const th = themeOf(THEME);
+  const oldTl = $('.tl-scroll'), tlLeft = oldTl ? oldTl.scrollLeft : null;
 
   $('#view').innerHTML = `<div class="st" style="${themeVars()}">
     <div class="st-head">
@@ -2106,6 +2191,7 @@ function renderStats() {
       </div>
     </section>
   </div>`;
+  const tl = $('.tl-scroll'); if (tl) tl.scrollLeft = tlLeft === null ? tl.scrollWidth : tlLeft;
 }
 
 /* ================= 分享给朋友 =================
@@ -2125,32 +2211,7 @@ async function presetAllowed() {
 }
 const siteUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
 const shareLink = () => siteUrl() + '?share=1';
-/* 分享卡片图：LOGO + Doumi + made by fs（同一套画法也用来生成网站的 share-card.png） */
-function loadImg(src) { return new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
-async function drawShareCard(w = 1200, h = 630) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d');
-  const logo = await loadImg(DEFAULT_LOGO);
-  const t = document.createElement('canvas'); t.width = t.height = 8;   // 底色取 LOGO 四角的颜色，图和底融为一体
-  const tg = t.getContext('2d'); tg.drawImage(logo, 0, 0, 8, 8);
-  const px = [0, 7].flatMap(x => [0, 7].map(y => tg.getImageData(x, y, 1, 1).data));
-  const avg = k => Math.round(px.reduce((n, d) => n + d[k], 0) / px.length);
-  g.fillStyle = `rgb(${avg(0)},${avg(1)},${avg(2)})`; g.fillRect(0, 0, w, h);
-  const u = Math.min(w, h);                    // 内容按短边排版，裁成正方形缩略图时也完整
-  const ls = u * 0.42, gap = u * 0.035, nameS = u * 0.135, byS = u * 0.042;
-  const total = ls + gap + nameS + u * 0.03 + byS;
-  let y = (h - total) / 2;
-  g.drawImage(logo, (w - ls) / 2, y, ls, ls); y += ls + gap;
-  const font = '-apple-system, "SF Pro Display", "Helvetica Neue", "PingFang SC", Arial, sans-serif';
-  g.textAlign = 'center'; g.textBaseline = 'top';
-  g.fillStyle = '#3a2a24'; g.font = `700 ${nameS}px ${font}`;
-  if ('letterSpacing' in g) g.letterSpacing = `${nameS * 0.01}px`;
-  g.fillText('Doumi', w / 2, y); y += nameS + u * 0.03;
-  g.fillStyle = '#a3958d'; g.font = `500 ${byS}px ${font}`;
-  if ('letterSpacing' in g) g.letterSpacing = `${byS * 0.08}px`;
-  g.fillText('made by fs', w / 2, y);
-  return c;
-}
+/* 分享卡片图 share-card.png 是事先生成好的静态文件（LOGO + Doumi + made by fs），网页头部的分享信息引用它 */
 async function nativeShare() {   // 系统分享：发链接（网站的分享信息会让微信、QQ 等显示成卡片）
   try { await navigator.share({title: 'Doumi', text: 'Doumi · 你的同人本管理书架 · made by fs', url: shareLink()}); } catch {}
 }
@@ -2374,7 +2435,7 @@ function renderSettings() {
     } catch (err) { toast(err.message); }
   };
   $('#import-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
-  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(r => { if (r && r.usage) $('#storage-hint').textContent = `已用存储约 ${(r.usage / 1048576).toFixed(1)} MB`; }).catch(() => {});
+  storageHint();
 }
 /* 云端同步说明卡片 */
 const CLOUD_URL = 'https://claude.ai/artifact/U3p7hkhHagKz5azQdWQMP8';
@@ -3084,7 +3145,7 @@ async function openBookForm(book, presetIp) {
         for (let k = 0; k < files.length; k++) {
           hint.textContent = files.length > 1 ? `正在处理第 ${k + 1} / ${files.length} 张…` : '正在处理图片…';
           try {
-            const du = await cropImage(files[k], files.length > 1 ? `第 ${k + 1} / ${files.length} 张` : '', 1600, 0.85, {key: 'book'});
+            const du = await cropImage(files[k], files.length > 1 ? `第 ${k + 1} / ${files.length} 张` : '', IMG_MAX, IMG_Q, {key: 'book'});
             if (du) { d.images.push(du); n++; drawImgs(); }
           } catch (err) { toast(err.message); }
         }
