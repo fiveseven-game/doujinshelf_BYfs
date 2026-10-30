@@ -170,6 +170,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .spine-title{writing-mode:vertical-rl;text-orientation:mixed;font-weight:600;font-size:15px;letter-spacing:.1em;flex:1;min-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .spine-count{font:500 12px/1 var(--num);opacity:.85}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
+.shelf{position:relative}
+.shelf.dragging .spine:hover{transform:none}
+.spine.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
+.spine.drag-ghost{background-color:var(--c);padding:12px 0 10px;margin:0;border-radius:2px 2px 0 0;filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
 .spine.add .spine-title{font-weight:500;font-size:13px}
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
@@ -376,7 +380,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .crop-zoom{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
 .crop-zoom input{flex:1;accent-color:var(--btn)}
 .crop-tip{margin:-4px 0 0}
-.crop-panel .crop-actions{justify-content:flex-end}
+.crop-panel .crop-actions{display:flex;gap:8px;justify-content:flex-end}
+.ip-bg-side .row{display:flex;gap:8px;flex-wrap:wrap}
 /* 弹层 */
 #modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,12,18,.4)}
 .sheet{width:100%;max-height:92vh;overflow:auto;background:var(--bg);border-radius:16px 16px 0 0;
@@ -463,6 +468,15 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .ip-custom{position:relative;overflow:hidden}
 .ip-custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .ip-thumb{width:56px;height:56px;border-radius:6px;object-fit:cover}
+.ip-bg-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:16px 12px;border:1.5px dashed var(--line-2);border-radius:10px;color:var(--muted);cursor:pointer;text-align:center}
+.ip-bg-add:hover{color:var(--ink);border-color:var(--muted)}
+.ip-bg-add b{font-size:20px;font-weight:300;line-height:1}
+.ip-bg-add span{font-size:14px}
+.ip-bg-add small{font-size:12px;color:var(--muted)}
+.ip-bg-row{display:flex;gap:14px;align-items:flex-end}
+.ip-bg-thumb{width:44px;height:132px;flex:none;object-fit:cover;border-radius:2px 2px 0 0;border-bottom:2px solid var(--line-2)}
+.ip-bg-side{display:grid;gap:10px;min-width:0}
+.ip-bg-side .hint{margin:0}
 .swatches{gap:7px}
 .swatches button{width:30px;height:30px}
 /* 统计：可视化 */
@@ -859,13 +873,15 @@ const normOrigin = o => ORIGIN_ALIAS[o] || o || '';
 
 /* 自定义名称与 LOGO */
 const DEFAULT_NAME = 'Doumi';
+const DEFAULT_SHELF = '我的书架';
+const shelfTitle = () => (BRAND.shelf || '').trim() || DEFAULT_SHELF;
 /* 默认 LOGO：看书的小猫（256×256） */
 const DEFAULT_LOGO = 'data:image/jpeg;base64,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';
 let BRAND = {name: DEFAULT_NAME, logo: ''};
 const DEFAULT_TOP_LOGO = $('#brand-logo').innerHTML, DEFAULT_LOCK_LOGO = $('#lock-logo').innerHTML;
 function applyBrand() {
   if (BRAND.name === '同人本棚') BRAND.name = DEFAULT_NAME;   // 旧版默认名自动换成 Doumi
-  const name = BRAND.name || DEFAULT_NAME;
+  const name = DEFAULT_NAME;   // 左上角、锁屏、浏览器标签固定显示 Doumi；可改的名称是书架页标题（BRAND.shelf）
   $('#brand-name').textContent = name; $('#lock-title').textContent = name; document.title = name;
   $('#brand-logo').innerHTML = BRAND.logo ? `<img class="brand-img" src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_TOP_LOGO;
   $('#lock-logo').innerHTML = BRAND.logo ? `<img class="lock-logo-img" src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_LOCK_LOGO;
@@ -978,7 +994,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-23';
+const APP_VERSION = '2026.10.30-26';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1530,7 +1546,7 @@ function afterWipe() {
 }
 /* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
 let lastSig = '';
-const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.logo, THEME, USER_THEMES, Store.urlsVer]);   // 图片地址到了也要刷新
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.shelf, BRAND.logo, THEME, USER_THEMES, Store.urlsVer]);   // 图片地址到了也要刷新
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
@@ -1619,7 +1635,7 @@ function coverHtml(b, c, big) {
     : `<div class="ph${big ? ' big' : ''}${b.images && b.images.length ? ' loading' : ''}" style="--c:${c};color:${textOn(c)}"><span>${esc(b.title || '无题')}</span></div>`;
 }
 function renderHome() {
-  const ips = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0));
+  const ips = [...S.ips].sort(byIpOrder);
   const transit = S.books.filter(b => b.transit).sort(byRecent);
   const hasSample = S.ips.some(i => i.sample);
   let body;
@@ -1638,16 +1654,16 @@ function renderHome() {
           ${cardText(b)}</button>`;
       })) : `<div class="empty-box">这里还没有本子</div>`}`;
   } else {
-    body = `<div class="shelf">${ips.map(ip => {
+    body = `${ips.length > 1 ? '<p class="drag-hint">长按书脊（电脑上按住拖动）可以调整合集顺序</p>' : ''}<div class="shelf" id="shelf"><button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">＋ 新建IP</span></button>${ips.map(ip => {
       const n = sum(S.books.filter(b => b.ipId === ip.id).map(qtyOf));
       const c = ipColor(ip), img = ip.spineImg ? imgSrc(ip.spineImg) : '';
-      return `<button class="spine${img ? ' has-img' : ''}" style="--c:${c};color:${img ? '#fff' : textOn(c)};height:${156 + (hashStr(ip.id) % 6) * 8}px${img ? `;background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}')` : ''}" data-go="ip-${esc(ip.id)}" title="${esc(ip.name)}">
+      return `<button class="spine${img ? ' has-img' : ''}" style="--c:${c};color:${img ? '#fff' : textOn(c)};height:${156 + (hashStr(ip.id) % 6) * 8}px${img ? `;background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}')` : ''}" data-go="ip-${esc(ip.id)}" data-id="${esc(ip.id)}" title="${esc(ip.name)}">
         <span class="spine-title">${esc(ip.name)}</span><span class="spine-count">${n}</span></button>`;
-    }).join('')}<button class="spine add" style="height:146px" data-act="new-ip" aria-label="新建IP合集"><span class="spine-title">＋ 新建IP</span></button></div>`;
+    }).join('')}</div>`;
   }
   $('#view').innerHTML = `
     ${hasSample ? `<div class="notice"><span>书架上有示例数据，熟悉之后可以一键删掉。</span><button class="btn small" data-act="del-sample">删除示例</button></div>` : ''}
-    <div class="page-head"><div><h1>我的书架</h1><p class="num">${S.ips.length} 个IP · ${sum(S.books.map(qtyOf))} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
+    <div class="page-head"><div><h1>${esc(shelfTitle())}</h1><p class="num">${S.ips.length} 个IP · ${sum(S.books.map(qtyOf))} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
       <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
     <section class="section">
       <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2></div>
@@ -1666,6 +1682,7 @@ function renderHome() {
           <div class="seg" role="tablist"><button class="${viewMode === 'shelf' ? 'on' : ''}" data-act="view" data-v="shelf">书架</button><button class="${viewMode === 'flow' ? 'on' : ''}" data-act="view" data-v="flow">瀑布流</button></div></div>` : ''}</div>
       ${body}
     </section>`;
+  setupShelfDrag();
 }
 
 /* ================= IP 合集 ================= */
@@ -1688,9 +1705,9 @@ let suppressClick = false, coverCtx = null;
 window.addEventListener('pointermove', e => { if (coverCtx) coverCtx.move(e); }, {passive: false});
 window.addEventListener('pointerup', () => { if (coverCtx) coverCtx.end(); });
 window.addEventListener('pointercancel', () => { if (coverCtx) coverCtx.end(); });
-function setupCoverDrag() {
-  const grid = $('#covers'); if (!grid) return;
-  const cards = () => $$('.cover-card[data-id]', grid);
+/* 通用：长按 / 按住拖动排序。grid = 容器，sel = 可拖动的项，save(ids) = 松手后保存新顺序 */
+function makeSortable(grid, sel, save, {padTop = 0} = {}) {
+  const cards = () => $$(sel, grid);
   let pending = null, drag = null;
   const begin = (card, x, y) => {
     const r = card.getBoundingClientRect();
@@ -1725,7 +1742,7 @@ function setupCoverDrag() {
     const list = cards();
     for (let i = 0; i < list.length; i++) {
       const c = list[i], l = c.offsetLeft, t = c.offsetTop, w = c.offsetWidth, h = c.offsetHeight;
-      if (px >= l && px <= l + w && py >= t && py <= t + h) return i;
+      if (px >= l && px <= l + w && py >= t - padTop && py <= t + h) return i;
     }
     return -1;
   };
@@ -1751,15 +1768,10 @@ function setupCoverDrag() {
     } else land();
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 60);
     if (!moved) return;
-    const ids = cards().map(c => c.dataset.id), books = ids.map(bookById).filter(Boolean);
-    const keys = books.map(keyOf).sort((a, b) => a - b);   // 只在这些本子原有的位置之间重新分配，不影响其他 IP 在瀑布流里的位置
-    const changed = [];
-    books.forEach((b, i) => { if (keyOf(b) !== keys[i] || typeof b.sortKey !== 'number') { b.sortKey = keys[i]; changed.push(b); } });
-    if (new Set(keys).size !== keys.length) { const base = keys[0]; books.forEach((b, i) => { b.sortKey = base + i * 0.001; if (!changed.includes(b)) changed.push(b); }); }
-    try { for (const b of changed) await Store.put('books', b); toast('顺序已保存'); } catch (e) { toast(errMsg(e)); }
+    await save(cards().map(c => c.dataset.id));
   };
   grid.addEventListener('pointerdown', e => {
-    const card = e.target.closest('.cover-card[data-id]'); if (!card || e.button > 0) return;
+    const card = e.target.closest(sel); if (!card || !grid.contains(card) || e.button > 0) return;
     const x = e.clientX, y = e.clientY, touch = e.pointerType !== 'mouse';
     pending = {card, x, y, touch, timer: touch ? setTimeout(() => { if (pending) { begin(card, pending.x, pending.y); pending = null; } }, 380) : null};
   });
@@ -1774,6 +1786,29 @@ function setupCoverDrag() {
   coverCtx = {move: onMove, end};
   grid.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});   // 拖动时不要滚动页面
   grid.addEventListener('contextmenu', e => { if (drag || pending) e.preventDefault(); });
+}
+
+function setupCoverDrag() {
+  const grid = $('#covers'); if (!grid) return;
+  makeSortable(grid, '.cover-card[data-id]', async ids => {
+  const books = ids.map(bookById).filter(Boolean);
+    const keys = books.map(keyOf).sort((a, b) => a - b);   // 只在这些本子原有的位置之间重新分配，不影响其他 IP 在瀑布流里的位置
+    const changed = [];
+    books.forEach((b, i) => { if (keyOf(b) !== keys[i] || typeof b.sortKey !== 'number') { b.sortKey = keys[i]; changed.push(b); } });
+    if (new Set(keys).size !== keys.length) { const base = keys[0]; books.forEach((b, i) => { b.sortKey = base + i * 0.001; if (!changed.includes(b)) changed.push(b); }); }
+    try { for (const b of changed) await Store.put('books', b); toast('顺序已保存'); } catch (e) { toast(errMsg(e)); }
+  });
+}
+/* 书架：拖动书脊调整 IP 合集的顺序 */
+const ipKey = ip => typeof ip.sortKey === 'number' ? ip.sortKey : (ip.created || 0);
+const byIpOrder = (a, b) => ipKey(a) - ipKey(b) || (a.created || 0) - (b.created || 0);
+function setupShelfDrag() {
+  const grid = $('#shelf'); if (!grid) return;
+  makeSortable(grid, '.spine[data-id]', async ids => {
+    const changed = [];
+    ids.map(ipById).filter(Boolean).forEach((ip, i) => { if (ip.sortKey !== i) { ip.sortKey = i; changed.push(ip); } });
+    try { for (const ip of changed) await Store.put('ips', ip); toast('顺序已保存'); } catch (e) { toast(errMsg(e)); }
+  }, {padTop: 70});
 }
 
 function renderIp(id) {
@@ -2113,7 +2148,24 @@ async function drawShareCard(w = 1200, h = 630) {
 }
 async function fillSharePreview() {
   const box = document.getElementById('share-preview'); if (!box) return;
-  try { const c = await drawShareCard(1200, 630); box.innerHTML = `<img src="${c.toDataURL('image/png')}" alt="分享卡片预览：Doumi · made by fs">`; } catch {}
+  try {
+    const c = await drawShareCard(1200, 630); box.innerHTML = `<img src="${c.toDataURL('image/png')}" alt="分享卡片预览：Doumi · made by fs">`;
+    // 提前准备好卡片图片文件：系统分享必须在点按的当下发起，来不及临时生成
+    c.toBlob(b => { if (b) shareFile = new File([b], 'Doumi.png', {type: 'image/png'}); }, 'image/png');
+  } catch {}
+}
+let shareFile = null;
+async function nativeShare() {
+  const link = shareLink(), text = 'Doumi · 你的同人本管理书架 · made by fs';
+  if (shareFile && navigator.canShare && navigator.canShare({files: [shareFile]})) {
+    // 只发卡片图：同时带文字时，微信、小红书等会只收文字、把图片丢掉。
+    // 链接先放进剪贴板，发完卡片后在对话框里粘贴即可。
+    let copied = false;
+    try { await navigator.clipboard.writeText(`${text}\n${link}`); copied = true; } catch {}
+    try { await navigator.share({files: [shareFile]}); if (copied) toast('卡片已发出，链接已复制，粘贴到消息里即可'); return; }
+    catch (e) { if (e && e.name === 'AbortError') { if (copied) toast('链接已复制'); return; } }
+  }
+  try { await navigator.share({title: 'Doumi', text, url: link}); } catch {}
 }
 
 function shareCard() {
@@ -2215,12 +2267,12 @@ function renderSettings() {
         </div>
       </section>
       <section class="set-group" id="sg-look">
-        <div class="set-group-head"><h2>个性化</h2><p>网站的名字、图标和统计页的颜色</p></div>
+        <div class="set-group-head"><h2>个性化</h2><p>书架名称、LOGO 和统计页的颜色</p></div>
         <div class="set-group-body">
-<div class="set-card"><h2>名称与 LOGO</h2>
-        <p>改的是左上角的主按钮、锁屏页和浏览器标签上显示的名称和图标。</p>
+<div class="set-card"><h2>书架名称与 LOGO</h2>
+        <p>书架名称显示在书架页顶部，比如改成“小明的书架”；LOGO 显示在左上角、锁屏页和浏览器标签上。</p>
         <form id="brand-form" class="form">
-          <label class="field"><span>名称（1–12 个字）</span><input class="input" id="brand-input" maxlength="12" value="${esc(BRAND.name || DEFAULT_NAME)}" placeholder="${DEFAULT_NAME}"></label>
+          <label class="field"><span>书架名称（1–12 个字）</span><input class="input" id="brand-input" maxlength="12" value="${esc(shelfTitle())}" placeholder="${DEFAULT_SHELF}"></label>
           <div class="brand-row">
             <div class="logo-preview" id="logo-preview">${BRAND.logo ? `<img src="${imgSrc(BRAND.logo)}" alt="">` : DEFAULT_TOP_LOGO}</div>
             <div class="row"><label class="btn" for="logo-file">上传 LOGO</label><input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
@@ -2324,8 +2376,10 @@ function renderSettings() {
   $('#brand-form').onsubmit = async e => {
     e.preventDefault();
     const name = $('#brand-input').value.trim();
-    if (!name) return toast('名称不能为空');
-    BRAND.name = name; await Store.put('meta', BRAND, 'brand'); applyBrand(); toast('名称已更新');
+    BRAND.shelf = name && name !== DEFAULT_SHELF ? name : '';
+    BRAND.name = DEFAULT_NAME;
+    await Store.put('meta', BRAND, 'brand'); applyBrand();
+    $('#brand-input').value = shelfTitle(); toast(`书架名称已改为“${shelfTitle()}”`);
   };
   $('#logo-file').onchange = async e => {
     const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -2644,8 +2698,7 @@ function openIpForm(ip) {
   const isNew = !ip;
   const d = ip ? clone(ip) : {id: uid(), name: '', color: COLORS[S.ips.length % COLORS.length], created: Date.now()};
   const n = isNew ? 0 : S.books.filter(b => b.ipId === d.id).length;
-  const covers = isNew ? [] : S.books.filter(b => b.ipId === d.id && b.images && b.images.length).map(b => b.images[0]).slice(0, 6);
-  let setIdx = d.palette && d.palette.length ? -1 : 0, pendingImg = '';
+  let setIdx = d.palette && d.palette.length ? -1 : 0;
   openModal(`
     <div class="sheet-head"><h2>${isNew ? '新建IP合集' : '编辑IP合集'}</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
     <form class="form" id="ip-form" style="margin-top:12px">
@@ -2659,17 +2712,20 @@ function openIpForm(ip) {
         <div class="row ip-tools">
           <label class="btn small ip-custom">自定义颜色<input type="color" id="ip-color" value="${esc(/^#[0-9a-f]{6}$/i.test(d.color || '') ? d.color : '#8a9ba8')}"></label>
           <label class="btn small" for="ip-file">上传图片取色</label><input type="file" id="ip-file" accept="image/*" hidden>
-          ${covers.length ? '<button type="button" class="btn small" id="ip-from-cover">从本子封面取色</button>' : ''}
+          <button type="button" class="btn small text" id="ip-nopal" hidden>清除图片取色</button>
         </div>
       </div>
-      <div class="field" id="ip-imgbox"></div>
+      <div class="field"><span>合集背景图<i>选填</i></span>
+        <div id="ip-bg"></div>
+        <input type="file" id="ip-bgfile" accept="image/*" hidden>
+      </div>
       <div class="sheet-actions" style="position:static">
         ${isNew ? '' : `<button type="button" class="btn danger left" id="ip-del">删除合集</button>`}
         <button type="button" class="btn" data-close>取消</button><button class="btn primary" type="submit">保存</button>
       </div>
     </form>`, root => {
     $$('[data-close]', root).forEach(b => b.onclick = closeModal);
-    const prev = $('#ip-prev', root), sw = $('#ip-sw', root), setsBox = $('#ip-sets', root), imgBox = $('#ip-imgbox', root);
+    const prev = $('#ip-prev', root), sw = $('#ip-sw', root), setsBox = $('#ip-sets', root), bgBox = $('#ip-bg', root), noPal = $('#ip-nopal', root);
     const drawPrev = () => {
       const img = d.spineImg ? imgSrc(d.spineImg) : '';
       prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
@@ -2680,38 +2736,39 @@ function openIpForm(ip) {
     const drawSets = () => {
       const all = sets(), cur = setIdx < 0 ? 0 : setIdx + (d.palette && d.palette.length ? 1 : 0);
       setsBox.innerHTML = all.map((s, i) => `<button type="button" class="${i === cur ? 'on' : ''}" data-set="${i}">${esc(s.name)}</button>`).join('');
+      noPal.hidden = !(d.palette && d.palette.length);
       sw.innerHTML = all[cur].colors.map(c => `<button type="button" style="--c:${c}" data-c="${c}" class="${c.toLowerCase() === String(d.color).toLowerCase() ? 'on' : ''}" title="${c}" aria-label="颜色 ${c}"></button>`).join('');
     };
-    const drawImgBox = () => {
-      if (d.spineImg) imgBox.innerHTML = `<span>书脊图片</span><div class="row" style="align-items:center"><img class="ip-thumb" src="${imgSrc(d.spineImg)}" alt=""><button type="button" class="btn small" id="ip-noimg">不用图片，只用颜色</button></div>`;
-      else if (pendingImg) imgBox.innerHTML = `<span>刚上传的图片</span><div class="row" style="align-items:center"><img class="ip-thumb" src="${pendingImg}" alt=""><button type="button" class="btn small" id="ip-useimg">用这张图做书脊背景</button></div><span class="hint">上面“图片取色”里是从这张图提取的颜色，可以直接选一个。</span>`;
-      else imgBox.innerHTML = '';
-      const no = $('#ip-noimg', root); if (no) no.onclick = () => { d.spineImg = ''; drawImgBox(); drawPrev(); };
-      const use = $('#ip-useimg', root); if (use) use.onclick = () => { d.spineImg = pendingImg; pendingImg = ''; drawImgBox(); drawPrev(); };
+    const drawBg = () => {   // 合集背景图：没有图 = 上传入口；有图 = 预览 + 更换 / 删除
+      bgBox.innerHTML = d.spineImg
+        ? `<div class="ip-bg-row"><img class="ip-bg-thumb" src="${imgSrc(d.spineImg)}" alt="合集背景图">
+            <div class="ip-bg-side"><span class="hint">图片会铺满书脊，文字自动变成白色。</span>
+            <div class="row"><label class="btn small" for="ip-bgfile">更换图片</label><button type="button" class="btn small danger" id="ip-bgdel">删除图片</button></div></div></div>`
+        : `<label class="ip-bg-add" for="ip-bgfile"><b>＋</b><span>上传图片做合集背景</span><small>可以放大缩小、裁剪成书脊的形状</small></label>`;
+      const delBtn = $('#ip-bgdel', root);
+      if (delBtn) delBtn.onclick = () => { d.spineImg = ''; drawBg(); drawPrev(); toast('已删除背景图，点保存后生效'); };
     };
     const usePalette = cols => {
       if (!cols.length) return toast('没能从图片里取到颜色，换一张试试');
-      d.palette = cols; setIdx = -1; d.color = cols[0]; drawSets(); drawPrev(); toast(`取到 ${cols.length} 个颜色`);
+      d.palette = cols; setIdx = -1; d.color = cols[0]; $('#ip-color', root).value = d.color; drawSets(); drawPrev(); toast(`取到 ${cols.length} 个颜色，点选一个做书脊颜色`);
     };
     setsBox.onclick = e => { const b = e.target.closest('[data-set]'); if (!b) return; const i = +b.dataset.set, off = d.palette && d.palette.length ? 1 : 0; setIdx = i - off; drawSets(); };
     sw.onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; d.color = b.dataset.c; $('#ip-color', root).value = d.color; drawSets(); drawPrev(); };
     $('#ip-color', root).oninput = e => { d.color = e.target.value; drawSets(); drawPrev(); };
     $('#ip-name', root).oninput = drawPrev;
-    $('#ip-file', root).onchange = async e => {
+    $('#ip-file', root).onchange = async e => {   // 取色：先框出想取色的区域
       const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-      try { pendingImg = await compressImage(f, 480, 0.82); } catch (err) { return toast(err.message); }
-      usePalette(await extractPalette(pendingImg)); drawImgBox();
+      let du; try { du = await cropImage(f, '', 480, 0.82, {title: '选择取色范围', ratios: [['原图', 0], ['1:1', 1], ['3:4', 3 / 4], ['4:3', 4 / 3]]}); } catch (err) { return toast(err.message); }
+      if (du) usePalette(await extractPalette(du));
     };
-    const fc = $('#ip-from-cover', root);
-    if (fc) fc.onclick = async () => {
-      const all = [];
-      for (const src of covers) (await extractPalette(imgSrc(src), 6)).forEach(c => all.push(c));
-      const uniq = [];
-      all.forEach(c => { const v = parseInt(c.slice(1), 16), r = v >> 16, g = (v >> 8) & 255, b = v & 255;
-        if (uniq.every(u => { const w = parseInt(u.slice(1), 16); return Math.hypot(r - (w >> 16), g - ((w >> 8) & 255), b - (w & 255)) > 46; })) uniq.push(c); });
-      usePalette(uniq.slice(0, 12));
+    noPal.onclick = () => { delete d.palette; setIdx = 0; drawSets(); toast('已清除图片取色'); };
+    $('#ip-bgfile', root).onchange = async e => {   // 背景图：裁剪 + 缩放，默认书脊比例
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      let du; try { du = await cropImage(f, '', 480, 0.82, {title: '裁剪合集背景', ratios: [['书脊 1:3', 1 / 3], ['3:4', 3 / 4], ['1:1', 1], ['原图', 0]]}); } catch (err) { return toast(err.message); }
+      if (!du) return;
+      d.spineImg = du; drawBg(); drawPrev();
     };
-    drawSets(); drawImgBox(); drawPrev();
+    drawSets(); drawBg(); drawPrev();
     $('#ip-name', root).focus();
     $('#ip-form', root).onsubmit = async e => {
       e.preventDefault();
@@ -2766,14 +2823,14 @@ function readImg(file) {
     img.src = url;
   });
 }
-async function cropImage(file, step = '', max = 1600, q = 0.85) {
+async function cropImage(file, step = '', max = 1600, q = 0.85, opts = {}) {
   const {img, url} = await readImg(file);
   const W = img.naturalWidth, H = img.naturalHeight;
-  const RATIOS = [['3:4', 3 / 4], ['4:3', 4 / 3], ['1:1', 1], ['原图', W / H]];
-  let ratio = 3 / 4, fw = 0, fh = 0, scale = 1, minS = 1, tx = 0, ty = 0;
+  const RATIOS = (opts.ratios || [['3:4', 3 / 4], ['4:3', 4 / 3], ['1:1', 1], ['原图', 0]]).map(([t, r]) => [t, r || W / H]);   // 0 = 原图比例
+  let ratio = RATIOS[0][1], fw = 0, fh = 0, scale = 1, minS = 1, tx = 0, ty = 0;
   const box = document.createElement('div'); box.className = 'crop'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', '裁剪图片');
   box.innerHTML = `<div class="crop-panel">
-    <div class="sheet-head"><h2>裁剪图片${step ? `<small>${step}</small>` : ''}</h2><button class="icon-btn" data-c="cancel" aria-label="不添加这张">✕</button></div>
+    <div class="sheet-head"><h2>${esc(opts.title || '裁剪图片')}${step ? `<small>${step}</small>` : ''}</h2><button class="icon-btn" data-c="cancel" aria-label="不添加这张">✕</button></div>
     <div class="seg crop-ratios" role="tablist">${RATIOS.map(([t], i) => `<button type="button" data-r="${i}" class="${i === 0 ? 'on' : ''}">${t}</button>`).join('')}</div>
     <div class="crop-wrap"><div class="crop-stage"><img src="${url}" alt="" draggable="false"><i class="crop-grid"></i></div></div>
     <div class="crop-zoom"><span aria-hidden="true">－</span><input type="range" min="1" max="4" step="0.01" value="1" aria-label="缩放"><span aria-hidden="true">＋</span></div>
@@ -2907,7 +2964,7 @@ async function openBookForm(book, presetIp) {
   const openSets = new Set();
   if (draft && d.ipId && !ipById(d.ipId)) d.ipId = '';
   const wantNew = d._ipSel === '__new' || !S.ips.length;
-  const ipOpts = [...S.ips].sort((a, b) => (a.created || 0) - (b.created || 0))
+  const ipOpts = [...S.ips].sort(byIpOrder)
     .map(ip => `<option value="${esc(ip.id)}" ${ip.id === d.ipId && !wantNew ? 'selected' : ''}>${esc(ip.name)}</option>`).join('');
   const curOpts = v => Object.entries(CUR).map(([k, c]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${c.n}</option>`).join('');
   openModal(`
@@ -3274,8 +3331,7 @@ document.addEventListener('click', async e => {
       break;
     }
     case 'share-native': {
-      try { await navigator.share({title: 'Doumi', text: 'Doumi · 你的同人本管理书架 · made by fs', url: shareLink()}); } catch {}
-      break;
+      await nativeShare(); break;
     }
     case 'stat-more': { statAll[el.dataset.v] = !statAll[el.dataset.v]; const y = window.scrollY; renderStats(); window.scrollTo(0, y); break; }
     case 'del-theme': {
