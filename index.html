@@ -168,8 +168,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 }
 .spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;transition:transform .16s ease;min-height:0;overflow:hidden}
 .spine:hover,.spine:focus-visible{transform:translateY(-6px)}
-.spine-title{display:flex;flex-direction:column;align-items:center;gap:var(--sw-gap);font-weight:600;font-size:15px;line-height:1.15;min-height:0;max-height:100%;overflow:hidden}
-.spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap}
+.spine-title{display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:center;justify-self:center;gap:var(--sw-gap);font-weight:600;font-size:15px;line-height:1.15;min-height:0;max-height:100%;overflow:hidden}
+.spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap;background:none;border:0;border-radius:0;box-shadow:none;padding:0;min-width:0;width:auto;height:auto}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
 .shelf.dragging .spine:hover{transform:none}
 .spine.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
@@ -178,12 +178,12 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 /* 书脊文字分段排：汉字段竖排正立，连续 2 个以上的英文 / 数字 / 符号成一段，横排后顺时针转 90 度。
    段与段之间用 flex 的 gap 留出间距（不依赖行内 margin，各浏览器表现一致）。
    间距参照 W3C《中文排版需求》(clreq) / 《日文排版需求》(JLREQ)：汉字与西文之间约 1/4 em；
-   书脊文字粗、列窄，取 0.3em；电脑（鼠标操作）上常见的雅黑 / 苹方字框更满，放宽到 0.5em。 */
-:root{--sw-gap:.3em}
-@media (hover:hover) and (pointer:fine){:root{--sw-gap:.5em}}
+   书脊文字粗、列窄，手机取 0.34em（至少 5px）；有鼠标的设备（电脑）上雅黑 / 苹方字框更满，放宽到 0.55em（至少 8px）。 */
+:root{--sw-gap:max(5px,.34em)}
+@media (any-pointer:fine){:root{--sw-gap:max(8px,.55em)}}
 .spine-title .sg{flex:none;writing-mode:vertical-rl;-webkit-text-orientation:upright;text-orientation:upright;letter-spacing:.06em;margin-block-end:-.06em;white-space:nowrap}
 .spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;margin-block-end:-.03em;font-variant-numeric:tabular-nums}
-.spine-title.clip{-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}   /* 名字太长：底部淡出 */
+.spine-title.clip{justify-content:flex-start;-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}   /* 名字太长：底部淡出 */
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -1007,7 +1007,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-33';
+const APP_VERSION = '2026.10.30-34';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1980,18 +1980,14 @@ function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
   books.forEach(b => (keyFn(b) || []).forEach(k => { const e = m.get(k) || {name: k, count: 0, cost: 0, titles: 0}; e.count += qtyOf(b); e.cost += bookTotal(b); e.titles++; m.set(k, e); }));
   return [...m.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
 }
-/* 书脊文字：拆成若干段 —— 汉字（及单个的字母 / 数字）一段竖排；连续 2 个以上的英文、数字、符号一段，横排转 90 度
-   例：新建IP → [新建][IP]；偶像梦幻祭2 → [偶像梦幻祭2]（单个数字保持正立） */
+/* 书脊文字：拆成若干段，段与段之间留固定间距
+   汉字一段竖排；英文、数字、符号单独成段 —— 1 个字符保持正立，2 个以上横排转 90 度
+   例：新建IP → [新建][IP↻]；最终幻想7 → [最终幻想][7] */
 const SW_RE = /([A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+(?: +[A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+)*)/;
-const spineText = name => {
-  const segs = [];
-  String(name || '').split(SW_RE).forEach((part, i) => {
-    const rot = i % 2 === 1 && part.length > 1;
-    if (!rot) { if (part.trim()) { const last = segs[segs.length - 1]; if (last && !last.rot) last.t += part; else segs.push({t: part, rot}); } return; }
-    segs.push({t: part, rot});
-  });
-  return segs.map(g => `<span class="sg${g.rot ? ' sw' : ''}">${esc(g.rot ? g.t : g.t.trim())}</span>`).join('');
-};
+const spineText = name => String(name || '').split(SW_RE)
+  .map((t, i) => ({t: t.trim(), rot: i % 2 === 1 && t.trim().length > 1}))
+  .filter(g => g.t)
+  .map(g => `<span class="sg${g.rot ? ' sw' : ''}">${esc(g.t)}</span>`).join('');
 /* 名字超出书脊高度时加 .clip（底部淡出），代替省略号 */
 const markClipped = root => root && $$('.spine-title', root).forEach(t => t.classList.toggle('clip', t.scrollHeight > t.clientHeight + 1));
 /* 小标题：色点 + 名称 + 右侧补充说明 */
