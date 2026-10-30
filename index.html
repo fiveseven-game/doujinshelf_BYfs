@@ -11,6 +11,23 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <title>Doumi</title>
+<meta name="description" content="你的同人本管理书架 · made by fs">
+<!-- 分享卡片：微信、QQ、Threads、Telegram 等读取这些信息生成链接卡片 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Doumi">
+<meta property="og:title" content="Doumi">
+<meta property="og:description" content="你的同人本管理书架 · made by fs">
+<meta property="og:image" content="share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Doumi · made by fs">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Doumi">
+<meta name="twitter:description" content="你的同人本管理书架 · made by fs">
+<meta name="twitter:image" content="share-card.png">
+<meta itemprop="name" content="Doumi">
+<meta itemprop="description" content="你的同人本管理书架 · made by fs">
+<meta itemprop="image" content="share-card.png">
 <style>
 /* 布局：极简扁平。首页 = 在途栏 + 收藏（书脊书架 / 瀑布流）；IP 合集 → 封面墙 → 详情 */
 :root{
@@ -663,6 +680,8 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#3aa17e}
 .sync[data-state=busy]::before{background:var(--transit)}
 .sync[data-state=error]::before{background:var(--danger)}
+.share-preview{aspect-ratio:1200/630;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;max-width:360px}
+.share-preview img{display:block;width:100%;height:100%}
 .link-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .link-box code{flex:1;min-width:0;font-size:12px;background:var(--bg);padding:8px 10px;border-radius:6px;overflow-wrap:anywhere;user-select:all}
 .steps{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:grid;gap:3px}
@@ -672,6 +691,7 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 </style>
 </head>
 <body>
+<div style="display:none" aria-hidden="true"><img src="share-card.png" alt=""></div>
 
 <section id="lock">
   <div class="lock-card wrap">
@@ -937,7 +957,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-19';
+const APP_VERSION = '2026.10.30-21';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -2004,7 +2024,7 @@ function renderStats() {
       <div class="sb-cols">
         <div class="sb">${blockHead('钱花在哪儿', 6, money(total))}
           ${labs.length ? stackBar(labs, total, r => money(r.v), 5) : '<p class="sb-empty">还没有支付明细</p>'}</div>
-        <div class="sb">${blockHead('花费最多的本子', 8, '按实际支付')}
+        <div class="sb">${blockHead('花费最多的本子', 8, '按总消费')}
           <ol class="sb-top">${top.map((b, i) => `<li><a href="#book-${esc(b.id)}"><span class="sb-rank">${i + 1}</span><span class="sb-top-name"><span class="sb-t1">${esc(b.title || '无题')}</span><span class="sb-t2">${esc((ipById(b.ipId) || {}).name || '')}${splitCp(b.cp).map(x => `<span class="sb-t3">${esc(x)}</span>`).join('')}</span></span><b class="num">${money(bookTotal(b))}</b></a></li>`).join('')}</ol></div>
       </div>
     </section>
@@ -2041,17 +2061,91 @@ async function presetAllowed() {
 }
 const siteUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
 const shareLink = () => siteUrl() + '?share=1';
+/* 分享卡片图：LOGO + Doumi + made by fs（同一套画法也用来生成网站的 share-card.png） */
+function loadImg(src) { return new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
+async function drawShareCard(w = 1200, h = 630) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const logo = await loadImg(DEFAULT_LOGO);
+  const t = document.createElement('canvas'); t.width = t.height = 8;   // 底色取 LOGO 四角的颜色，图和底融为一体
+  const tg = t.getContext('2d'); tg.drawImage(logo, 0, 0, 8, 8);
+  const px = [0, 7].flatMap(x => [0, 7].map(y => tg.getImageData(x, y, 1, 1).data));
+  const avg = k => Math.round(px.reduce((n, d) => n + d[k], 0) / px.length);
+  g.fillStyle = `rgb(${avg(0)},${avg(1)},${avg(2)})`; g.fillRect(0, 0, w, h);
+  const u = Math.min(w, h);                    // 内容按短边排版，裁成正方形缩略图时也完整
+  const ls = u * 0.42, gap = u * 0.035, nameS = u * 0.135, byS = u * 0.042;
+  const total = ls + gap + nameS + u * 0.03 + byS;
+  let y = (h - total) / 2;
+  g.drawImage(logo, (w - ls) / 2, y, ls, ls); y += ls + gap;
+  const font = '-apple-system, "SF Pro Display", "Helvetica Neue", "PingFang SC", Arial, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  g.fillStyle = '#3a2a24'; g.font = `700 ${nameS}px ${font}`;
+  if ('letterSpacing' in g) g.letterSpacing = `${nameS * 0.01}px`;
+  g.fillText('Doumi', w / 2, y); y += nameS + u * 0.03;
+  g.fillStyle = '#a3958d'; g.font = `500 ${byS}px ${font}`;
+  if ('letterSpacing' in g) g.letterSpacing = `${byS * 0.08}px`;
+  g.fillText('made by fs', w / 2, y);
+  return c;
+}
+const canvasBlob = c => new Promise(r => c.toBlob(r, 'image/png'));
+async function shareCardImage() {
+  const blob = await canvasBlob(await drawShareCard(1080, 1080));   // 正方形，适合小红书、TikTok、朋友圈
+  const file = new File([blob], 'Doumi.png', {type: 'image/png'});
+  if (navigator.canShare && navigator.canShare({files: [file]})) {
+    try { await navigator.share({files: [file], title: 'Doumi', text: 'Doumi · 你的同人本管理书架 ' + shareLink()}); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Doumi.png';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('分享卡片已保存');
+}
+async function fillSharePreview() {
+  const box = document.getElementById('share-preview'); if (!box) return;
+  try { const c = await drawShareCard(1200, 630); box.innerHTML = `<img src="${c.toDataURL('image/png')}" alt="分享卡片预览：Doumi · made by fs">`; } catch {}
+}
+
 function shareCard() {
   if (Store.kind === 'claude') return '';
   const local = location.protocol === 'file:';
   const preset = normConfig(window.SHELF_CONFIG);
   return `<div class="set-card"><h2>分享给朋友</h2>
-    <p>朋友用这个链接打开时，会是第一次使用的初始状态：空书架、自己设解锁密码、不连接任何云端。你的本子、密码和 Supabase 信息都不会给到对方，你自己的数据也不受任何影响。</p>
+    <p>朋友打开是全新的空书架，看不到你的任何数据。</p>
     ${local ? '<p class="notice" style="margin:0">现在是直接打开的本地文件，没有网址可以分享。请先用 GitHub Pages 的网址打开，再来这里复制分享链接。</p>' : `
+    <div class="share-preview" id="share-preview" aria-label="分享卡片预览"></div>
+    <p class="hint" style="margin:0">链接发到微信、QQ 等会显示成这张卡片；小红书、TikTok 可以保存卡片图来发。</p>
     <div class="link-box"><code id="share-url">${esc(shareLink())}</code></div>
-    <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
+    <div class="row"><button class="btn primary small" type="button" data-act="share-copy">复制分享链接</button><button class="btn small" type="button" data-act="share-card">保存分享卡片</button>${navigator.share ? '<button class="btn small" type="button" data-act="share-native">用其他 App 分享</button>' : ''}</div>`}
     ${preset ? '<p class="hint" style="margin:0;color:var(--danger)">提醒：网站的 config.js 里填了 Supabase 信息。分享链接已经会自动忽略它，但别人看网站源码时仍能看到。建议把 config.js 改回空白，只在自己的设备里填写。</p>' : ''}
   </div>`;
+}
+
+/* ================= 清除缓存 =================
+   本地缓存：离线网页文件（Service Worker）+ 云端图片在本机的副本（imgcache）
+   在线缓存：云端图片的临时签名链接（内存里），清完重新向云端要
+   不碰：本子、IP、设置、待同步队列，也不动 Supabase 里的任何数据 */
+async function clearCaches() {
+  const web = Store.kind !== 'claude';
+  if (web && !navigator.onLine) return toast('请先联网再清除缓存，清除后需要重新下载网页');
+  if (!(await confirmBox('清除这台设备上的网页缓存和图片缓存，并重新下载最新版本？本子数据和还没同步的修改不受影响。', '清除缓存'))) return;
+  toast('正在清除缓存…');
+  let keptImgs = false;
+  try {
+    if (DB.db) {
+      const n = (await DB.keys('imgcache')).length;
+      if (n && Sync.client && Sync.user) {
+        await Sync.repairImages();               // 先确认图片都在云端，再删本机副本
+        await DB.clear('imgcache');
+      } else if (n) keptImgs = true;             // 没连云端时，本机副本是唯一能显示这些图的地方，保留
+    }
+  } catch { keptImgs = true; }
+  Object.keys(Store.urls).forEach(k => { if (k.startsWith('sb:')) delete Store.urls[k]; });
+  Store.missing.clear();
+  try { if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k); } catch {}
+  try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update(); } catch {}
+  const msg = keptImgs ? '缓存已清除（没连云端同步，图片副本先保留）' : '缓存已清除，已重新加载最新版本';
+  if (!web) { Store.bumpUrls(); return toast(msg.replace('，已重新加载最新版本', '')); }
+  try { sessionStorage.setItem('doumi-toast', msg); } catch {}
+  location.reload();
 }
 
 /* ================= 添加到桌面 ================= */
@@ -2068,7 +2162,7 @@ function installCard() {
   else if (isStandalone()) btn = '<span class="install-done">已经在桌面上打开</span>';
   else btn = `<button type="button" class="btn primary small" data-act="install">${isIOS() ? '添加到主屏幕' : '添加到桌面'}</button>`;
   return `<div class="set-card sync-row" id="install-card">
-    <div class="install-info"><img src="${logo}" alt="" class="install-logo"><div><h2>添加到桌面</h2><p>像 App 一样从桌面直接打开，图标就是网站 LOGO。</p></div></div>
+    <div class="install-info"><img src="${logo}" alt="" class="install-logo"><div><h2>添加到桌面</h2><p>像 App 一样从桌面一键打开。</p></div></div>
     ${btn}</div>`;
 }
 async function doInstall() {
@@ -2101,7 +2195,7 @@ function renderSettings() {
     <div class="settings">
       <nav class="set-nav" aria-label="设置分类">${[['sync', '同步与设备'], ['look', '个性化'], ['money', '记账与数据'], ['safe', '安全与隐私']].map(([k, t]) => `<button type="button" data-act="set-jump" data-v="${k}">${t}</button>`).join('')}</nav>
       <section class="set-group" id="sg-sync">
-        <div class="set-group-head"><h2>同步与设备</h2><p>多台设备之间同步、放到桌面、分享给朋友</p></div>
+        <div class="set-group-head"><h2>同步与设备</h2><p>多设备同步、桌面图标和分享</p></div>
         <div class="set-group-body">
       ${syncCard()}
       ${installCard()}
@@ -2167,7 +2261,7 @@ function renderSettings() {
         </div>
       </section>
       <section class="set-group" id="sg-safe">
-        <div class="set-group-head"><h2>安全与隐私</h2><p>解锁密码、上锁和清空数据</p></div>
+        <div class="set-group-head"><h2>安全与隐私</h2><p>解锁密码、上锁、缓存和数据</p></div>
         <div class="set-group-body">
 <div class="set-card"><h2>修改解锁密码</h2>
         <form id="pw-form" class="form" autocomplete="off">
@@ -2179,6 +2273,8 @@ function renderSettings() {
       </div>
 <div class="set-card"><h2>立即上锁</h2><p>离开页面超过 3 分钟会自动上锁，也可以现在手动上锁。</p>
         <div class="row"><button class="btn" data-act="lock">立即上锁</button></div></div>
+<div class="set-card"><h2>清除缓存</h2><p>清掉离线网页、图片缓存和云端图片的临时链接，重新下载最新版。本子数据和未同步的修改不受影响。</p>
+        <div class="row"><button class="btn" data-act="clear-cache">清除缓存</button></div></div>
 <div class="set-card danger-card"><h2>清空这台设备的数据</h2><p>删除这台设备上的全部 IP、本子、图片和解锁密码，无法恢复；如果开着云端同步，会先断开，云端数据保留不动。</p>
         <div class="row"><button class="btn danger" data-act="wipe">清空所有数据</button></div></div>
         </div>
@@ -2228,6 +2324,7 @@ function renderSettings() {
     } catch (err) { toast(err.message); }
   };
   $('#import-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
+  fillSharePreview();
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(r => { if (r && r.usage) $('#storage-hint').textContent = `已用存储约 ${(r.usage / 1048576).toFixed(1)} MB`; }).catch(() => {});
 }
 /* 云端同步说明卡片 */
@@ -2239,7 +2336,7 @@ function syncCard() {
     <p>你正在使用 Claude 云端版。数据和图片保存在你 Claude 账号下的私有空间，手机、电脑登录同一个 Claude 账号打开这个链接即可同步。</p>${link}</div>`;
   }
   return `<div class="set-card sync-row">
-    <div><h2>云端同步</h2><p>内容会先自动保存在这台设备；连上 Supabase 后，在多台设备之间同步。</p></div>
+    <div><h2>云端同步</h2><p>先存在本机，连上 Supabase 后多设备自动同步。</p></div>
     <button type="button" class="sync-pill" data-sync-pill data-state="${{ok: 'ok', busy: 'busy'}[Sync.state] || 'off'}" data-act="sync-panel"><i></i><span>${esc(Sync.label())}</span></button>
   </div>`;
 }
@@ -3036,6 +3133,7 @@ document.addEventListener('click', async e => {
   const curBook = () => bookById(decodeURIComponent(location.hash).slice(6));
   switch (act) {
     case 'lock': lockNow(); break;
+    case 'clear-cache': clearCaches(); break;
     case 'new-ip': openIpForm(); break;
     case 'edit-ip': openIpForm(ipById(id)); break;
     case 'new-book': openBookForm(null, el.dataset.ip); break;
@@ -3059,8 +3157,9 @@ document.addEventListener('click', async e => {
       catch { const c = $('#share-url'); if (c) { const r = document.createRange(); r.selectNodeContents(c); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } toast('请长按或按 Ctrl+C 复制选中的链接'); }
       break;
     }
+    case 'share-card': { try { await shareCardImage(); } catch { toast('生成卡片失败，请稍后再试'); } break; }
     case 'share-native': {
-      try { await navigator.share({title: BRAND.name || DEFAULT_NAME, text: '你的同人本管理书架', url: shareLink()}); } catch {}
+      try { await navigator.share({title: 'Doumi', text: 'Doumi · 你的同人本管理书架 · made by fs', url: shareLink()}); } catch {}
       break;
     }
     case 'stat-more': { statAll[el.dataset.v] = !statAll[el.dataset.v]; const y = window.scrollY; renderStats(); window.scrollTo(0, y); break; }
@@ -3121,6 +3220,7 @@ document.addEventListener('click', async e => {
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 initLock();
+try { const m = sessionStorage.getItem('doumi-toast'); if (m) { sessionStorage.removeItem('doumi-toast'); setTimeout(() => toast(m), 900); } } catch {}
 </script>
 </body>
 </html>
