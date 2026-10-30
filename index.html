@@ -181,6 +181,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
 .spine-title .sw.gs{margin-block-start:0;margin-inline-start:.22em}
 .spine-title .sw.ge{margin-inline-end:.28em}
+/* 电脑端字体（苹方 / 微软雅黑）的汉字字框更紧，转过来的英文数字看起来更贴近，留更大的间距 */
+@media (min-width:720px){.spine-title .sw.gs{margin-inline-start:.45em}.spine-title .sw.ge{margin-inline-end:.5em}}
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -1022,7 +1024,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-31';
+const APP_VERSION = '2026.10.30-32';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
