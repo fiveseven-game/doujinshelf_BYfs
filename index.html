@@ -152,7 +152,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .t-card .mini{width:44px;height:60px;flex:none;border-radius:3px;overflow:hidden;border:0;padding:0;background:var(--line)}
 .t-card .mini img{width:100%;height:100%;object-fit:cover}
 .t-card .mini .ph.loading{opacity:.75}
-.ph span{font-size:10px}
+.t-card .mini .ph span{font-size:10px}
 .t-info{min-width:0;flex:1;display:grid;gap:1px;text-align:left;border:0;background:none;padding:0}
 .t-info b{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t-info span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -160,7 +160,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .transit-empty{padding:14px;border-radius:10px;background:var(--soft);color:var(--muted);font-size:13px}
 
 /* 书脊书架 */
-.shelf{
+.shelf{position:relative;
   --row:228px;
   display:grid;grid-template-columns:repeat(auto-fill,54px);grid-auto-rows:var(--row);column-gap:6px;
   background-image:linear-gradient(to bottom,transparent 0 208px,var(--line-2) 208px 210px,transparent 210px);
@@ -168,21 +168,22 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 }
 .spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;transition:transform .16s ease;min-height:0;overflow:hidden}
 .spine:hover,.spine:focus-visible{transform:translateY(-6px)}
-.spine-title{writing-mode:vertical-rl;text-orientation:upright;font-weight:600;font-size:15px;letter-spacing:.06em;line-height:1.15;min-height:0;max-height:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:normal}
+.spine-title{display:flex;flex-direction:column;align-items:center;gap:var(--sw-gap);font-weight:600;font-size:15px;line-height:1.15;min-height:0;max-height:100%;overflow:hidden}
 .spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
-.shelf{position:relative}
 .shelf.dragging .spine:hover{transform:none}
 .spine.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
 .spine.drag-ghost{background-color:var(--c);padding:12px 0 10px;margin:0;border-radius:2px 2px 0 0;filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
 .spine.add .spine-title{font-weight:500;font-size:13px}
-/* 书脊上连续 2 个及以上的英文 / 数字 / 符号：横排后顺时针转 90 度，和上下的竖排汉字居中对齐；单个字符保持正立 */
-.spine-title{-webkit-text-orientation:upright}
-.spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
-.spine-title .sw.gs{margin-block-start:0;margin-inline-start:.22em}
-.spine-title .sw.ge{margin-inline-end:.28em}
-/* 电脑端字体（苹方 / 微软雅黑）的汉字字框更紧，转过来的英文数字看起来更贴近，留更大的间距 */
-@media (min-width:720px){.spine-title .sw.gs{margin-inline-start:.45em}.spine-title .sw.ge{margin-inline-end:.5em}}
+/* 书脊文字分段排：汉字段竖排正立，连续 2 个以上的英文 / 数字 / 符号成一段，横排后顺时针转 90 度。
+   段与段之间用 flex 的 gap 留出间距（不依赖行内 margin，各浏览器表现一致）。
+   间距参照 W3C《中文排版需求》(clreq) / 《日文排版需求》(JLREQ)：汉字与西文之间约 1/4 em；
+   书脊文字粗、列窄，取 0.3em；电脑（鼠标操作）上常见的雅黑 / 苹方字框更满，放宽到 0.5em。 */
+:root{--sw-gap:.3em}
+@media (hover:hover) and (pointer:fine){:root{--sw-gap:.5em}}
+.spine-title .sg{flex:none;writing-mode:vertical-rl;-webkit-text-orientation:upright;text-orientation:upright;letter-spacing:.06em;margin-block-end:-.06em;white-space:nowrap}
+.spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;margin-block-end:-.03em;font-variant-numeric:tabular-nums}
+.spine-title.clip{-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}   /* 名字太长：底部淡出 */
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -192,11 +193,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 @media (min-width:720px){.flow{gap:16px}}
 .flow-col{display:grid;gap:16px;min-width:0}
 .wf{display:block;width:100%;border:0;background:none;padding:0;margin:0;text-align:left}
-.wf .pic{border-radius:6px;overflow:hidden;background:var(--soft);transition:opacity .16s}
+.wf .pic{position:relative;border-radius:6px;overflow:hidden;background:var(--soft);transition:opacity .16s}
 .wf:hover .pic{opacity:.9}
 .wf .pic img{width:100%;height:auto}
 .wf .pic .ph{aspect-ratio:5/7;height:auto}
-.wf .pic{position:relative}
 .wf .pic .tag{position:absolute;top:6px;left:6px}
 .wf .pic .tag.qty{left:auto;right:6px;background:rgba(0,0,0,.55);color:#fff}
 .wf-title{font-size:15px;font-weight:600;margin-top:8px;line-height:1.35;overflow-wrap:anywhere;letter-spacing:.01em}
@@ -216,7 +216,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .buy-facts span{font-size:12px;color:var(--muted);margin-left:3px}
 .buy-facts i{font-style:normal;color:var(--muted);font-size:13px;display:block;margin-top:3px}
 .buy .buy-sum{text-align:left}
-.price-cap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
+.price-cap{display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
 .buy .price-cap+.price-lines{margin-top:6px;padding-top:0;border-top:0}
 .unit-in{position:relative}
 .unit-in input{padding-right:30px}
@@ -237,7 +237,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .coll-head h1{font-size:24px}
 .coll-head p{margin:2px 0 0;color:var(--muted);font-size:13px}
 .coll-head .btn{margin-left:auto}
-.covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:20px 12px}
+.covers{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:20px 12px}
 @media (min-width:720px){.covers{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:24px 16px}}
 .cover-card{border:0;background:none;padding:0;text-align:left;display:grid;gap:6px;align-content:start;min-width:0}
 .cover{aspect-ratio:5/7;max-width:100%;border-radius:4px;overflow:hidden;background:var(--soft);position:relative;transition:transform .16s}
@@ -279,7 +279,6 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cover-card:hover .cover-add{border-color:var(--ink);color:var(--ink)}
 
 .drag-hint{margin:-6px 0 14px;line-height:1.5;font-size:12px;color:var(--muted)}
-.covers{position:relative}
 .covers .cover-card[data-id]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y}
 .covers .cover-card img{-webkit-user-drag:none;pointer-events:none}
 .covers.dragging .cover-card:hover .cover{transform:none}
@@ -358,7 +357,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .hint{font-size:12px;color:var(--muted)}
 
 /* 设置 */
-.settings{max-width:560px;display:grid;gap:12px}
+.settings{max-width:560px;display:grid;gap:28px}
 .set-card{background:var(--soft);border-radius:10px;padding:16px;display:grid;gap:10px}
 .set-card h2{font-size:15px}
 .set-card p{margin:0;color:var(--muted);font-size:13px}
@@ -411,9 +410,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .img-item.drag-src{opacity:.22;transform:scale(.96);transition:opacity .15s,transform .15s}
 .img-item.drag-ghost{height:94px;padding:0;border-radius:6px}
 .img-item.drag-ghost .x{display:none}
-.img-item{position:relative;width:70px;height:94px;border-radius:6px;overflow:hidden;background:var(--soft);cursor:pointer}
+.img-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y;position:relative;width:70px;height:94px;border-radius:6px;overflow:hidden;background:var(--soft);cursor:pointer}
 .img-item img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
-.img-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:pan-y}
 .img-wait{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px}
 .img-item .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:22px;padding:0}
 .img-item .badge{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:11px;text-align:center}
@@ -434,8 +432,8 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .cost-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .cost-foot strong{font:600 17px var(--num);font-variant-numeric:tabular-nums}
 .cost-foot small{display:block;text-align:right;color:var(--muted);font-size:12px}
-.swatches{display:flex;gap:8px;flex-wrap:wrap}
-.swatches button{width:32px;height:32px;border-radius:50%;border:0;background:var(--c)}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.swatches button{width:30px;height:30px;border-radius:50%;border:0;background:var(--c)}
 .swatches button.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
 .sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));background:var(--bg);padding:12px 0 4px}
 .sheet-actions .left{margin-right:auto}
@@ -489,8 +487,6 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .ip-bg-thumb{width:44px;height:132px;flex:none;object-fit:cover;border-radius:2px 2px 0 0;border-bottom:2px solid var(--line-2)}
 .ip-bg-side{display:grid;gap:10px;min-width:0}
 .ip-bg-side .hint{margin:0}
-.swatches{gap:7px}
-.swatches button{width:30px;height:30px}
 /* 统计：可视化 */
 .viz{display:grid;gap:32px;margin-bottom:36px}
 @media (min-width:860px){.viz{grid-template-columns:1fr 1fr;gap:36px 40px}.viz .wide{grid-column:1/-1}}
@@ -549,7 +545,6 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 .pill.tint i{background:var(--c)}
 .pill.sm{font-size:12.5px;padding:4px 10px}
 .buy .buy-sum strong{margin-top:2px}
-.price-cap{display:flex;justify-content:space-between}
 .price-more{margin-top:10px;border-top:1px dashed var(--line-2);padding-top:8px}
 .price-more summary{display:flex;justify-content:space-between;gap:10px;cursor:pointer;font-size:13px;color:var(--muted);list-style:none;padding:4px 0}
 .price-more summary::-webkit-details-marker{display:none}
@@ -689,7 +684,6 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .theme-names{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
 .theme-names span{display:inline-flex;align-items:center;gap:4px}
 .theme-names i{width:8px;height:8px;border-radius:2px;background:var(--c)}
-.sync{border:0;background:none;padding:4px 8px;border-radius:99px;cursor:pointer}
 .sync:hover{background:var(--soft)}
 .sync[data-state=off]::before{background:var(--line-2)}
 .sync[data-state=ok]::before{background:#2f9e6e}
@@ -714,7 +708,6 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .install-done{font-size:13px;color:#2f9e6e;font-weight:500;white-space:nowrap}
 .install-steps{margin:14px 0 0;padding-left:20px;display:grid;gap:8px;font-size:14px;line-height:1.6}
 /* 设置：二级分组（同步与设备 / 个性化 / 记账与数据 / 安全与隐私），组内是三级的功能卡片 */
-.settings{gap:28px}
 .set-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:-12px;position:sticky;top:calc(54px + env(safe-area-inset-top,0px));z-index:5;background:var(--bg);padding:8px 0}
 .set-nav button{flex:none;border:0;background:var(--soft);color:var(--muted);padding:5px 12px;border-radius:99px;font-size:13px}
 .set-nav button:hover{color:var(--ink)}
@@ -743,7 +736,7 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .live-table td:first-child{white-space:nowrap}
 .rate-q a{font-size:12px;margin-right:8px;text-decoration:none}
 .diff{font-size:11px;color:var(--muted)}
-.sync{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sync{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;border:0;background:none;padding:4px 8px;border-radius:99px;cursor:pointer}
 .sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#3aa17e}
 .sync[data-state=busy]::before{background:var(--transit)}
 .sync[data-state=error]::before{background:var(--danger)}
@@ -764,14 +757,6 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
     <div class="lock-title" id="lock-title">Doumi</div>
     <p class="lock-slogan">你的同人本管理书架</p>
     <p class="lock-sub" id="lock-sub">正在打开…</p>
-    <form class="lock-form" id="auth-form" hidden>
-      <div class="seg" style="justify-self:center"><button type="button" data-mode="login" class="on">登录</button><button type="button" data-mode="signup">注册</button></div>
-      <input class="input" type="email" id="au-email" placeholder="邮箱" autocomplete="email" inputmode="email">
-      <input class="input" type="password" id="au-pw" placeholder="账号密码（至少 6 位）" autocomplete="current-password">
-      <button class="btn primary block" id="au-btn" type="submit">登录</button>
-      <div class="lock-msg" id="au-msg"></div>
-      <button class="lock-link" id="au-forgot" type="button">忘记账号密码？</button>
-    </form>
     <p class="lock-sub" id="lock-acct" hidden style="margin:0;font-size:12px"></p>
     <form class="lock-form" id="lock-form" autocomplete="off" hidden>
       <input class="input" type="password" id="pw1" placeholder="密码" autocomplete="current-password">
@@ -872,7 +857,6 @@ document.addEventListener('pointerover', e => { const h = e.target.closest && e.
 document.addEventListener('pointerout', e => { const box = e.target.closest && e.target.closest('.stars'); if (box && !box.contains(e.relatedTarget)) fillStars(box, +box.dataset.rating || 0); });
 const qtyOf = b => Math.max(1, parseInt(b && b.qty, 10) || 1);
 /* 单价（每本）：只做记录，不参与总价计算。总价永远 = 支付明细各项相加 */
-const unitOf = b => b && b.unit && Number(b.unit.amount) > 0 ? {amount: Number(b.unit.amount), cur: b.unit.cur || 'CNY'} : null;
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5-4.8-4.5 6.5-.8z"/></svg>';
 let toastTimer;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
@@ -896,7 +880,6 @@ const SIZE_MM = {
   'A4': '210 × 297 mm', 'B5': '182 × 257 mm', 'A5': '148 × 210 mm', 'B6': '128 × 182 mm',
   'A6': '105 × 148 mm', '新书判': '103 × 182 mm', '文库本': '105 × 148 mm', '正方形': '边长不一',
 };
-const REGION_COLORS = {'日本': '#e4574c', '中国大陆': '#3d6fd9', '港澳台': '#3aa17e', '韩国': '#8a63d2', '欧美': '#e3a33b', '其他地区': '#2a9bb0', '未填写': '#c3c6cd'};
 /* 旧版地区名自动换成新写法（日本本子 → 日本，港台本子 → 港澳台 …） */
 const ORIGIN_ALIAS = {'日本本子': '日本', '中国大陆本子': '中国大陆', '中国本子': '中国大陆', '港台本子': '港澳台', '港台': '港澳台', '韩国本子': '韩国', '欧美本子': '欧美'};
 const normOrigin = o => ORIGIN_ALIAS[o] || o || '';
@@ -1024,7 +1007,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-32';
+const APP_VERSION = '2026.10.30-33';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1417,37 +1400,6 @@ function authErr(e) {
   if (/fetch|network/i.test(m)) return '连不上服务器，请检查网络';
   return m || '出错了，请再试一次';
 }
-function showAuth(client) {
-  return new Promise(resolve => {
-    const f = $('#auth-form'), msg = $('#au-msg'), btn = $('#au-btn'); let mode = 'login';
-    f.hidden = false; $('#lock-sub').textContent = '登录账号后，手机和电脑看到同一个书架';
-    const say = (t, ok) => { msg.textContent = t; msg.style.color = ok ? 'var(--muted)' : ''; };
-    $$('[data-mode]', f).forEach(b => b.onclick = () => {
-      mode = b.dataset.mode; $$('[data-mode]', f).forEach(x => x.classList.toggle('on', x === b));
-      btn.textContent = mode === 'login' ? '登录' : '注册'; $('#au-pw').autocomplete = mode === 'login' ? 'current-password' : 'new-password'; say('');
-    });
-    const back = location.origin + location.pathname;
-    f.onsubmit = async e => {
-      e.preventDefault();
-      const email = $('#au-email').value.trim(), password = $('#au-pw').value;
-      if (!/^\S+@\S+\.\S+$/.test(email)) return say('请填写正确的邮箱');
-      if (password.length < 6) return say('账号密码至少 6 位');
-      btn.disabled = true; say('');
-      try {
-        const r = mode === 'signup' ? await client.auth.signUp({email, password, options: {emailRedirectTo: back}}) : await client.auth.signInWithPassword({email, password});
-        if (r.error) return say(authErr(r.error));
-        if (!r.data.session) return say('注册成功！请去邮箱点确认链接，确认后回到这里登录。', true);
-        f.hidden = true; resolve(r.data.session);
-      } catch (err) { say(authErr(err)); } finally { btn.disabled = false; }
-    };
-    $('#au-forgot').onclick = async () => {
-      const email = $('#au-email').value.trim();
-      if (!/^\S+@\S+\.\S+$/.test(email)) return say('先在上面填写注册时用的邮箱');
-      const {error} = await client.auth.resetPasswordForEmail(email, {redirectTo: back});
-      say(error ? authErr(error) : '重置邮件已发送，请到邮箱点链接设置新密码', !error);
-    };
-  });
-}
 function showRecovery(client) {
   openModal(`<div class="sheet-head"><h2>设置新的账号密码</h2></div>
     <form class="form" id="rc-form"><input class="input" type="password" id="rc-pw" placeholder="新密码（至少 6 位）" autocomplete="new-password">
@@ -1734,7 +1686,7 @@ function renderHome() {
           <div class="seg" role="tablist"><button class="${viewMode === 'shelf' ? 'on' : ''}" data-act="view" data-v="shelf">书架</button><button class="${viewMode === 'flow' ? 'on' : ''}" data-act="view" data-v="flow">瀑布流</button></div></div>` : ''}</div>
       ${body}
     </section>`;
-  setupShelfDrag();
+  setupShelfDrag(); markClipped($('#shelf'));
 }
 
 /* ================= IP 合集 ================= */
@@ -2028,19 +1980,21 @@ function sumBy(books, keyFn) {   // 按本数（含购买数量）汇总
   books.forEach(b => (keyFn(b) || []).forEach(k => { const e = m.get(k) || {name: k, count: 0, cost: 0, titles: 0}; e.count += qtyOf(b); e.cost += bookTotal(b); e.titles++; m.set(k, e); }));
   return [...m.values()].sort((a, b) => b.count - a.count || b.cost - a.cost);
 }
-/* 小标题：色点 + 名称 + 右侧补充说明 */
-/* 书脊文字：汉字竖排正立；连续 2 个以上的英文、数字、符号包成一段横排旋转显示（例：新建IP → 新建 + 「IP」转 90 度） */
+/* 书脊文字：拆成若干段 —— 汉字（及单个的字母 / 数字）一段竖排；连续 2 个以上的英文、数字、符号一段，横排转 90 度
+   例：新建IP → [新建][IP]；偶像梦幻祭2 → [偶像梦幻祭2]（单个数字保持正立） */
 const SW_RE = /([A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+(?: +[A-Za-z0-9\u00C0-\u024F!-\/:-@\[-`{-~×]+)*)/;
-/* 书脊文字：连续 2 个及以上的英文 / 数字 / 符号包成 .sw（横排后顺时针转 90 度），
-   和汉字相邻的一侧加一点间距（.gs = 上方有字，.ge = 下方有字），避免贴在一起或重叠 */
 const spineText = name => {
-  const parts = String(name || '').split(SW_RE);
-  return parts.map((part, i) => {
-    if (!(i % 2) || part.length < 2) return esc(part);
-    const before = parts.slice(0, i).join('').trim(), after = parts.slice(i + 1).join('').trim();
-    return `<span class="sw${before ? ' gs' : ''}${after ? ' ge' : ''}">${esc(part)}</span>`;
-  }).join('');
+  const segs = [];
+  String(name || '').split(SW_RE).forEach((part, i) => {
+    const rot = i % 2 === 1 && part.length > 1;
+    if (!rot) { if (part.trim()) { const last = segs[segs.length - 1]; if (last && !last.rot) last.t += part; else segs.push({t: part, rot}); } return; }
+    segs.push({t: part, rot});
+  });
+  return segs.map(g => `<span class="sg${g.rot ? ' sw' : ''}">${esc(g.rot ? g.t : g.t.trim())}</span>`).join('');
 };
+/* 名字超出书脊高度时加 .clip（底部淡出），代替省略号 */
+const markClipped = root => root && $$('.spine-title', root).forEach(t => t.classList.toggle('clip', t.scrollHeight > t.clientHeight + 1));
+/* 小标题：色点 + 名称 + 右侧补充说明 */
 const blockHead = (title, n, aside) => `<div class="sb-head"><h3><i style="--c:var(--p${n})"></i>${title}</h3>${aside ? `<span>${aside}</span>` : ''}</div>`;
 function barRows(rows, {valFn, color, limit, moreKey}) {
   const shown = limit && !statAll[moreKey] ? rows.slice(0, limit) : rows;
@@ -2793,7 +2747,7 @@ function openIpForm(ip) {
       const img = d.spineImg ? imgSrc(d.spineImg) : '';
       prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
       prev.style.color = img ? '#fff' : textOn(d.color);
-      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称');
+      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称'); markClipped(prev);
     };
     const sets = () => (d.palette && d.palette.length ? [{name: '图片取色', colors: d.palette}] : []).concat(SPINE_SETS);
     const drawSets = () => {
