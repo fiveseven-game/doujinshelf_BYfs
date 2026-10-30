@@ -1,8 +1,8 @@
 // Doumi 离线缓存（通过 https 网址访问时生效）
 // 规则：先去服务器取最新文件；网速慢（超过 2.5 秒）或断网时，先用这台设备上存的副本马上打开，
 //       同时在后台继续下载最新版，下次打开就是新的。
-const CACHE = 'doumi-v8';
-const CORE = ['./', './index.html', './config.js', './supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
+const CACHE = 'doumi-v9';
+const CORE = ['./', './index.html', './config.js', './supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './share-card.png'];
 const WAIT = 2500;
 
 self.addEventListener('install', e => {

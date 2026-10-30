@@ -168,7 +168,7 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
 }
 .spine{align-self:end;margin-bottom:20px;width:54px;border:0;padding:12px 0 10px;border-radius:2px 2px 0 0;background:var(--c);color:#fff;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;transition:transform .16s ease;min-height:0;overflow:hidden}
 .spine:hover,.spine:focus-visible{transform:translateY(-6px)}
-.spine-title{writing-mode:vertical-rl;-webkit-text-orientation:upright;text-orientation:upright;white-space:nowrap;align-self:center;justify-self:center;font-weight:600;font-size:15px;line-height:0;min-height:0;max-height:100%;overflow:hidden}
+.spine-title{writing-mode:vertical-rl;-webkit-text-orientation:upright;text-orientation:upright;white-space:nowrap;align-self:center;justify-self:center;font-weight:600;font-size:15px;line-height:1.2;min-height:0}
 .spine-count{font:500 12px/1 var(--num);opacity:.85;white-space:nowrap;background:none;border:0;border-radius:0;box-shadow:none;padding:0;min-width:0;width:auto;height:auto}
 .spine.add{background:transparent;border:1.5px dashed var(--line-2);color:var(--muted)}
 .shelf.dragging .spine:hover{transform:none}
@@ -181,10 +181,10 @@ main{padding-block:22px calc(96px + env(safe-area-inset-bottom,0px))}
    书脊文字粗、列窄，手机取 0.34em（至少 5px）；有鼠标的设备（电脑）上雅黑 / 苹方字框更满，放宽到 0.55em（至少 8px）。 */
 :root{--sw-gap:max(5px,.34em)}
 @media (any-pointer:fine){:root{--sw-gap:max(8px,.55em)}}
-.spine-title .sg{display:inline-block;vertical-align:top;line-height:1.15;letter-spacing:.06em}   /* 标题行高 0 + 段 vertical-align:top：整列宽度就是字宽，左右正好居中 */
+.spine-title .sg{display:inline-block;line-height:1.2;letter-spacing:.06em}
 .spine-title .sg+.sg{margin-inline-start:var(--sw-gap)}
 .spine-title .sw{-webkit-text-orientation:sideways;text-orientation:mixed;text-orientation:sideways;letter-spacing:.03em;font-variant-numeric:tabular-nums}
-.spine-title.clip{-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}   /* 名字太长：从顶部开始显示，底部淡出 */
+   /* 名字太长：从顶部开始显示，底部淡出 */
 .shelf-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:14px;background:var(--soft);border-radius:10px}
 .shelf-empty strong{display:block;color:var(--ink);font-size:16px;font-weight:600;margin-bottom:4px}
 .shelf-empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
@@ -1008,7 +1008,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.10.30-35';
+const APP_VERSION = '2026.10.30-36';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1550,7 +1550,7 @@ function afterWipe() {
 }
 /* 其他设备改了数据：刷新当前页面（保持滚动位置，正在输入时不打断） */
 let lastSig = '';
-const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.shelf, BRAND.logo, THEME, USER_THEMES, Store.urlsVer]);   // 图片地址到了也要刷新
+const sigOf = () => JSON.stringify([S.ips, S.books, RATES, BRAND.name, BRAND.shelf, BRAND.logo, THEME, USER_THEMES, Store.urlsVer, viewMode, startView]);   // 图片地址到了也要刷新
 async function onRemoteChange() {
   const br = await Store.get('meta', 'brand'); if (br) { BRAND = {...BRAND, ...br}; applyBrand(); }
   if (!unlocked) return;
@@ -1559,6 +1559,7 @@ async function onRemoteChange() {
   const r = await Store.get('meta', 'rates'); RATES = {...DEFAULT_RATES, ...(r || {})};
   USER_THEMES = (await Store.get('meta', 'themes')) || USER_THEMES;
   THEME = (await Store.get('meta', 'theme')) || THEME;
+  startView = (await Store.get('meta', 'startView')) || startView;
   const sig = sigOf(); if (sig === lastSig) return; lastSig = sig;
   const a = document.activeElement;
   if (a && $('#view').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
@@ -1687,7 +1688,7 @@ function renderHome() {
           <div class="seg" role="tablist"><button class="${viewMode === 'shelf' ? 'on' : ''}" data-act="view" data-v="shelf">书架</button><button class="${viewMode === 'flow' ? 'on' : ''}" data-act="view" data-v="flow">瀑布流</button></div></div>` : ''}</div>
       ${body}
     </section>`;
-  setupShelfDrag(); markClipped($('#shelf'));
+  setupShelfDrag();
 }
 
 /* ================= IP 合集 ================= */
@@ -1990,7 +1991,6 @@ const spineText = name => String(name || '').split(SW_RE)
   .filter(g => g.t)
   .map(g => `<span class="sg${g.rot ? ' sw' : ''}">${esc(g.t)}</span>`).join('');
 /* 名字超出书脊高度时加 .clip（底部淡出），代替省略号 */
-const markClipped = root => root && $$('.spine-title', root).forEach(t => t.classList.toggle('clip', t.scrollHeight > t.clientHeight + 1));
 /* 小标题：色点 + 名称 + 右侧补充说明 */
 const blockHead = (title, n, aside) => `<div class="sb-head"><h3><i style="--c:var(--p${n})"></i>${title}</h3>${aside ? `<span>${aside}</span>` : ''}</div>`;
 function barRows(rows, {valFn, color, limit, moreKey}) {
@@ -2744,7 +2744,7 @@ function openIpForm(ip) {
       const img = d.spineImg ? imgSrc(d.spineImg) : '';
       prev.style.background = img ? `linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.38)),url('${img}') center/cover` : d.color;
       prev.style.color = img ? '#fff' : textOn(d.color);
-      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称'); markClipped(prev);
+      $('.spine-title', prev).innerHTML = spineText($('#ip-name', root).value.trim() || 'IP 名称');
     };
     const sets = () => (d.palette && d.palette.length ? [{name: '图片取色', colors: d.palette}] : []).concat(SPINE_SETS);
     const drawSets = () => {
@@ -3340,8 +3340,13 @@ document.addEventListener('click', async e => {
     case 'sample': loadSample(); break;
     case 'del-sample': deleteSample(); break;
     case 'export': exportBackup(); break;
-    case 'view': viewMode = el.dataset.v; Store.put('meta', viewMode, 'view').catch(() => {}); renderHome(); break;
-    case 'pin-view': startView = viewMode; try { await Store.put('meta', startView, 'startView'); toast(`以后打开网站会先显示${viewMode === 'flow' ? '瀑布流' : '书架'}`); } catch (e) { toast(errMsg(e)); } renderHome(); break;
+    case 'view': viewMode = el.dataset.v; renderHome(); Store.put('meta', viewMode, 'view').catch(() => {}); break;   // 先切换画面，再在后台保存（云端版保存要等网络，不能让按钮等它）
+    case 'pin-view': {
+      const v = viewMode, prev = startView; startView = v; renderHome();
+      toast(`以后打开网站会先显示${v === 'flow' ? '瀑布流' : '书架'}`);
+      Store.put('meta', v, 'startView').catch(err => { if (startView === v) { startView = prev; renderHome(); } toast(errMsg(err)); });
+      break;
+    }
     case 'flow-ip': flowIp = el.dataset.v; renderHome(); break;
     case 'stat-year': case 'stat-metric': {
       if (act === 'stat-year') statYear = +el.dataset.v; else statMetric = el.dataset.v;
