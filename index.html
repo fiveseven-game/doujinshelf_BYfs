@@ -1049,7 +1049,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.11.11-4';
+const APP_VERSION = '2026.11.11-5';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1711,7 +1711,7 @@ function renderHome() {
   const ips = [...S.ips].sort(byIpOrder);
   const transit = S.books.filter(b => b.transit).sort(byRecent);
   const hasSample = S.ips.some(i => i.sample);
-  const tFold = transit.length > 4, tShown = tFold && !transitOpen ? transit.slice(0, 4) : transit;
+  const tFold = transit.length > 2, tShown = tFold && !transitOpen ? transit.slice(0, 2) : transit;
   let body;
   if (!ips.length) {
     body = `<div class="shelf-empty"><strong>书架还是空的</strong>先建一个 IP 合集，再往里面放本子。
@@ -1741,7 +1741,7 @@ function renderHome() {
       <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
     <section class="section">
       <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2>${transit.length ? '<a class="btn small ghost" href="#transit">管理</a>' : ''}</div>
-      ${transit.length ? `<div class="transit-list${transitOpen ? ' open' : ''}">${tShown.map(b => transitCard(b)).join('')}</div>${tFold ? `<button class="t-fold" data-act="t-fold" aria-expanded="${transitOpen}">${transitOpen ? '收起 ▴' : `展开全部 ${transit.length} 本 ▾<small>还有 ${transit.length - 4} 本已折叠</small>`}</button>` : ''}` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
+      ${transit.length ? `<div class="transit-list${transitOpen ? ' open' : ''}">${tShown.map(b => transitCard(b)).join('')}</div>${tFold ? `<button class="t-fold" data-act="t-fold" aria-expanded="${transitOpen}">${transitOpen ? '收起 ▴' : `展开全部 ${transit.length} 本 ▾<small>还有 ${transit.length - 2} 本已折叠</small>`}</button>` : ''}` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
     </section>
     <section class="section">
       <div class="sec-head"><h2>收藏</h2>
