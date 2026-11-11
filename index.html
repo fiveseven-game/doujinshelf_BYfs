@@ -788,6 +788,21 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .t-card.picked .t-ck::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
 .sec-head .btn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--line-2);text-decoration:none;color:inherit}
 .batch-btns .btn.primary{background:var(--btn);color:var(--btn-ink)}
+
+/* 在途（首页）：电脑端 4 列、>4 折叠；手机端 2 列、>2 折叠；均为纵向网格，不横向滑动 */
+.transit-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;padding-bottom:0}
+.transit-list .t-card{width:auto}
+.transit-list:not(.open) .td{display:none}
+.t-fold small.fm{display:none}.t-fold.m-only{display:none}
+@media (max-width:960px){
+  .transit-list .t-card{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px 10px;align-items:center}
+  .transit-list .t-card .btn{grid-column:1 / -1;width:100%;justify-content:center}
+}
+@media (max-width:720px){
+  .transit-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .transit-list:not(.open) .tm{display:none}
+  .t-fold small.fm{display:inline}.t-fold small.fd{display:none}.t-fold.m-only{display:flex}
+}
 </style>
 </head>
 <body>
@@ -1049,7 +1064,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.11.11-4';
+const APP_VERSION = '2026.11.11-5';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1689,9 +1704,9 @@ function coverHtml(b, c, big) {
 }
 /* 在途本子：首页折叠状态、管理页多选状态 */
 let transitOpen = false, tBatch = false, tSel = new Set();
-function transitCard(b, extra) {
+function transitCard(b, extra, cls) {
   const ip = ipById(b.ipId);
-  return `<div class="t-card${extra && tSel.has(b.id) ? ' picked' : ''}"><button class="mini" ${extra ? `data-act="t-toggle" data-id="${esc(b.id)}"` : `data-go="book-${esc(b.id)}"`}>${coverHtml(b, ipColor(ip))}</button>
+  return `<div class="t-card${extra && tSel.has(b.id) ? ' picked' : ''}${cls || ''}"><button class="mini" ${extra ? `data-act="t-toggle" data-id="${esc(b.id)}"` : `data-go="book-${esc(b.id)}"`}>${coverHtml(b, ipColor(ip))}</button>
           <button class="t-info" ${extra ? `data-act="t-toggle" data-id="${esc(b.id)}"` : `data-go="book-${esc(b.id)}"`}><b>${esc(b.title || '无题')}</b>
           <span>${esc(ip ? ip.name : '')}${b.place ? ' · ' + esc(b.place) : ''}</span>
           <span class="num">${b.buyDate ? esc(ymd(b.buyDate)) + ' 购入' : '未填购买时间'}</span></button>
@@ -1711,7 +1726,7 @@ function renderHome() {
   const ips = [...S.ips].sort(byIpOrder);
   const transit = S.books.filter(b => b.transit).sort(byRecent);
   const hasSample = S.ips.some(i => i.sample);
-  const tFold = transit.length > 4, tShown = tFold && !transitOpen ? transit.slice(0, 4) : transit;
+  const tFold = transit.length > 2;   /* 手机端 >2 折叠，电脑端 >4 折叠（见 CSS） */
   let body;
   if (!ips.length) {
     body = `<div class="shelf-empty"><strong>书架还是空的</strong>先建一个 IP 合集，再往里面放本子。
@@ -1741,7 +1756,7 @@ function renderHome() {
       <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
     <section class="section">
       <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2>${transit.length ? '<a class="btn small ghost" href="#transit">管理</a>' : ''}</div>
-      ${transit.length ? `<div class="transit-list${transitOpen ? ' open' : ''}">${tShown.map(b => transitCard(b)).join('')}</div>${tFold ? `<button class="t-fold" data-act="t-fold" aria-expanded="${transitOpen}">${transitOpen ? '收起 ▴' : `展开全部 ${transit.length} 本 ▾<small>还有 ${transit.length - 4} 本已折叠</small>`}</button>` : ''}` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
+      ${transit.length ? `<div class="transit-list${transitOpen ? ' open' : ''}">${transit.map((b, i) => transitCard(b, false, i >= 4 ? ' tm td' : i >= 2 ? ' tm' : '')).join('')}</div>${tFold ? `<button class="t-fold${transit.length <= 4 ? ' m-only' : ''}" data-act="t-fold" aria-expanded="${transitOpen}">${transitOpen ? '收起 ▴' : `展开全部 ${transit.length} 本 ▾<small class="fm">还有 ${transit.length - 2} 本已折叠</small><small class="fd">还有 ${transit.length - 4} 本已折叠</small>`}</button>` : ''}` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
     </section>
     <section class="section">
       <div class="sec-head"><h2>收藏</h2>
