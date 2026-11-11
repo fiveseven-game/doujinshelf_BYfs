@@ -756,6 +756,38 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .xl-sum{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}.xl-sum b{color:var(--ink);font-size:16px;font-variant-numeric:tabular-nums}
 .xl-list{display:block;font-size:12.5px;line-height:1.7;max-height:140px;overflow:auto}
 .xl-tbl{overflow:auto;max-height:240px;border:1px solid var(--line);border-radius:8px}.xl-tbl table{width:100%;border-collapse:collapse;font-size:13px}.xl-tbl th,.xl-tbl td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}.xl-tbl th{background:var(--soft);color:var(--muted);font-weight:500;position:sticky;top:0}.xl-tbl small{color:var(--muted)}
+
+/* 合集页：「编辑」改合集本身（中性描边），「批量管理」管理里面的本子（强调色）；批量选择模式 */
+.coll-actions{margin-left:auto;display:flex;gap:8px;align-items:center}.coll-head .coll-actions .btn{margin-left:0}
+.coll-actions .btn .ico{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.coll-actions .btn.edit{background:none;box-shadow:inset 0 0 0 1px var(--line-2)}
+.coll-actions .btn.bulk{background:var(--accent-soft);color:var(--accent)}
+.coll-actions .btn.bulk.on{background:var(--accent);color:var(--bg)}
+.batch-bar{position:sticky;top:calc(54px + env(safe-area-inset-top,0px));z-index:15;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:-6px 0 14px;padding:8px 12px;background:var(--accent-soft);border-radius:8px;font-size:14px}
+.batch-bar b{font-variant-numeric:tabular-nums}.batch-btns{display:flex;gap:8px;flex-wrap:wrap}
+.batch-btns .btn{background:var(--bg)}.batch-btns .btn.danger{background:var(--danger);color:#fff}.batch-btns .btn:disabled{opacity:.45;cursor:not-allowed}
+.covers.batching .cover-card{cursor:pointer;-webkit-user-select:none;user-select:none}
+.covers.batching .cover-card:hover .cover{transform:none}
+.cover .pick-mark{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.cover-card.picked .cover{box-shadow:0 0 0 3px var(--accent)}
+.cover-card.picked .pick-mark{background:var(--accent);box-shadow:0 0 0 2px #fff}
+.cover-card.picked .pick-mark::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+/* Excel 导出范围 / 导入预览 */
+.xl-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px}.xl-opt span{display:grid}.xl-opt small,.xl-ips small{color:var(--muted)}
+.xl-ips{display:grid;gap:6px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.xl-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.xl-ask{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:13px}
+.xl-new{color:var(--accent)}.xl-ex{color:var(--transit)}.xl-same{color:var(--muted)}.xl-chg{white-space:normal!important;min-width:100px;max-width:170px;font-size:12px;color:var(--muted)}.xl-ck{display:inline-flex;gap:6px;align-items:center}.xl-tbl tr.xl-on{background:var(--transit-soft)}
+.xl-opt.check,.xl-ips .check{background:none;color:var(--fg);font-weight:400}.xl-ips .check{padding:4px 2px}.xl-opt input,.xl-ips input{accent-color:var(--accent)}.xl-opt span b{font-weight:600}
+
+/* 在途：折叠按钮 / 管理页 */
+.t-fold{display:flex;gap:8px;align-items:center;margin:8px auto 0;padding:6px 14px;border:0;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;cursor:pointer}.t-fold small{color:var(--muted);font-size:12px}
+.transit-list.open{flex-wrap:wrap;overflow-x:visible}
+.transit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.transit-grid .t-card{width:auto}
+.t-card .t-ck{width:22px;height:22px;flex:none;border-radius:50%;box-shadow:0 0 0 1.5px var(--line-2);background:var(--bg)}
+.t-card.picked{box-shadow:0 0 0 2px var(--accent)}.t-card.picked .t-ck{background:var(--accent);box-shadow:0 0 0 2px var(--accent);position:relative}
+.t-card.picked .t-ck::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.sec-head .btn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--line-2);text-decoration:none;color:inherit}
+.batch-btns .btn.primary{background:var(--btn);color:var(--btn-ink)}
 </style>
 </head>
 <body>
@@ -1017,7 +1049,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.11.11-2';
+const APP_VERSION = '2026.11.11-4';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -1452,6 +1484,9 @@ async function storageHint() {
   if (document.body.contains(el)) el.textContent = parts.join(' · ');
 }
 const errMsg = e => (e && e.userMsg) || (e && e.code ? `云端操作失败（${e.code}），请检查网络后再试` : '操作失败：' + ((e && e.message) || e));
+async function save2(books) {
+  try { await Store.putMany('books', books); return true; } catch (e) { toast(errMsg(e)); return false; }
+}
 async function save(store, v) {
   try { await Store.put(store, v); return true; }
   catch (e) {
@@ -1611,10 +1646,13 @@ function route() {
 }
 function renderCurrent() {
   if (!unlocked) return;
+  if (batchIp && decodeURIComponent(location.hash) !== '#ip-' + batchIp) batchLeave();
+  if (location.hash !== '#transit') { tBatch = false; tSel.clear(); }
   const h = decodeURIComponent(location.hash.slice(1));
   let tab = 'shelf';
   if (h === 'stats') { tab = 'stats'; renderStats(); }
   else if (h === 'prefs') { tab = 'prefs'; renderSettings(); }
+  else if (h === 'transit') renderTransit();
   else if (h.startsWith('ip-') && ipById(h.slice(3))) renderIp(h.slice(3));
   else if (h.startsWith('book-') && bookById(h.slice(5))) {
     if (lastBookId !== h.slice(5)) { galleryIdx = 0; lastBookId = h.slice(5); }
@@ -1649,10 +1687,31 @@ function coverHtml(b, c, big) {
     ? `<img src="${src}" alt="${esc(b.title)}" ${big ? '' : 'loading="lazy" decoding="async"'} onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph${big ? ' big' : ''}',style:'--c:${c};color:${textOn(c)}',innerHTML:'<span>'+this.alt+'</span>'}))">`
     : `<div class="ph${big ? ' big' : ''}${b.images && b.images.length ? ' loading' : ''}" style="--c:${c};color:${textOn(c)}"><span>${esc(b.title || '无题')}</span></div>`;
 }
+/* 在途本子：首页折叠状态、管理页多选状态 */
+let transitOpen = false, tBatch = false, tSel = new Set();
+function transitCard(b, extra) {
+  const ip = ipById(b.ipId);
+  return `<div class="t-card${extra && tSel.has(b.id) ? ' picked' : ''}"><button class="mini" ${extra ? `data-act="t-toggle" data-id="${esc(b.id)}"` : `data-go="book-${esc(b.id)}"`}>${coverHtml(b, ipColor(ip))}</button>
+          <button class="t-info" ${extra ? `data-act="t-toggle" data-id="${esc(b.id)}"` : `data-go="book-${esc(b.id)}"`}><b>${esc(b.title || '无题')}</b>
+          <span>${esc(ip ? ip.name : '')}${b.place ? ' · ' + esc(b.place) : ''}</span>
+          <span class="num">${b.buyDate ? esc(ymd(b.buyDate)) + ' 购入' : '未填购买时间'}</span></button>
+          ${extra ? `<span class="t-ck" aria-hidden="true"></span>` : `<button class="btn small" data-act="arrive" data-id="${esc(b.id)}">到手</button>`}</div>`;
+}
+function renderTransit() {
+  const list = S.books.filter(b => b.transit).sort(byRecent);
+  [...tSel].forEach(x => { if (!list.some(b => b.id === x)) tSel.delete(x); });
+  $('#view').innerHTML = `
+    <a class="crumb" href="#">‹ 书架</a>
+    <div class="coll-head"><div style="min-width:0"><h1>在途本子</h1><p class="num">${list.length} 本</p></div>
+      <div class="coll-actions">${list.length ? `<button class="btn small bulk${tBatch ? ' on' : ''}" data-act="${tBatch ? 't-off' : 't-on'}">${ICON_BATCH}${tBatch ? '完成' : '批量管理'}</button>` : ''}</div></div>
+    ${tBatch ? `<div class="batch-bar"><span>已选 <b id="t-n">${tSel.size}</b> 本</span><span class="batch-btns"><button class="btn small" data-act="t-all">全选</button><button class="btn small" data-act="t-none">取消选择</button><button class="btn small primary" id="t-go" data-act="t-arrive" ${tSel.size ? '' : 'disabled'}>批量转为到手</button></span></div>` : ''}
+    ${list.length ? `<div class="transit-grid">${list.map(b => transitCard(b, tBatch)).join('')}</div>` : '<div class="transit-empty">没有在路上的本子。</div>'}`;
+}
 function renderHome() {
   const ips = [...S.ips].sort(byIpOrder);
   const transit = S.books.filter(b => b.transit).sort(byRecent);
   const hasSample = S.ips.some(i => i.sample);
+  const tFold = transit.length > 4, tShown = tFold && !transitOpen ? transit.slice(0, 4) : transit;
   let body;
   if (!ips.length) {
     body = `<div class="shelf-empty"><strong>书架还是空的</strong>先建一个 IP 合集，再往里面放本子。
@@ -1681,15 +1740,8 @@ function renderHome() {
     <div class="page-head"><div><h1>${esc(shelfTitle())}</h1><p class="num">${S.ips.length} 个IP · ${sum(S.books.map(qtyOf))} 本 · ${money(sum(S.books.map(bookTotal)))}</p></div>
       <button class="btn primary" data-act="new-book">${Drafts.mem.new ? '＋ 继续添加 · 有草稿' : '＋ 添加本子'}</button></div>
     <section class="section">
-      <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2></div>
-      ${transit.length ? `<div class="transit-list">${transit.map(b => {
-        const ip = ipById(b.ipId);
-        return `<div class="t-card"><button class="mini" data-go="book-${esc(b.id)}">${coverHtml(b, ipColor(ip))}</button>
-          <button class="t-info" data-go="book-${esc(b.id)}"><b>${esc(b.title || '无题')}</b>
-          <span>${esc(ip ? ip.name : '')}${b.place ? ' · ' + esc(b.place) : ''}</span>
-          <span class="num">${b.buyDate ? esc(ymd(b.buyDate)) + ' 购入' : '未填购买时间'}</span></button>
-          <button class="btn small" data-act="arrive" data-id="${esc(b.id)}">到手</button></div>`;
-      }).join('')}</div>` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
+      <div class="sec-head"><h2>在途本子<small>${transit.length} 本</small></h2>${transit.length ? '<a class="btn small ghost" href="#transit">管理</a>' : ''}</div>
+      ${transit.length ? `<div class="transit-list${transitOpen ? ' open' : ''}">${tShown.map(b => transitCard(b)).join('')}</div>${tFold ? `<button class="t-fold" data-act="t-fold" aria-expanded="${transitOpen}">${transitOpen ? '收起 ▴' : `展开全部 ${transit.length} 本 ▾<small>还有 ${transit.length - 4} 本已折叠</small>`}</button>` : ''}` : `<div class="transit-empty">没有在路上的本子。添加本子时勾选“还在路上”，它会出现在这里。</div>`}
     </section>
     <section class="section">
       <div class="sec-head"><h2>收藏</h2>
@@ -1851,23 +1903,35 @@ function setupShelfDrag() {
   }, {padTop: 70});
 }
 
+/* 批量管理：只在当前这个合集里勾选本子；退出或离开合集就恢复原样 */
+let batchIp = '', batchSel = new Set();
+const ICON_EDIT = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+const ICON_BATCH = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M14 7h6.5M14 17h6.5M5.5 7l1.2 1.2L9 5.8"/></svg>';
+function batchLeave() { batchIp = ''; batchSel.clear(); }
 function renderIp(id) {
   const ip = ipById(id), books = booksOf(id), c = ipColor(ip);
+  if (batchIp !== id) batchLeave();
+  const batch = batchIp === id;
+  if (batch) [...batchSel].forEach(x => { if (!books.some(b => b.id === x)) batchSel.delete(x); });
   $('#view').innerHTML = `
     <a class="crumb" href="#">‹ 书架</a>
     <div class="coll-head"><div class="coll-mark" style="--c:${c}"></div>
       <div style="min-width:0"><h1>${esc(ip.name)} ${ip.sample ? '<span class="tag">示例</span>' : ''}</h1>
       <p class="num">${sum(books.map(qtyOf))} 本 · ${money(sum(books.map(bookTotal)))}</p></div>
-      <button class="btn small" data-act="edit-ip" data-id="${esc(id)}">编辑</button></div>
-    ${books.length > 1 ? '<p class="drag-hint">长按封面（电脑上按住拖动）可以调整顺序，瀑布流会按同样的顺序显示</p>' : ''}
-    <div class="covers" id="covers" data-ip="${esc(id)}">
-      <button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>
+      <div class="coll-actions">
+        <button class="btn small bulk${batch ? ' on' : ''}" data-act="${batch ? 'batch-off' : 'batch-on'}" data-id="${esc(id)}" title="选择多本，批量删除">${ICON_BATCH}${batch ? '完成' : '批量管理'}</button>
+        ${batch ? '' : `<button class="btn small edit" data-act="edit-ip" data-id="${esc(id)}" title="修改合集的名称、颜色、背景图">${ICON_EDIT}编辑</button>`}
+      </div></div>
+    ${batch ? `<div class="batch-bar"><span>已选 <b id="batch-n">${batchSel.size}</b> 本</span><span class="batch-btns"><button class="btn small" data-act="batch-all" data-id="${esc(id)}">全选</button><button class="btn small" data-act="batch-none">取消选择</button><button class="btn small danger solid" id="batch-del" data-act="batch-del" data-id="${esc(id)}" ${batchSel.size ? '' : 'disabled'}>删除所选</button></span></div>` : ''}
+    ${!batch && books.length > 1 ? '<p class="drag-hint">长按封面（电脑上按住拖动）可以调整顺序，瀑布流会按同样的顺序显示</p>' : ''}
+    <div class="covers${batch ? ' batching' : ''}" id="covers" data-ip="${esc(id)}">
+      ${batch ? '' : `<button class="cover-card" data-act="new-book" data-ip="${esc(id)}"><div class="cover-add"><b>＋</b>添加本子</div></button>`}
       ${books.map(b => {
-        return `<button class="cover-card" data-go="book-${esc(b.id)}" data-id="${esc(b.id)}">
-        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${doneMark(b)}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}</div>
+        return `<button class="cover-card${batch && batchSel.has(b.id) ? ' picked' : ''}" ${batch ? `data-act="batch-toggle" aria-pressed="${batchSel.has(b.id)}"` : `data-go="book-${esc(b.id)}"`} data-id="${esc(b.id)}">
+        <div class="cover">${coverHtml(b, c)}${b.transit ? '<span class="tag transit">在途</span>' : ''}${doneMark(b)}${qtyOf(b) > 1 ? `<span class="tag qty">×${qtyOf(b)}</span>` : ''}${batch ? '<span class="pick-mark" aria-hidden="true"></span>' : ''}</div>
         ${cardText(b)}</button>`; }).join('')}
     </div>`;
-  setupCoverDrag();
+  if (!batch) setupCoverDrag();
 }
 
 /* ================= 详情 ================= */
@@ -2899,10 +2963,6 @@ async function xlSaveFile(filename, blob) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   toast('文件已生成');
 }
-async function exportExcel(template) {
-  try { await xlSaveFile(template ? 'Doumi导入模板.xlsx' : `Doumi数据-${today().replace(/-/g, '')}.xlsx`, xlBuildWorkbook(S.ips, S.books, template)); }
-  catch (e) { toast('导出失败：' + errMsg(e)); }
-}
 
 /* ---- 导入：读表头 → 自动对应字段（可手动改）→ 预览（新增 / 重复 / 错误）→ 确认后才写入，只新增不覆盖 ---- */
 const xlStr = v => v === null || v === undefined ? '' : (typeof v === 'number' ? String(v) : String(v)).trim();
@@ -2939,6 +2999,21 @@ function xlAutoMap(fields, headers) {
   });
   return map;
 }
+const XL_CMP = ['ipId', 'title', 'author', 'club', 'cp', 'transit', 'kind', 'size', 'lang', 'place', 'origin', 'format', 'condition', 'age', 'read', 'buyDate', 'releaseDate', 'pages', 'words', 'qty', 'rating', 'costs', 'more', 'link', 'note'];
+const XL_LABEL = Object.fromEntries([...XL_BOOK.map(f => [f.k, f.t]), ['ipId', '所属IP'], ['wordUnit', '字数']]);
+const xlCmpVal = (k, v) => {
+  const sets = x => JSON.stringify((Array.isArray(x) ? x : []).map(st => (st || []).map(c => [normLabel(c.label), Number(c.amount) || 0, c.cur || 'CNY'])));
+  switch (k) {
+    case 'costs': return sets([v]);
+    case 'more': return sets(v);
+    case 'words': return v && v.n ? `${v.n}${v.unit === 'z' ? 'z' : 'w'}` : '';
+    case 'pages': case 'rating': return String(Number(v) || 0);
+    case 'qty': return String(Math.max(1, Number(v) || 1));
+    case 'transit': return v ? '1' : '';
+    case 'origin': return normOrigin(v || '');
+    default: return String(v ?? '').trim();
+  }
+};
 function xlPlan(wb, st) {
   const bk = wb.find(s => s.name === st.bookSheet), ipS = wb.find(s => s.name === st.ipSheet);
   const get = (row, map, k) => map[k] >= 0 ? row[map[k]] : '';
@@ -2946,16 +3021,18 @@ function xlPlan(wb, st) {
   const lc = s => xlStr(s).toLowerCase();
   const exName = new Map(S.ips.map(i => [lc(i.name), i])), exId = new Map(S.ips.map(i => [i.id, i]));
   const usedIpIds = new Set(S.ips.map(i => i.id)), usedBookIds = new Set(S.books.map(b => b.id));
+  const bookById0 = new Map(S.books.map(b => [b.id, b])), bookByKey = new Map();
+  S.books.forEach(b => { const k = [b.ipId, lc(b.title), lc(b.author), b.buyDate || ''].join('|'); if (!bookByKey.has(k)) bookByKey.set(k, b); });
   let colorN = S.ips.length;
   const pickColor = c => /^#[0-9a-f]{6}$/i.test(xlStr(c)) ? xlStr(c).toLowerCase() : COLORS[colorN++ % COLORS.length];
-  const ensureIp = (name, id, color) => {   // → {ip, isNew}
+  const ensureIp = (name, id, color) => {
     const key = lc(name), ex = exName.get(key); if (ex) return {ip: ex, isNew: false};
     if (ipByName.has(key)) return {ip: ipByName.get(key), isNew: false, dupInFile: true};
     const ip = {id: id && !usedIpIds.has(id) ? id : uid(), name: xlStr(name), color: pickColor(color), created: Date.now()};
     usedIpIds.add(ip.id); ipByName.set(key, ip); newIps.push(ip); return {ip, isNew: true};
   };
   if (ipS) {
-    const hdr = (ipS.rows[0] || []).map(xlStr), map = st.ipMap;
+    const map = st.ipMap;
     ipS.rows.slice(1).forEach((r, i) => {
       if (!r.some(c => xlStr(c))) return;
       const name = xlStr(get(r, map, 'name')), id = xlStr(get(r, map, 'id'));
@@ -2964,11 +3041,12 @@ function xlPlan(wb, st) {
       ensureIp(name, id, get(r, map, 'color'));
     });
   }
-  const seenKey = new Set(S.books.map(b => [b.ipId, lc(b.title), lc(b.author), b.buyDate || ''].join('|')));
+  const seenInFile = new Set(), newIds = new Set();
   const total = bk ? bk.rows.length - 1 : 0, now = Date.now();
   (bk ? bk.rows.slice(1) : []).forEach((r, i) => {
     if (!r.some(c => xlStr(c))) return;
-    const line = i + 2, g = k => get(r, st.bookMap, k), warns = [], row = {line, title: xlStr(g('title')), ipName: xlStr(g('ipName')), status: 'new', warns};
+    const line = i + 2, g = k => get(r, st.bookMap, k), has = k => st.bookMap[k] >= 0 && xlStr(g(k)) !== '';
+    const warns = [], row = {line, title: xlStr(g('title')), ipName: xlStr(g('ipName')), status: 'new', warns, changes: []};
     rows.push(row);
     const err = m => { row.status = 'error'; row.err = m; };
     if (!row.title) return err('缺少本子名');
@@ -2987,9 +3065,8 @@ function xlPlan(wb, st) {
     ['kind', 'size', 'lang', 'place'].forEach(k => { b[k] = xlStr(g(k)); });
     b.origin = normOrigin(xlStr(g('origin'))); ['format', 'condition', 'age', 'read'].forEach(k => { b[k] = xlStr(g(k)); });
     [['origin', 'origin', '地区'], ['format', 'format', '形式'], ['condition', 'condition', '品相'], ['age', 'age', '限制年龄'], ['read', 'read', '阅读状态']].forEach(([k, o, lab]) => { if (b[k] && !OPT[o].includes(b[k])) warns.push(`${lab}“${b[k]}”不在选项里`); });
-    if (!b.format) b.format = '实体本';
+    const fmtBlank = !b.format; if (fmtBlank) b.format = '实体本';
     for (const [k, lab] of [['buyDate', '购买时间'], ['releaseDate', '发行日']]) { const d = xlDate(g(k)); b[k] = d.v; if (d.bad) warns.push(`${lab}“${xlStr(g(k))}”不是有效日期，已留空`); }
-    if (!b.buyDate && !xlStr(g('buyDate'))) b.buyDate = '';
     const pg = xlNum(g('pages')); b.pages = pg > 0 ? Math.round(pg) : ''; if (Number.isNaN(pg)) warns.push('页数不是数字，已留空');
     const wn = xlNum(g('words')); if (Number.isNaN(wn)) warns.push('字数不是数字，已留空');
     b.words = wn > 0 ? {n: wn, unit: /^字$|^z$/i.test(xlStr(g('wordUnit'))) ? 'z' : 'w'} : null;
@@ -2998,17 +3075,26 @@ function xlPlan(wb, st) {
     const c1 = xlCosts(g('costs')), c2 = xlCosts(g('more')); b.costs = c1.sets[0] || []; b.more = [...c1.sets.slice(1), ...c2.sets].filter(s => s.length);
     [...c1.bad, ...c2.bad].forEach(x => warns.push(`支付明细“${x}”看不懂，已忽略`));
     if (!b.costs.length) b.costs = [{label: '本体', amount: '', cur: 'CNY'}];
-    const bid = xlStr(g('id')); let dup = false;
-    if (bid && usedBookIds.has(bid)) dup = true;
-    const key = [ip.id, lc(b.title), lc(b.author), b.buyDate || ''].join('|');
-    if (seenKey.has(key)) dup = true;
-    seenKey.add(key);
-    if (dup) row.status = 'dup';
-    b.id = bid && !usedBookIds.has(bid) ? bid : uid(); usedBookIds.add(b.id);
+    const bid = xlStr(g('id')), key = [ip.id, lc(b.title), lc(b.author), b.buyDate || ''].join('|');
+    const target = (bid && bookById0.get(bid)) || bookByKey.get(key) || null;
+    const fileKey = target ? 'T' + target.id : 'N' + key;
+    if (seenInFile.has(fileKey)) { row.status = 'filedup'; return; }
+    seenInFile.add(fileKey);
+    if (target) {
+      // 已有条目：只比较 Excel 里填了内容的列；空单元格不会清掉已有内容
+      const prov = k => k === 'ipId' ? true : k === 'title' ? true : k === 'words' ? has('words') : k === 'costs' ? has('costs') : k === 'more' ? (has('costs') || has('more')) : has(k);
+      const patch = {};
+      XL_CMP.forEach(k => { if (prov(k) && xlCmpVal(k, target[k]) !== xlCmpVal(k, b[k])) { patch[k] = b[k]; row.changes.push(XL_LABEL[k] || k); } });
+      if (patch.title !== undefined && !has('title')) delete patch.title;
+      row.status = Object.keys(patch).length ? 'exist' : 'same'; row.target = target; row.patch = patch;
+      row.changes = Object.keys(patch).map(k => XL_LABEL[k] || k);
+      return;
+    }
+    b.id = bid && !usedBookIds.has(bid) && !newIds.has(bid) ? bid : uid(); newIds.add(b.id);
     b.images = []; b.created = now; b.sortKey = -now - (total - i);
     row.book = b;
   });
-  return {rows, newIps, issues, usedIps: new Set(rows.filter(r => r.book && r.status !== 'error').map(r => r.ip))};
+  return {rows, newIps, issues};
 }
 async function importExcel(file) {
   let wb;
@@ -3017,9 +3103,9 @@ async function importExcel(file) {
   const nm = s => s.name.toLowerCase().replace(/\s/g, '');
   const bookDef = wb.find(s => ['books', '本子', '书籍'].includes(nm(s))) || wb.find(s => !['ips', 'ip', '合集', '说明'].includes(nm(s))) || wb[0];
   const ipDef = wb.find(s => s !== bookDef && ['ips', 'ip', '合集', 'ip合集'].includes(nm(s)));
-  const st = {bookSheet: bookDef.name, ipSheet: ipDef ? ipDef.name : '', bookMap: {}, ipMap: {}, dupMode: false};
+  const st = {bookSheet: bookDef.name, ipSheet: ipDef ? ipDef.name : '', bookMap: {}, ipMap: {}, upd: new Set()};
   const headersOf = name => ((wb.find(s => s.name === name) || {rows: []}).rows[0] || []).map(xlStr);
-  const remap = () => { st.bookMap = xlAutoMap(XL_BOOK, headersOf(st.bookSheet)); st.ipMap = st.ipSheet ? xlAutoMap(XL_IP, headersOf(st.ipSheet)) : {}; };
+  const remap = () => { st.bookMap = xlAutoMap(XL_BOOK, headersOf(st.bookSheet)); st.ipMap = st.ipSheet ? xlAutoMap(XL_IP, headersOf(st.ipSheet)) : {}; st.upd.clear(); };
   remap();
   const sel = (fields, map, h, scope) => fields.map(f => `<label class="xl-map"><span>${esc(f.t)}${f.req ? '<i class="xl-req">必填</i>' : ''}</span><select class="input" data-scope="${scope}" data-k="${f.k}"><option value="-1">不导入</option>${h.map((t, i) => `<option value="${i}" ${map[f.k] === i ? 'selected' : ''}>${esc(t || `（第 ${i + 1} 列）`)}</option>`).join('')}</select></label>`).join('');
   openModal(`<div class="sheet-head"><h2>导入 Excel</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div><div id="xl-body"></div>`, root => {
@@ -3029,13 +3115,22 @@ async function importExcel(file) {
       const plan = xlPlan(wb, st), hB = headersOf(st.bookSheet), hI = headersOf(st.ipSheet);
       const reqMissing = XL_BOOK.filter(f => f.req && st.bookMap[f.k] < 0 && !(f.k === 'ipName' && st.bookMap.ipId >= 0)).map(f => f.t);
       const usedB = new Set(Object.values(st.bookMap)), lost = hB.map((t, i) => [t, i]).filter(([t, i]) => t && !usedB.has(i)).map(([t]) => t);
-      const nOk = plan.rows.filter(r => r.status === 'new').length, nDup = plan.rows.filter(r => r.status === 'dup').length, nErr = plan.rows.filter(r => r.status === 'error').length;
-      const importable = plan.rows.filter(r => r.status === 'new' || (r.status === 'dup' && st.dupMode));
-      const usedIps = new Set(importable.map(r => r.ip)), toCreate = plan.newIps.filter(ip => usedIps.has(ip) || plan.rows.every(r => r.ip !== ip));
-      const linked = new Set(importable.filter(r => !r.ipNew).map(r => r.ip.id)).size;
+      const cnt = s => plan.rows.filter(r => r.status === s).length;
+      const nNew = cnt('new'), nExist = cnt('exist'), nSame = cnt('same'), nFd = cnt('filedup'), nErr = cnt('error');
+      const chosen = plan.rows.filter(r => r.status === 'new' || (r.status === 'exist' && st.upd.has(r.line)));
+      const nUpd = chosen.filter(r => r.status === 'exist').length, nSkip = nExist - nUpd + nSame + nFd;
+      const toCreate = plan.newIps.filter(ip => chosen.some(r => r.ip === ip) || plan.rows.every(r => r.ip !== ip));
+      const linked = new Set(chosen.filter(r => r.status === 'new' && !r.ipNew).map(r => r.ip.id)).size;
       const sheetOpts = (cur, none) => `${none ? `<option value="">（没有）</option>` : ''}${wb.map(s => `<option value="${esc(s.name)}" ${s.name === cur ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
       const warnLines = plan.rows.filter(r => r.warns.length).slice(0, 12).map(r => `第 ${r.line} 行「${esc(r.title)}」：${esc(r.warns.join('；'))}`);
       const errLines = plan.rows.filter(r => r.status === 'error').slice(0, 20).map(r => `第 ${r.line} 行：${esc(r.err)}，这一行不会导入`);
+      const stat = r => r.status === 'new' ? '<span class="xl-new">新增条目</span>'
+        : r.status === 'exist' ? `<span class="xl-ex">已有条目</span>`
+        : r.status === 'same' ? '<span class="xl-same">已有条目 · 无变化，跳过</span>'
+        : r.status === 'filedup' ? '<span class="xl-warn">表里重复，跳过</span>' : '<span class="xl-bad">错误</span>';
+      const rowsHtml = plan.rows.slice(0, 300).map(r => `<tr class="${r.status === 'exist' && st.upd.has(r.line) ? 'xl-on' : ''}"><td>${r.line}</td><td>${stat(r)}</td><td>${esc(r.ipName)}${r.ip ? (r.ipNew ? ' <small>新建</small>' : ' <small>已有</small>') : ''}</td><td>${esc(r.title)}</td>
+        <td class="xl-chg">${r.status === 'exist' ? '将更新：' + esc(r.changes.join('、')) : r.status === 'error' ? esc(r.err) : ''}</td>
+        <td>${r.status === 'exist' ? `<label class="xl-ck"><input type="checkbox" data-line="${r.line}" ${st.upd.has(r.line) ? 'checked' : ''}> 覆盖</label>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">没有读到数据行</td></tr>';
       body.innerHTML = `
         <div class="form">
           <div class="two wrap-sm">
@@ -3048,33 +3143,74 @@ async function importExcel(file) {
             ${st.ipSheet ? `<h3 style="margin:14px 0 6px;font-size:14px">IP 表</h3><div class="xl-maps">${sel(XL_IP, st.ipMap, hI, 'ip')}</div>` : ''}
           </details>
           <div class="fgroup"><h3>导入预览</h3>
-            <div class="xl-sum"><span><b>${importable.length}</b> 本将导入</span><span><b>${toCreate.length}</b> 个新建 IP</span><span><b>${linked}</b> 个已有 IP 直接归入</span><span class="${nDup ? 'xl-warn' : ''}"><b>${nDup}</b> 本重复</span><span class="${nErr ? 'xl-bad' : ''}"><b>${nErr}</b> 行有错</span></div>
+            <div class="xl-sum"><span><b>${nNew}</b> 本新增</span><span class="xl-ex"><b>${nUpd}</b> 本覆盖更新</span><span><b>${nSkip}</b> 本跳过</span><span><b>${toCreate.length}</b> 个新建 IP</span><span><b>${linked}</b> 个已有 IP 直接归入</span><span class="${nErr ? 'xl-bad' : ''}"><b>${nErr}</b> 行有错</span></div>
             ${reqMissing.length ? `<p class="xl-bad">必填的列还没对应：${esc(reqMissing.join('、'))}，请在上面的“列对应”里选择。</p>` : ''}
-            ${nDup ? `<label class="check"><input type="checkbox" id="xl-dup" ${st.dupMode ? 'checked' : ''}>重复的 ${nDup} 本也导入（会作为新的一本，不会覆盖已有的）</label>` : ''}
+            ${nExist ? `<div class="notice xl-ask"><span>书架里已有 ${nExist} 本和 Excel 对得上，但内容不同。勾选的才会被覆盖，没勾选的保持原样。</span><span class="xl-btns"><button type="button" class="btn small" id="xl-all">全部覆盖</button><button type="button" class="btn small" id="xl-none">全不覆盖</button></span></div>` : ''}
             ${errLines.length ? `<div class="notice xl-list">${errLines.join('<br>')}</div>` : ''}
             ${warnLines.length ? `<div class="notice xl-list">${warnLines.join('<br>')}</div>` : ''}
-            <div class="xl-tbl"><table><thead><tr><th>行</th><th>状态</th><th>所属IP</th><th>本子名</th></tr></thead><tbody>${plan.rows.slice(0, 30).map(r => `<tr><td>${r.line}</td><td>${r.status === 'error' ? '<span class="xl-bad">错误</span>' : r.status === 'dup' ? '<span class="xl-warn">重复' + (st.dupMode ? '（仍导入）' : '（跳过）') + '</span>' : '新增'}</td><td>${esc(r.ipName)}${r.ip ? (r.ipNew ? ' <small>新建</small>' : ' <small>已有</small>') : ''}</td><td>${esc(r.title)}</td></tr>`).join('') || '<tr><td colspan="4">没有读到数据行</td></tr>'}</tbody></table>${plan.rows.length > 30 ? `<p class="form-note">只显示前 30 行，共 ${plan.rows.length} 行</p>` : ''}</div>
-            <p class="form-note">只会新增，不会覆盖或删除已有的 IP 和本子。Excel 里没有图片，导入的本子可以之后再补图。</p>
+            <div class="xl-tbl"><table><thead><tr><th>行</th><th>状态</th><th>所属IP</th><th>本子名</th><th>差异</th><th></th></tr></thead><tbody>${rowsHtml}</tbody></table>${plan.rows.length > 300 ? `<p class="form-note">只显示前 300 行，共 ${plan.rows.length} 行</p>` : ''}</div>
+            <p class="form-note">覆盖只改 Excel 里填了内容的列，空单元格不会清掉已有内容；图片、封面、顺序不受影响。不会删除任何已有的 IP 或本子。</p>
           </div>
-          <div class="sheet-actions"><button type="button" class="btn left" data-close>取消</button><button type="button" class="btn primary" id="xl-go" ${importable.length || toCreate.length ? '' : 'disabled'}>确认导入</button></div>
+          <div class="sheet-actions"><button type="button" class="btn left" data-close>取消</button><button type="button" class="btn primary" id="xl-go" ${chosen.length || toCreate.length ? '' : 'disabled'}>${nUpd ? `确认导入（新增 ${nNew}，覆盖 ${nUpd}）` : '确认导入'}</button></div>
         </div>`;
       $$('[data-close]', body).forEach(b => b.onclick = closeModal);
       $('#xl-bs', body).onchange = e => { st.bookSheet = e.target.value; remap(); draw(); };
       $('#xl-is', body).onchange = e => { st.ipSheet = e.target.value; remap(); draw(); };
-      $$('select[data-k]', body).forEach(s => s.onchange = () => { (s.dataset.scope === 'ip' ? st.ipMap : st.bookMap)[s.dataset.k] = +s.value; draw(); });
-      const dupBox = $('#xl-dup', body); if (dupBox) dupBox.onchange = () => { st.dupMode = dupBox.checked; draw(); };
+      $$('select[data-k]', body).forEach(s => s.onchange = () => { (s.dataset.scope === 'ip' ? st.ipMap : st.bookMap)[s.dataset.k] = +s.value; st.upd.clear(); draw(); });
+      $$('input[data-line]', body).forEach(c => c.onchange = () => { c.checked ? st.upd.add(+c.dataset.line) : st.upd.delete(+c.dataset.line); draw(); });
+      const all = $('#xl-all', body), none = $('#xl-none', body);
+      if (all) all.onclick = () => { plan.rows.filter(r => r.status === 'exist').forEach(r => st.upd.add(r.line)); draw(); };
+      if (none) none.onclick = () => { st.upd.clear(); draw(); };
       $('#xl-go', body).onclick = async () => {
         const go = $('#xl-go', body); go.disabled = true; go.textContent = '导入中…';
         try {
-          const ipsOut = toCreate, booksOut = importable.map(r => r.book);
+          const ipsOut = toCreate, now = Date.now();
+          const added = chosen.filter(r => r.status === 'new').map(r => r.book);
+          const updated = chosen.filter(r => r.status === 'exist').map(r => ({...r.target, ...r.patch, updated: now}));
           if (ipsOut.length) await Store.putMany('ips', ipsOut);
-          if (booksOut.length) await Store.putMany('books', booksOut, (i, n) => toast(`正在导入 ${i} / ${n}`));
+          if (added.length || updated.length) await Store.putMany('books', [...added, ...updated], (i, n) => toast(`正在导入 ${i} / ${n}`));
           S.ips = await Store.all('ips'); S.books = await Store.all('books');
-          closeModal(); toast(`导入完成：${booksOut.length} 本，新建 ${ipsOut.length} 个 IP`); location.hash = ''; route();
+          closeModal(); toast(`导入完成：新增 ${added.length} 本，覆盖更新 ${updated.length} 本，新建 ${ipsOut.length} 个 IP`); location.hash = ''; route();
         } catch (e) { go.disabled = false; go.textContent = '确认导入'; toast('导入失败：' + errMsg(e)); }
       };
     };
     draw();
+  });
+}
+/* ---- 导出：先选范围（全部 / 指定 IP 合集，可多选） ---- */
+function exportExcel(template) {
+  if (template) return xlSaveFile('Doumi导入模板.xlsx', xlBuildWorkbook(S.ips, S.books, true)).catch(e => toast('导出失败：' + errMsg(e)));
+  const ips = [...S.ips].sort(byIpOrder), cnt = id => S.books.filter(b => b.ipId === id).length;
+  openModal(`<div class="sheet-head"><h2>导出 Excel</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div>
+    <div class="form">
+      <label class="check xl-opt"><input type="radio" name="xl-scope" value="all" checked><span><b>全部书籍</b><small>${S.books.length} 本 · ${S.ips.length} 个 IP 合集</small></span></label>
+      <label class="check xl-opt"><input type="radio" name="xl-scope" value="pick"><span><b>指定 IP 合集中的书籍</b><small>可以选多个合集</small></span></label>
+      <div id="xl-pick" hidden>
+        <div class="xl-btns" style="margin:4px 0 8px"><button type="button" class="btn small" id="xl-pa">全选</button><button type="button" class="btn small" id="xl-pn">清除</button><span class="hint" id="xl-pc"></span></div>
+        <div class="xl-ips">${ips.map(ip => `<label class="check"><input type="checkbox" value="${esc(ip.id)}"><span>${esc(ip.name)} <small>${cnt(ip.id)} 本</small></span></label>`).join('') || '<p class="form-note">书架里还没有 IP 合集</p>'}</div>
+      </div>
+      <div class="sheet-actions"><button type="button" class="btn left" data-close>取消</button><button type="button" class="btn primary" id="xl-exp">导出</button></div>
+    </div>`, root => {
+    $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    const pick = $('#xl-pick', root), boxes = () => $$('#xl-pick input[type=checkbox]', root), scope = () => $('input[name=xl-scope]:checked', root).value;
+    const upd = () => {
+      const on = scope() === 'pick', n = boxes().filter(c => c.checked);
+      pick.hidden = !on; $('#xl-pc', root).textContent = on ? `已选 ${n.length} 个合集，共 ${sum(n.map(c => cnt(c.value)))} 本` : '';
+      $('#xl-exp', root).disabled = on && !n.length;
+    };
+    root.addEventListener('change', upd); upd();
+    $('#xl-pa', root).onclick = () => { boxes().forEach(c => { c.checked = true; }); upd(); };
+    $('#xl-pn', root).onclick = () => { boxes().forEach(c => { c.checked = false; }); upd(); };
+    $('#xl-exp', root).onclick = async () => {
+      let outIps = S.ips, outBooks = S.books, tag = '全部';
+      if (scope() === 'pick') {
+        const ids = new Set(boxes().filter(c => c.checked).map(c => c.value));
+        outIps = S.ips.filter(i => ids.has(i.id)); outBooks = S.books.filter(b => ids.has(b.ipId)); tag = ids.size === 1 ? outIps[0].name.replace(/[\\/:*?"<>|]/g, '_') : `${ids.size}个合集`;
+      }
+      closeModal();
+      try { await xlSaveFile(`Doumi数据-${tag}-${today().replace(/-/g, '')}.xlsx`, xlBuildWorkbook([...outIps].sort(byIpOrder), [...outBooks].sort(byOrder), false)); toast(`已导出 ${outBooks.length} 本、${outIps.length} 个合集`); }
+      catch (e) { toast('导出失败：' + errMsg(e)); }
+    };
   });
 }
 
@@ -3764,6 +3900,47 @@ document.addEventListener('click', async e => {
     case 'clear-cache': clearCaches(); break;
     case 'new-ip': openIpForm(); break;
     case 'edit-ip': openIpForm(ipById(id)); break;
+    case 't-fold': transitOpen = !transitOpen; { const y = window.scrollY; renderHome(); window.scrollTo(0, y); } break;
+    case 't-on': tBatch = true; tSel.clear(); renderTransit(); break;
+    case 't-off': tBatch = false; tSel.clear(); renderTransit(); break;
+    case 't-toggle': {
+      if (!tBatch) break;
+      tSel.has(id) ? tSel.delete(id) : tSel.add(id);
+      el.closest('.t-card').classList.toggle('picked', tSel.has(id));
+      $('#t-n').textContent = tSel.size; $('#t-go').disabled = !tSel.size; break;
+    }
+    case 't-all': S.books.filter(b => b.transit).forEach(b => tSel.add(b.id)); renderTransit(); break;
+    case 't-none': tSel.clear(); renderTransit(); break;
+    case 't-arrive': {
+      const bs = [...tSel].map(bookById).filter(b => b && b.transit);
+      if (!bs.length) break;
+      if (!(await choose(`把选中的 ${bs.length} 本在途本子（${bs.slice(0, 3).map(b => `《${b.title || '无题'}》`).join('')}${bs.length > 3 ? ' 等' : ''}）全部转为“到手”？其他本子不受影响。`, [{v: 'ok', t: `转为到手 ${bs.length} 本`, cls: 'primary'}]))) return;
+      const now = Date.now(), upd = bs.map(b => ({...b, transit: false, updated: now}));
+      if (!(await save2(upd))) return;
+      upd.forEach(u => { const i = S.books.findIndex(b => b.id === u.id); if (i >= 0) S.books[i] = u; tSel.delete(u.id); });
+      toast(`已转为到手 ${upd.length} 本`); renderTransit(); break;
+    }
+    case 'batch-on': batchIp = id; batchSel.clear(); renderIp(id); break;
+    case 'batch-off': batchLeave(); renderIp(id); break;
+    case 'batch-toggle': {
+      if (!batchIp) break;
+      batchSel.has(id) ? batchSel.delete(id) : batchSel.add(id);
+      el.classList.toggle('picked', batchSel.has(id)); el.setAttribute('aria-pressed', String(batchSel.has(id)));
+      const n = $('#batch-n'), d = $('#batch-del'); if (n) n.textContent = batchSel.size; if (d) d.disabled = !batchSel.size;
+      break;
+    }
+    case 'batch-all': booksOf(id).forEach(b => batchSel.add(b.id)); renderIp(id); break;
+    case 'batch-none': batchSel.clear(); renderIp(batchIp); break;
+    case 'batch-del': {
+      const ip = ipById(id), ids = [...batchSel].filter(x => { const b = bookById(x); return b && b.ipId === id; });
+      if (!ids.length) break;
+      const names = ids.slice(0, 3).map(x => `《${bookById(x).title || '无题'}》`).join('');
+      if (!(await confirmBox(`删除选中的 ${ids.length} 本（${names}${ids.length > 3 ? ' 等' : ''}）？删除后无法恢复。“${ip ? ip.name : '这个合集'}”合集本身和其他本子不会受影响。`, `删除 ${ids.length} 本`))) return;
+      let done = 0;
+      try { for (const x of ids) { await Store.del('books', x); S.books = S.books.filter(b => b.id !== x); batchSel.delete(x); done++; } }
+      catch (err) { toast(`已删除 ${done} 本，其余没有删除：${errMsg(err)}`); renderIp(id); return; }
+      toast(`已删除 ${done} 本`); renderIp(id); break;
+    }
     case 'new-book': openBookForm(null, el.dataset.ip); break;
     case 'edit-book': openBookForm(bookById(id)); break;
     case 'sample': loadSample(); break;
