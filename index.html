@@ -748,6 +748,14 @@ button.pin:hover{color:var(--ink);background:var(--soft)}
 .brand-img{width:28px;height:28px;border-radius:7px;object-fit:cover}
 .lock-logo-img{width:96px;height:96px;border-radius:22px;object-fit:cover;margin:0 auto}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Excel 导入预览 */
+.xl-maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 12px;margin-top:8px}
+.xl-map{display:grid;gap:3px;font-size:13px}.xl-map span{color:var(--muted)}.xl-req,.xl-bad{color:var(--danger)}.xl-req{margin-left:6px;font-style:normal;font-size:11px}
+.xl-warn{color:var(--transit)}.xl-det{border:1px solid var(--line);border-radius:8px;padding:8px 12px}.xl-det summary{cursor:pointer;font-size:14px}
+.xl-sum{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}.xl-sum b{color:var(--ink);font-size:16px;font-variant-numeric:tabular-nums}
+.xl-list{display:block;font-size:12.5px;line-height:1.7;max-height:140px;overflow:auto}
+.xl-tbl{overflow:auto;max-height:240px;border:1px solid var(--line);border-radius:8px}.xl-tbl table{width:100%;border-collapse:collapse;font-size:13px}.xl-tbl th,.xl-tbl td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}.xl-tbl th{background:var(--soft);color:var(--muted);font-weight:500;position:sticky;top:0}.xl-tbl small{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1009,7 +1017,7 @@ const DB = {
    · local  —— 直接打开离线文件：数据存在这个浏览器（IndexedDB）
    · sb     —— 放在 GitHub Pages 并填好 config.js：用邮箱账号登录，数据存在你自己的 Supabase
    · claude —— 作为 Claude 云端版打开：数据存在 Claude 账号的私有空间 */
-const APP_VERSION = '2026.11.11-1';
+const APP_VERSION = '2026.11.11-2';
 const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
 function dataUrlToBlob(u) {
   const [head, body] = u.split(','); const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
@@ -2363,6 +2371,10 @@ function renderSettings() {
         <p>手机和电脑的数据不互通。换设备、换浏览器或清理缓存前，先导出备份文件（包含图片），到另一边再导入。</p>
         <div class="row"><button class="btn primary" data-act="export">导出备份</button>
           <label class="btn" for="import-file">导入备份</label><input type="file" id="import-file" accept=".json,application/json" hidden></div>
+        <p style="margin-top:16px">想批量整理或从表格导入：导出 Excel 可以在电脑上编辑；导入 Excel 时能预览、检查重复，已有的 IP 会自动归入，不会覆盖已有数据。Excel 不含图片。</p>
+        <div class="row"><button class="btn" data-act="export-xlsx">导出 Excel</button>
+          <label class="btn" for="import-xlsx">导入 Excel</label><input type="file" id="import-xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+          <button class="btn text" data-act="xlsx-template">下载 Excel 模板</button></div>
       </div>
         </div>
       </section>
@@ -2432,6 +2444,7 @@ function renderSettings() {
     } catch (err) { toast(err.message); }
   };
   $('#import-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
+  $('#import-xlsx').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importExcel(f); };
   storageHint();
 }
 /* 云端同步说明卡片 */
@@ -2674,6 +2687,395 @@ function importBackup(file) {
     } catch (e) { toast('导入失败：' + errMsg(e)); }
   };
   r.readAsText(file);
+}
+
+/* ================= Excel（.xlsx）导出 / 导入 =================
+   不依赖外部库：自带一个很小的 zip 读写和 xlsx 读写（离线也能用）。
+   工作簿：Books（本子）、IPs（IP 合集）、说明（只读，导入时忽略）。Books 用“所属IP标识”和 IPs 关联。
+   图片、书脊背景图、取色方案、排序不放进 Excel（要完整备份请用“导出备份”）。 */
+const XL = (() => {
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  /* ---- zip（写：不压缩；读：支持不压缩和 deflate） ---- */
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zip(files) {   // files: [{name, data: string}]
+    const parts = [], central = []; let off = 0;
+    const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    for (const f of files) {
+      const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+      lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+      lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+      parts.push(new Uint8Array(lh.buffer), name, data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+      ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true);
+      ch.setUint16(28, name.length, true); ch.setUint32(42, off, true);
+      central.push(new Uint8Array(ch.buffer), name);
+      off += 30 + name.length + data.length;
+    }
+    const csize = central.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csize, true); end.setUint32(16, off, true);
+    return new Blob([...parts, ...central, new Uint8Array(end.buffer)], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  async function inflate(u8) {
+    if (typeof DecompressionStream !== 'function') throw new Error('这个浏览器不能读取压缩的 Excel 文件，请换用新版 Chrome / Edge / Safari / Firefox');
+    const ds = new DecompressionStream('deflate-raw'), w = ds.writable.getWriter();
+    w.write(u8); w.close();
+    return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+  }
+  async function unzip(buf) {   // → {name: Uint8Array}
+    const u8 = new Uint8Array(buf), v = new DataView(buf);
+    let e = u8.length - 22; while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('这不是有效的 .xlsx 文件');
+    const n = v.getUint16(e + 10, true); let p = v.getUint32(e + 16, true); const out = {};
+    for (let i = 0; i < n; i++) {
+      if (v.getUint32(p, true) !== 0x02014b50) throw new Error('.xlsx 文件已损坏');
+      const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), el = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+      const name = dec.decode(u8.subarray(p + 46, p + 46 + nl));
+      const lnl = v.getUint16(lo + 26, true), lel = v.getUint16(lo + 28, true), start = lo + 30 + lnl + lel, raw = u8.subarray(start, start + csize);
+      if (/\.(xml|rels)$/i.test(name)) out[name] = method === 0 ? raw : method === 8 ? await inflate(raw) : null;
+      p += 46 + nl + el + cl;
+    }
+    return out;
+  }
+  /* ---- 写 xlsx ---- */
+  const xe = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const colName = i => { let s = ''; for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; };
+  function sheetXml(rows, widths, lists) {   // lists: {列号: [选项…]}
+    const body = rows.map((r, ri) => `<row r="${ri + 1}">${r.map((v, ci) => {
+      if (v === null || v === undefined || v === '') return '';
+      const ref = colName(ci) + (ri + 1), st = ri === 0 ? ' s="1"' : '';
+      return typeof v === 'number' && isFinite(v) ? `<c r="${ref}"${st}><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+    }).join('')}</row>`).join('');
+    const last = colName(Math.max(0, (rows[0] || []).length - 1)) + Math.max(1, rows.length);
+    const dv = Object.entries(lists || {}).map(([c, opts]) => `<dataValidation type="list" allowBlank="1" showErrorMessage="0" sqref="${colName(+c)}2:${colName(+c)}2000"><formula1>"${xe(opts.join(','))}"</formula1></dataValidation>`).join('');
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/>`
+      + `<cols>${(widths || []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${body}</sheetData>`
+      + (rows.length > 1 ? `<autoFilter ref="A1:${last}"/>` : '') + (dv ? `<dataValidations count="${Object.keys(lists).length}">${dv}</dataValidations>` : '') + `</worksheet>`;
+  }
+  function write(sheets) {   // sheets: [{name, rows, widths, lists}]
+    const n = sheets.length, H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    return zip([
+      {name: '[Content_Types].xml', data: H + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`},
+      {name: '_rels/.rels', data: H + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+      {name: 'xl/workbook.xml', data: H + `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${xe(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`},
+      {name: 'xl/_rels/workbook.xml.rels', data: H + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${n + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+      {name: 'xl/styles.xml', data: H + `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF1F2F5"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`},
+      ...sheets.map((s, i) => ({name: `xl/worksheets/sheet${i + 1}.xml`, data: sheetXml(s.rows, s.widths, s.lists)}))
+    ]);
+  }
+  /* ---- 读 xlsx ---- */
+  const xml = u8 => new DOMParser().parseFromString(dec.decode(u8), 'application/xml');
+  const kids = (el, tag) => [...el.getElementsByTagNameNS('*', tag)];
+  const colIdx = ref => { const m = /^([A-Z]+)/i.exec(ref || ''); if (!m) return 0; let n = 0; for (const c of m[1].toUpperCase()) n = n * 26 + c.charCodeAt(0) - 64; return n - 1; };
+  const BUILTIN_DATE = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47]);
+  const serialToYmd = n => { const d = new Date(Math.round((n - 25569) * 86400000)), p = x => String(x).padStart(2, '0'); return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`; };
+  async function read(buf) {   // → [{name, rows: [[cell…]]}]
+    const f = await unzip(buf);
+    if (!f['xl/workbook.xml']) throw new Error('这不是有效的 .xlsx 文件');
+    if (Object.values(f).some(v => v === null)) throw new Error('这个 Excel 文件用了不支持的压缩方式');
+    const shared = f['xl/sharedStrings.xml'] ? kids(xml(f['xl/sharedStrings.xml']), 'si').map(si => kids(si, 't').filter(t => !t.parentNode.localName.startsWith('rPh')).map(t => t.textContent).join('')) : [];
+    const dateXf = new Set();
+    if (f['xl/styles.xml']) {
+      const sx = xml(f['xl/styles.xml']), fm = {};
+      kids(sx, 'numFmt').forEach(n => { fm[n.getAttribute('numFmtId')] = n.getAttribute('formatCode') || ''; });
+      const xfs = kids(sx, 'cellXfs')[0];
+      if (xfs) [...xfs.children].forEach((x, i) => { const id = +x.getAttribute('numFmtId'); if (BUILTIN_DATE.has(id) || (fm[id] && /[ymd]/i.test(fm[id].replace(/"[^"]*"|\[[^\]]*\]|\\./g, '')))) dateXf.add(i); });
+    }
+    const wb = xml(f['xl/workbook.xml']), rels = {};
+    if (f['xl/_rels/workbook.xml.rels']) kids(xml(f['xl/_rels/workbook.xml.rels']), 'Relationship').forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+    const out = [];
+    for (const s of kids(wb, 'sheet')) {
+      let t = rels[s.getAttribute('r:id')] || rels[[...s.attributes].find(a => a.localName === 'id' && a.value in rels)?.value];
+      if (!t) continue;
+      t = t.replace(/^\//, ''); const path = t.startsWith('xl/') ? t : 'xl/' + t;
+      if (!f[path]) continue;
+      const rows = [];
+      kids(xml(f[path]), 'row').forEach(row => {
+        const r = (+row.getAttribute('r') || rows.length + 1) - 1, arr = rows[r] || (rows[r] = []);
+        [...row.children].filter(c => c.localName === 'c').forEach((c, k) => {
+          const ci = c.getAttribute('r') ? colIdx(c.getAttribute('r')) : k, ty = c.getAttribute('t'), vEl = kids(c, 'v')[0], v = vEl ? vEl.textContent : '';
+          let val = '';
+          if (ty === 's') val = shared[+v] ?? '';
+          else if (ty === 'inlineStr') val = kids(c, 't').map(x => x.textContent).join('');
+          else if (ty === 'b') val = v === '1' ? 'TRUE' : 'FALSE';
+          else if (ty === 'str' || ty === 'e') val = v;
+          else if (v !== '') { const num = parseFloat(v); val = dateXf.has(+c.getAttribute('s')) && isFinite(num) ? serialToYmd(num) : isFinite(num) ? num : v; }
+          arr[ci] = val;
+        });
+      });
+      for (let i = 0; i < rows.length; i++) if (!rows[i]) rows[i] = [];
+      out.push({name: s.getAttribute('name') || '', rows});
+    }
+    return out;
+  }
+  return {write, read};
+})();
+
+/* ---- 字段表：顺序就是 Excel 里的列顺序（和“添加本子”表单的顺序一致） ---- */
+const XL_CUR_NAME = Object.fromEntries(Object.entries(CUR).map(([k, c]) => [c.n, k]));
+const XL_BOOK = [
+  {k: 'id', t: '本子标识', w: 16, hint: '系统生成的编号。新填的行可以留空，导入时自动生成', alias: ['id', 'bookid', 'book_id', '编号']},
+  {k: 'ipId', t: '所属IP标识', w: 16, hint: '和 IPs 表的“IP标识”对应；没有的话只填“所属IP”也行', alias: ['ipid', 'ip_id', 'ip标识', '合集标识']},
+  {k: 'ipName', t: '所属IP', w: 18, hint: '必填（和“所属IP标识”至少填一个）。IP 已存在就自动归入，不存在就新建', alias: ['ip', 'ip名称', 'ip名', '合集', '作品', '所属ip名称', '所属合集'], req: true},
+  {k: 'title', t: '本子名', w: 26, hint: '必填', alias: ['书名', '标题', 'title', 'name', '本子名称'], req: true},
+  {k: 'author', t: '作者', w: 14, alias: ['author']},
+  {k: 'club', t: '社团', w: 14, alias: ['circle', '社团名']},
+  {k: 'cp', t: 'CP', w: 14, hint: '多个用逗号隔开', alias: ['配对', 'cp']},
+  {k: 'transit', t: '在途', w: 8, hint: '是 / 否', list: ['是', '否'], alias: ['还在路上', '在途本子']},
+  {k: 'kind', t: '本子类型', w: 14, list: OPT.kind, alias: ['类型']},
+  {k: 'size', t: '本子尺寸', w: 10, list: OPT.size, alias: ['尺寸']},
+  {k: 'origin', t: '地区', w: 10, list: OPT.origin, alias: ['地域']},
+  {k: 'pages', t: '页数', w: 8, hint: '整数', alias: ['页']},
+  {k: 'words', t: '字数', w: 8, hint: '数字，单位见“字数单位”', alias: ['字数n']},
+  {k: 'wordUnit', t: '字数单位', w: 10, hint: 'W字 / 字（默认 W字）', list: ['W字', '字'], alias: ['单位']},
+  {k: 'lang', t: '语言', w: 10, list: OPT.lang, alias: ['语种']},
+  {k: 'format', t: '形式', w: 10, hint: '实体本 / 电子本', list: OPT.format, alias: ['本子性质', '性质', '本子性质形式']},
+  {k: 'condition', t: '品相', w: 10, list: OPT.condition, alias: ['成色']},
+  {k: 'age', t: '限制年龄', w: 12, list: OPT.age, alias: ['年龄限制', '年龄', '分级']},
+  {k: 'buyDate', t: '购买时间', w: 12, hint: '年-月-日，例如 2026-10-05', alias: ['购买日期', '购入时间', '购入日期', '日期']},
+  {k: 'qty', t: '购买数量', w: 10, hint: '整数，默认 1', alias: ['数量', '册数']},
+  {k: 'place', t: '购买地点', w: 14, list: OPT.place, alias: ['地点', '购入地点', '渠道']},
+  {k: 'releaseDate', t: '发行日', w: 12, hint: '年-月-日', alias: ['发行日期', '发售日', '出版日期']},
+  {k: 'link', t: '购入链接', w: 24, alias: ['链接', 'url', '购买链接']},
+  {k: 'costs', t: '支付明细', w: 28, hint: '第 1 本的各项费用：项目 金额 币种，多项用分号隔开，例如 本体 50 CNY; 邮费 10 CNY（币种省略按 CNY）', alias: ['费用', '价格', '金额', '支付', '花费']},
+  {k: 'more', t: '其他本支付明细', w: 28, hint: '买了多本时，第 2 本起每本一段，段与段用 | 隔开', alias: ['更多明细', '第2本起明细']},
+  {k: 'read', t: '阅读状态', w: 10, list: OPT.read, alias: ['阅读', '读完状态']},
+  {k: 'rating', t: '评分', w: 8, hint: '0–5 的整数', alias: ['星级', '打分']},
+  {k: 'note', t: '备注', w: 30, alias: ['说明', '感想', 'note']},
+];
+const XL_IP = [
+  {k: 'id', t: 'IP标识', w: 16, hint: '系统生成的编号。新填的行可以留空', alias: ['id', 'ipid', 'ip_id']},
+  {k: 'name', t: 'IP名称', w: 20, hint: '必填', alias: ['名称', 'ip', 'ip名', '合集', '合集名称', '作品'], req: true},
+  {k: 'color', t: '书脊颜色', w: 12, hint: '#RRGGBB，例如 #3d6fd9；留空自动配色', alias: ['颜色', 'color', '色']},
+];
+const xlNorm = s => String(s ?? '').toLowerCase().replace(/[\s_\-·（）()\[\]【】*＊:：/、,，.。]/g, '').replace(/选填|必填/g, '');
+const xlCostStr = set => (set || []).map(c => `${c.label || ''} ${c.amount ?? ''} ${c.cur || 'CNY'}`.trim()).join('; ');
+
+function xlBuildWorkbook(ips, books, template) {
+  const ipName = id => (ips.find(i => i.id === id) || {}).name || '';
+  const bookRow = b => XL_BOOK.map(f => {
+    switch (f.k) {
+      case 'ipName': return ipName(b.ipId);
+      case 'transit': return b.transit ? '是' : '否';
+      case 'pages': return Number(b.pages) || '';
+      case 'words': return b.words && b.words.n ? b.words.n : '';
+      case 'wordUnit': return b.words && b.words.n ? (b.words.unit === 'z' ? '字' : 'W字') : '';
+      case 'qty': return qtyOf(b);
+      case 'costs': return xlCostStr(b.costs);
+      case 'more': return (Array.isArray(b.more) ? b.more : []).map(xlCostStr).join(' | ');
+      case 'rating': return Number(b.rating) || '';
+      case 'origin': return normOrigin(b.origin);
+      default: return b[f.k] ?? '';
+    }
+  });
+  const sample = {id: '', ipId: '', title: '示例本子（可删除这一行）', ipName: '示例IP', author: '作者A', club: '', cp: 'A×B', transit: false, kind: '漫画', size: 'A5', origin: '日本', pages: 40, words: null, lang: '日文', format: '实体本', condition: '全新', age: '全年龄', buyDate: today(), qty: 1, place: '场贩', releaseDate: '', link: '', costs: [{label: '本体', amount: 50, cur: 'CNY'}, {label: '邮费', amount: 10, cur: 'CNY'}], more: [], read: '未读', rating: 0, note: ''};
+  const bRows = [XL_BOOK.map(f => f.t), ...(template ? [bookRow(sample)] : books.map(bookRow))];
+  const iRows = [XL_IP.map(f => f.t), ...(template ? [['', '示例IP', COLORS[0]]] : ips.map(i => [i.id, i.name, /^#[0-9a-f]{6}$/i.test(i.color || '') ? i.color : '']))];
+  const help = [['工作表', '字段', '必填', '填写说明 / 可选值'],
+    ['Books', '（总说明）', '', '一行一本。“所属IP”写 IP 名称：书架里已有就自动归入，没有就自动新建；同一个 IP 下的多本书各占一行即可批量导入。'],
+    ...XL_BOOK.map(f => ['Books', f.t, f.req ? '是' : '', [f.hint, f.list ? '可选：' + f.list.join(' / ') : ''].filter(Boolean).join('。')]),
+    ['IPs', '（总说明）', '', 'IPs 表可选。只想新建 IP、或想指定书脊颜色时才需要填；Books 里的“所属IP标识”和这里的“IP标识”对应。'],
+    ...XL_IP.map(f => ['IPs', f.t, f.req ? '是' : '', f.hint || '']),
+    ['全部', '（不包含）', '', '图片、书脊背景图、取色方案、书架排序不在 Excel 里，要完整备份请用“导出备份”（.json）。导入 Excel 只会新增，不会覆盖或删除已有数据。']];
+  const lists = {}; XL_BOOK.forEach((f, i) => { if (f.list && f.list.join(',').length < 250) lists[i] = f.list; });
+  return XL.write([
+    {name: 'Books', rows: bRows, widths: XL_BOOK.map(f => f.w), lists},
+    {name: 'IPs', rows: iRows, widths: XL_IP.map(f => f.w)},
+    {name: '说明', rows: help, widths: [10, 16, 6, 90]}
+  ]);
+}
+async function xlSaveFile(filename, blob) {
+  if (Store.kind === 'claude') {
+    if (!Store.cloud.downloads) return toast('这个窗口不支持保存文件');
+    try { const r = await Store.cloud.downloads.save({filename, data: blob}); if (r && r.status === 'saved') toast('文件已保存'); } catch (e) { toast('没有保存文件'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('文件已生成');
+}
+async function exportExcel(template) {
+  try { await xlSaveFile(template ? 'Doumi导入模板.xlsx' : `Doumi数据-${today().replace(/-/g, '')}.xlsx`, xlBuildWorkbook(S.ips, S.books, template)); }
+  catch (e) { toast('导出失败：' + errMsg(e)); }
+}
+
+/* ---- 导入：读表头 → 自动对应字段（可手动改）→ 预览（新增 / 重复 / 错误）→ 确认后才写入，只新增不覆盖 ---- */
+const xlStr = v => v === null || v === undefined ? '' : (typeof v === 'number' ? String(v) : String(v)).trim();
+const xlNum = v => { const s = xlStr(v).replace(/[,，¥￥\s]/g, ''); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : NaN; };
+function xlDate(v) {
+  const s = xlStr(v); if (!s) return {v: ''};
+  let m = /^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})/.exec(s);
+  if (!m) { const y = /^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*月?$/.exec(s); if (y) m = [0, y[1], y[2], 1]; }
+  if (!m) return {v: '', bad: true};
+  const Y = +m[1], M = +m[2], D = +m[3];
+  if (M < 1 || M > 12 || D < 1 || D > new Date(Y, M, 0).getDate()) return {v: '', bad: true};
+  return {v: `${Y}-${String(M).padStart(2, '0')}-${String(D).padStart(2, '0')}`};
+}
+function xlCosts(v) {
+  const sets = xlStr(v) ? xlStr(v).split('|').map(p => p.trim()) : [], bad = [];
+  const parse = p => p.split(/[;；\n]/).map(x => x.trim()).filter(Boolean).map(it => {
+    const m = /^(.*?)[\s:：=]*(\d+(?:\.\d+)?)\s*([A-Za-z]{3}|人民币|日元|美元|港币|新台币|韩元|欧元|英镑|元|円)?$/.exec(it);
+    if (!m) { bad.push(it); return null; }
+    let cur = (m[3] || 'CNY').toUpperCase(); if (m[3] === '元') cur = 'CNY'; if (m[3] === '円') cur = 'JPY'; if (XL_CUR_NAME[m[3]]) cur = XL_CUR_NAME[m[3]];
+    if (!CUR[cur]) { bad.push(it); return null; }
+    return {label: normLabel(m[1]) || '本体', amount: parseFloat(m[2]), cur};
+  }).filter(Boolean);
+  return {sets: sets.map(parse), bad};
+}
+const xlBool = v => /^(是|y|yes|true|1|✓|√|在途)$/i.test(xlStr(v));
+function xlAutoMap(fields, headers) {
+  const map = {}, used = new Set(), hn = headers.map(xlNorm);
+  fields.forEach(f => { map[f.k] = -1; });
+  for (const pass of [0, 1]) fields.forEach(f => {
+    if (map[f.k] >= 0) return;
+    const names = pass ? f.alias.map(xlNorm) : [xlNorm(f.t)];
+    const i = hn.findIndex((h, j) => h && !used.has(j) && names.includes(h));
+    if (i >= 0) { map[f.k] = i; used.add(i); }
+  });
+  return map;
+}
+function xlPlan(wb, st) {
+  const bk = wb.find(s => s.name === st.bookSheet), ipS = wb.find(s => s.name === st.ipSheet);
+  const get = (row, map, k) => map[k] >= 0 ? row[map[k]] : '';
+  const issues = [], rows = [], newIps = [], ipByName = new Map(), ipByIdFile = new Map();
+  const lc = s => xlStr(s).toLowerCase();
+  const exName = new Map(S.ips.map(i => [lc(i.name), i])), exId = new Map(S.ips.map(i => [i.id, i]));
+  const usedIpIds = new Set(S.ips.map(i => i.id)), usedBookIds = new Set(S.books.map(b => b.id));
+  let colorN = S.ips.length;
+  const pickColor = c => /^#[0-9a-f]{6}$/i.test(xlStr(c)) ? xlStr(c).toLowerCase() : COLORS[colorN++ % COLORS.length];
+  const ensureIp = (name, id, color) => {   // → {ip, isNew}
+    const key = lc(name), ex = exName.get(key); if (ex) return {ip: ex, isNew: false};
+    if (ipByName.has(key)) return {ip: ipByName.get(key), isNew: false, dupInFile: true};
+    const ip = {id: id && !usedIpIds.has(id) ? id : uid(), name: xlStr(name), color: pickColor(color), created: Date.now()};
+    usedIpIds.add(ip.id); ipByName.set(key, ip); newIps.push(ip); return {ip, isNew: true};
+  };
+  if (ipS) {
+    const hdr = (ipS.rows[0] || []).map(xlStr), map = st.ipMap;
+    ipS.rows.slice(1).forEach((r, i) => {
+      if (!r.some(c => xlStr(c))) return;
+      const name = xlStr(get(r, map, 'name')), id = xlStr(get(r, map, 'id'));
+      if (!name) return issues.push({lvl: 'warn', t: `IPs 表第 ${i + 2} 行没有 IP 名称，已跳过`});
+      if (id) ipByIdFile.set(id, {name, color: get(r, map, 'color')});
+      ensureIp(name, id, get(r, map, 'color'));
+    });
+  }
+  const seenKey = new Set(S.books.map(b => [b.ipId, lc(b.title), lc(b.author), b.buyDate || ''].join('|')));
+  const total = bk ? bk.rows.length - 1 : 0, now = Date.now();
+  (bk ? bk.rows.slice(1) : []).forEach((r, i) => {
+    if (!r.some(c => xlStr(c))) return;
+    const line = i + 2, g = k => get(r, st.bookMap, k), warns = [], row = {line, title: xlStr(g('title')), ipName: xlStr(g('ipName')), status: 'new', warns};
+    rows.push(row);
+    const err = m => { row.status = 'error'; row.err = m; };
+    if (!row.title) return err('缺少本子名');
+    const idv = xlStr(g('ipId')); let nm = xlStr(g('ipName')), ip = null;
+    if (idv && exId.has(idv)) { ip = exId.get(idv); row.ipNew = false; }
+    else {
+      if (!nm && idv && ipByIdFile.has(idv)) nm = ipByIdFile.get(idv).name;
+      if (!nm) return err(idv ? `找不到标识为 ${idv} 的 IP，也没有写所属IP` : '缺少所属IP');
+      const r2 = ensureIp(nm, idv, ipByIdFile.has(idv) ? ipByIdFile.get(idv).color : ''); ip = r2.ip; row.ipNew = r2.isNew || !!r2.dupInFile;
+    }
+    row.ipName = ip.name; row.ip = ip;
+    const b = {id: '', ipId: ip.id, title: row.title};
+    ['author', 'club', 'cp', 'link', 'note'].forEach(k => { b[k] = xlStr(g(k)); });
+    if (b.link && !/^https?:\/\//i.test(b.link)) b.link = 'https://' + b.link;
+    b.transit = xlBool(g('transit'));
+    ['kind', 'size', 'lang', 'place'].forEach(k => { b[k] = xlStr(g(k)); });
+    b.origin = normOrigin(xlStr(g('origin'))); ['format', 'condition', 'age', 'read'].forEach(k => { b[k] = xlStr(g(k)); });
+    [['origin', 'origin', '地区'], ['format', 'format', '形式'], ['condition', 'condition', '品相'], ['age', 'age', '限制年龄'], ['read', 'read', '阅读状态']].forEach(([k, o, lab]) => { if (b[k] && !OPT[o].includes(b[k])) warns.push(`${lab}“${b[k]}”不在选项里`); });
+    if (!b.format) b.format = '实体本';
+    for (const [k, lab] of [['buyDate', '购买时间'], ['releaseDate', '发行日']]) { const d = xlDate(g(k)); b[k] = d.v; if (d.bad) warns.push(`${lab}“${xlStr(g(k))}”不是有效日期，已留空`); }
+    if (!b.buyDate && !xlStr(g('buyDate'))) b.buyDate = '';
+    const pg = xlNum(g('pages')); b.pages = pg > 0 ? Math.round(pg) : ''; if (Number.isNaN(pg)) warns.push('页数不是数字，已留空');
+    const wn = xlNum(g('words')); if (Number.isNaN(wn)) warns.push('字数不是数字，已留空');
+    b.words = wn > 0 ? {n: wn, unit: /^字$|^z$/i.test(xlStr(g('wordUnit'))) ? 'z' : 'w'} : null;
+    const q = xlNum(g('qty')); b.qty = q >= 1 ? Math.min(999, Math.round(q)) : 1; if (Number.isNaN(q)) warns.push('购买数量不是数字，按 1 本');
+    const rt = xlNum(g('rating')); b.rating = rt > 0 ? Math.min(5, Math.round(rt)) : 0; if (Number.isNaN(rt)) warns.push('评分不是数字，已留空');
+    const c1 = xlCosts(g('costs')), c2 = xlCosts(g('more')); b.costs = c1.sets[0] || []; b.more = [...c1.sets.slice(1), ...c2.sets].filter(s => s.length);
+    [...c1.bad, ...c2.bad].forEach(x => warns.push(`支付明细“${x}”看不懂，已忽略`));
+    if (!b.costs.length) b.costs = [{label: '本体', amount: '', cur: 'CNY'}];
+    const bid = xlStr(g('id')); let dup = false;
+    if (bid && usedBookIds.has(bid)) dup = true;
+    const key = [ip.id, lc(b.title), lc(b.author), b.buyDate || ''].join('|');
+    if (seenKey.has(key)) dup = true;
+    seenKey.add(key);
+    if (dup) row.status = 'dup';
+    b.id = bid && !usedBookIds.has(bid) ? bid : uid(); usedBookIds.add(b.id);
+    b.images = []; b.created = now; b.sortKey = -now - (total - i);
+    row.book = b;
+  });
+  return {rows, newIps, issues, usedIps: new Set(rows.filter(r => r.book && r.status !== 'error').map(r => r.ip))};
+}
+async function importExcel(file) {
+  let wb;
+  try { wb = await XL.read(await file.arrayBuffer()); } catch (e) { return toast(e.message || '读取 Excel 失败'); }
+  if (!wb.length) return toast('这个 Excel 里没有工作表');
+  const nm = s => s.name.toLowerCase().replace(/\s/g, '');
+  const bookDef = wb.find(s => ['books', '本子', '书籍'].includes(nm(s))) || wb.find(s => !['ips', 'ip', '合集', '说明'].includes(nm(s))) || wb[0];
+  const ipDef = wb.find(s => s !== bookDef && ['ips', 'ip', '合集', 'ip合集'].includes(nm(s)));
+  const st = {bookSheet: bookDef.name, ipSheet: ipDef ? ipDef.name : '', bookMap: {}, ipMap: {}, dupMode: false};
+  const headersOf = name => ((wb.find(s => s.name === name) || {rows: []}).rows[0] || []).map(xlStr);
+  const remap = () => { st.bookMap = xlAutoMap(XL_BOOK, headersOf(st.bookSheet)); st.ipMap = st.ipSheet ? xlAutoMap(XL_IP, headersOf(st.ipSheet)) : {}; };
+  remap();
+  const sel = (fields, map, h, scope) => fields.map(f => `<label class="xl-map"><span>${esc(f.t)}${f.req ? '<i class="xl-req">必填</i>' : ''}</span><select class="input" data-scope="${scope}" data-k="${f.k}"><option value="-1">不导入</option>${h.map((t, i) => `<option value="${i}" ${map[f.k] === i ? 'selected' : ''}>${esc(t || `（第 ${i + 1} 列）`)}</option>`).join('')}</select></label>`).join('');
+  openModal(`<div class="sheet-head"><h2>导入 Excel</h2><button class="icon-btn" data-close aria-label="关闭">✕</button></div><div id="xl-body"></div>`, root => {
+    $$('[data-close]', root).forEach(b => b.onclick = closeModal);
+    const body = $('#xl-body', root);
+    const draw = () => {
+      const plan = xlPlan(wb, st), hB = headersOf(st.bookSheet), hI = headersOf(st.ipSheet);
+      const reqMissing = XL_BOOK.filter(f => f.req && st.bookMap[f.k] < 0 && !(f.k === 'ipName' && st.bookMap.ipId >= 0)).map(f => f.t);
+      const usedB = new Set(Object.values(st.bookMap)), lost = hB.map((t, i) => [t, i]).filter(([t, i]) => t && !usedB.has(i)).map(([t]) => t);
+      const nOk = plan.rows.filter(r => r.status === 'new').length, nDup = plan.rows.filter(r => r.status === 'dup').length, nErr = plan.rows.filter(r => r.status === 'error').length;
+      const importable = plan.rows.filter(r => r.status === 'new' || (r.status === 'dup' && st.dupMode));
+      const usedIps = new Set(importable.map(r => r.ip)), toCreate = plan.newIps.filter(ip => usedIps.has(ip) || plan.rows.every(r => r.ip !== ip));
+      const linked = new Set(importable.filter(r => !r.ipNew).map(r => r.ip.id)).size;
+      const sheetOpts = (cur, none) => `${none ? `<option value="">（没有）</option>` : ''}${wb.map(s => `<option value="${esc(s.name)}" ${s.name === cur ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
+      const warnLines = plan.rows.filter(r => r.warns.length).slice(0, 12).map(r => `第 ${r.line} 行「${esc(r.title)}」：${esc(r.warns.join('；'))}`);
+      const errLines = plan.rows.filter(r => r.status === 'error').slice(0, 20).map(r => `第 ${r.line} 行：${esc(r.err)}，这一行不会导入`);
+      body.innerHTML = `
+        <div class="form">
+          <div class="two wrap-sm">
+            <label class="field"><span>本子数据在哪张表</span><select class="input" id="xl-bs">${sheetOpts(st.bookSheet)}</select></label>
+            <label class="field"><span>IP 数据在哪张表<i>选填</i></span><select class="input" id="xl-is">${sheetOpts(st.ipSheet, true)}</select></label>
+          </div>
+          <details class="xl-det" ${reqMissing.length || lost.length ? 'open' : ''}><summary>列对应：已自动匹配 ${Object.values(st.bookMap).filter(i => i >= 0).length} 项${lost.length ? `，有 ${lost.length} 列没有对应` : ''}${reqMissing.length ? `，<b class="xl-bad">还缺：${esc(reqMissing.join('、'))}</b>` : ''}</summary>
+            ${lost.length ? `<p class="form-note">这些列没能自动对应，不会导入，可以在下面手动选择：${esc(lost.join('、'))}</p>` : ''}
+            <div class="xl-maps">${sel(XL_BOOK, st.bookMap, hB, 'book')}</div>
+            ${st.ipSheet ? `<h3 style="margin:14px 0 6px;font-size:14px">IP 表</h3><div class="xl-maps">${sel(XL_IP, st.ipMap, hI, 'ip')}</div>` : ''}
+          </details>
+          <div class="fgroup"><h3>导入预览</h3>
+            <div class="xl-sum"><span><b>${importable.length}</b> 本将导入</span><span><b>${toCreate.length}</b> 个新建 IP</span><span><b>${linked}</b> 个已有 IP 直接归入</span><span class="${nDup ? 'xl-warn' : ''}"><b>${nDup}</b> 本重复</span><span class="${nErr ? 'xl-bad' : ''}"><b>${nErr}</b> 行有错</span></div>
+            ${reqMissing.length ? `<p class="xl-bad">必填的列还没对应：${esc(reqMissing.join('、'))}，请在上面的“列对应”里选择。</p>` : ''}
+            ${nDup ? `<label class="check"><input type="checkbox" id="xl-dup" ${st.dupMode ? 'checked' : ''}>重复的 ${nDup} 本也导入（会作为新的一本，不会覆盖已有的）</label>` : ''}
+            ${errLines.length ? `<div class="notice xl-list">${errLines.join('<br>')}</div>` : ''}
+            ${warnLines.length ? `<div class="notice xl-list">${warnLines.join('<br>')}</div>` : ''}
+            <div class="xl-tbl"><table><thead><tr><th>行</th><th>状态</th><th>所属IP</th><th>本子名</th></tr></thead><tbody>${plan.rows.slice(0, 30).map(r => `<tr><td>${r.line}</td><td>${r.status === 'error' ? '<span class="xl-bad">错误</span>' : r.status === 'dup' ? '<span class="xl-warn">重复' + (st.dupMode ? '（仍导入）' : '（跳过）') + '</span>' : '新增'}</td><td>${esc(r.ipName)}${r.ip ? (r.ipNew ? ' <small>新建</small>' : ' <small>已有</small>') : ''}</td><td>${esc(r.title)}</td></tr>`).join('') || '<tr><td colspan="4">没有读到数据行</td></tr>'}</tbody></table>${plan.rows.length > 30 ? `<p class="form-note">只显示前 30 行，共 ${plan.rows.length} 行</p>` : ''}</div>
+            <p class="form-note">只会新增，不会覆盖或删除已有的 IP 和本子。Excel 里没有图片，导入的本子可以之后再补图。</p>
+          </div>
+          <div class="sheet-actions"><button type="button" class="btn left" data-close>取消</button><button type="button" class="btn primary" id="xl-go" ${importable.length || toCreate.length ? '' : 'disabled'}>确认导入</button></div>
+        </div>`;
+      $$('[data-close]', body).forEach(b => b.onclick = closeModal);
+      $('#xl-bs', body).onchange = e => { st.bookSheet = e.target.value; remap(); draw(); };
+      $('#xl-is', body).onchange = e => { st.ipSheet = e.target.value; remap(); draw(); };
+      $$('select[data-k]', body).forEach(s => s.onchange = () => { (s.dataset.scope === 'ip' ? st.ipMap : st.bookMap)[s.dataset.k] = +s.value; draw(); });
+      const dupBox = $('#xl-dup', body); if (dupBox) dupBox.onchange = () => { st.dupMode = dupBox.checked; draw(); };
+      $('#xl-go', body).onclick = async () => {
+        const go = $('#xl-go', body); go.disabled = true; go.textContent = '导入中…';
+        try {
+          const ipsOut = toCreate, booksOut = importable.map(r => r.book);
+          if (ipsOut.length) await Store.putMany('ips', ipsOut);
+          if (booksOut.length) await Store.putMany('books', booksOut, (i, n) => toast(`正在导入 ${i} / ${n}`));
+          S.ips = await Store.all('ips'); S.books = await Store.all('books');
+          closeModal(); toast(`导入完成：${booksOut.length} 本，新建 ${ipsOut.length} 个 IP`); location.hash = ''; route();
+        } catch (e) { go.disabled = false; go.textContent = '确认导入'; toast('导入失败：' + errMsg(e)); }
+      };
+    };
+    draw();
+  });
 }
 
 /* ================= 弹层 ================= */
@@ -3367,6 +3769,8 @@ document.addEventListener('click', async e => {
     case 'sample': loadSample(); break;
     case 'del-sample': deleteSample(); break;
     case 'export': exportBackup(); break;
+    case 'export-xlsx': exportExcel(false); break;
+    case 'xlsx-template': exportExcel(true); break;
     case 'view': viewMode = el.dataset.v; renderHome(); Store.put('meta', viewMode, 'view').catch(() => {}); break;   // 先切换画面，再在后台保存（云端版保存要等网络，不能让按钮等它）
     case 'pin-view': {
       const v = viewMode, prev = startView; startView = v; renderHome();
